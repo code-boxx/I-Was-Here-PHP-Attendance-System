@@ -1,0 +1,67 @@
+/* (A) FOR THE POPUP TIME PICKER */
+#tp-pop {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+}
+#tp-pop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* (B) TIME PICKER ITSELF */
+.tp {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 320px;
+  background: #2d2d2d;
+  border: 1px solid #000;
+}
+.tp-box > *::selection {
+  background: transparent;
+}
+#tp-pop .tp {
+  margin: 50vh auto 0 auto;
+  transform: translateY(-50%);
+}
+
+/* (C) HR + MIN + AM/PM */
+.tp-box {
+  width: 33%;
+  padding: 0 15px;
+  text-align: center;
+  box-sizing: border-box;
+}
+.tp-up, .tp-down {
+  font-size: 32px;
+  font-weight: bold;
+  color: #e01717;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.tp-val {
+  box-sizing: border-box;
+  width: 100%;
+  background: #fff;
+  border: 0;
+  padding: 5px;
+  text-align: center;
+  font-size: 22px;
+}
+
+/* (D) OK BUTTON */
+.tp-ok {
+  width: 100%;
+  background: #ce3535;
+  color: #fff;
+  border: 0;
+  padding: 15px 0;
+  margin: 10px;
+  cursor: pointer;
+}
