@@ -1,72 +1,308 @@
 <?php
-// (A) LOAD CORE ENGINE
-require __DIR__ . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "Core.php";
+// (A) SOME SETTINGS & STUFF
+// (A1) TURN ON ERROR REPORTING
+error_reporting(E_ALL & ~E_NOTICE);
+ini_set("display_errors", 1);
+ini_set("log_errors", 0);
 
-// (B) STRIP PATH DOWN TO AN ARRAY
-// E.G. HTTP://SITE.COM/HELLO/WORLD/ > $_PATH = ["HELLO", "WORLD"]
-$_PATH = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-if (substr($_PATH, 0, strlen(URL_PATH_BASE)) == URL_PATH_BASE) {
-  $_PATH = substr($_PATH, strlen(URL_PATH_BASE));
+// (A2) SYSTEM
+$minver = "7.4.0";
+$isapache = apache_get_version() !== false;
+
+// (A3) PATHS & IMPORTANT FILES
+$pBASE = __DIR__ . DIRECTORY_SEPARATOR;
+$pAPI = $pBASE . "api" . DIRECTORY_SEPARATOR;
+$pLIB = $pBASE . "lib" . DIRECTORY_SEPARATOR;
+$pALL = [$pBASE, $pAPI, $pLIB, $pBASE."index.foo", $pLIB."GO.foo", $pLIB."i-was-here.sql"];
+
+// (A4) URL
+$uHTTPS = isset($_SERVER["HTTPS"]);
+$uHOST = $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+$uIDX = strpos($uHOST, "index.php");
+if ($uIDX!==false) { $uHOST = substr($uHOST, 0, $uIDX); }
+$uHOST = rtrim($uHOST, "/") . "/";
+$uFULL = $uHTTPS ? "https://" : "http://" . $uHOST;
+
+// (A5) MODE SELECTOR
+// (B) PRE-CHECKS
+// (C) SHOW INSTALLATION HTML
+// (D) ACTUAL INSTALLATION
+$mode = isset($_POST["install"]) ? "D" : "B";
+
+// (B) PRE CHECKS
+if ($mode=="B") {
+  // (B1) PHP VERSION
+  if (version_compare(PHP_VERSION, $minver, "<")) {
+    exit("At least PHP $minver is required. You are using ". PHP_VERSION);
+  }
+
+  // (B2) MYSQL PDO
+  if (!extension_loaded("pdo_mysql")) {
+    exit("PDO MYSQL extension is not enabled.");
+  }
+
+  // (B3) APACHE MOD REWRITE
+  if ($isapache && !in_array("mod_rewrite", apache_get_modules())) {
+    exit("Please enable Apache MOD_REWRITE.");
+  }
+
+  // (B4) FILES & FOLDERS EXIST + READ WRITE PERMISSIONS
+  foreach ($pALL as $p) {
+    if (!file_exists($p)) { exit("$p does not exist!"); }
+    if (!is_readable($p)) { exit("Please give PHP read permission to $p"); }
+    if (!is_writable($p)) { exit("Please give PHP write permission to $p"); }
+  }
+
+  // (B5) REMOVE OLD COPIES OF HTACCESS
+  $htaccess = $pBASE . ".htaccess";
+  if (file_exists($htaccess)) {
+    if (!unlink($htaccess)) { exit("Failed to delete $htaccess - Please delete this file manually"); }
+  }
+  $htaccess = $pAPI . ".htaccess";
+  if (file_exists($htaccess)) {
+    if (!unlink($htaccess)) { exit("Failed to delete $htaccess - Please delete this file manually"); }
+  }
+
+  // (B6) ALL GREEN
+  $mode = "C";
 }
-$_PATH = rtrim($_PATH, '/');
-$_PATH = explode("/", $_PATH);
+unset($uIDX); unset($pALL);
 
-// (C) API CALL
-// E.G. HTTP://SITE.COM/API/MODULE/ > $_PATH = ["API", "MODULE"]
-if ($_PATH[0]==URL_PATH_API) {
-  // (C1) INVALID URL PATH
-  if (count($_PATH) != 2) { $_CORE->respond(0, "Invalid API call"); }
+// (C) SHOW INSTALL HTML
+if ($mode == "C") { ?>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>I Was Here Installation</title>
+    <style>
+    *{font-family: arial, sans-serif}
+    label,select,input{font-size:20px} h1{font-size:26px;margin:0 0 20px 0}
+    h1,label,select,input{box-sizing:border-box;display:block;width:100%}
+    form{max-width:500px;margin:20px auto 20px auto}
+    .iSec{background:#f5f5f5;border:1px solid #dbdbdb;padding:20px;margin-bottom:20px}
+    input,select{padding:10px}
+    label{margin:10px 0;color:#7968ff}
+    input[type=submit]{background:#4e89f5;border:0;color:#fff}
+    .danger{padding:20px;margin-bottom:30px;background:#5542f3;color:#fff;font-weight:700;font-size:20px;line-height:28px}
+    .notes{font-size:17px;color:#585858;padding:10px 0}
+    </style>
+    <script>
+    function install () {
+      // ADMIN PASSWORD
+      var pass = document.getElementsByName("apass")[0],
+          cpass = document.getElementsByName("apassc")[0];
+      if (pass.value != cpass.value) {
+        alert("Admin passwords do not match!");
+        return false;
+      }
 
-  // (C2) INVALID API REQUEST OR INSUFFICIENT PERMISSION
-  if (!isset($_POST['req']) && !isset($_POST['reqS']) && !isset($_POST['reqT'])) { 
-    $_CORE->respond(0, "Invalid API Request"); 
-  }
-  if (isset($_POST['reqS']) && !isset($_SESSION['user'])) { 
-    $_CORE->respond(0, "No access permission");
-  }
-  if (isset($_POST['reqT']) && $_SESSION['user']['role']!="T") { 
-    $_CORE->respond(0, "No access permission");
-  }
+      // FORM DATA
+      var data = new FormData(document.getElementById("iForm"));
+      data.append("install", "1");
 
-   // (C3) LOAD API MODULE
-  $_APIFILE = PATH_CORE . "API-" . $_PATH[1] . ".php";
-  if (file_exists($_APIFILE)) { require $_APIFILE; }
-  else { exit($_CORE->respond(0, "Invalid Module")); }
-}
-
-// (D) LOAD HTML PAGE
-else {
-  // (D1) NOT SIGNED IN
-  if (!isset($_SESSION['user']) && $_PATH[0]!="login") {
-    if (isset($_POST['ajax'])) { exit("BADSESS"); }
-    header('Location: '. URL_BASE .'login');
-    exit();
-  }
-
-  // (D2) ADMIN PAGE ACCESS
-  if ($_PATH[0]=="admin") {
-    // (D2A) SIGNED IN BUT NOT ADMIN
-    if ($_PATH[0]=="admin" && $_SESSION['user']['role']!="T") {
-      if (isset($_POST['ajax'])) { exit("BADSESS"); }
-      header('Location: ' . URL_BASE);
-      exit();
+      // AJAX FETCH
+      var url = (document.getElementsByName("https")[0].value=="0" ? "http" : "https")
+              + "://"
+              + document.getElementsByName("host")[0].value;
+      fetch(url, { method:"POST", body:data })
+      .then((res) => {
+        if (res.status!=200) {
+          alert("SERVER ERROR - ${res.status}");
+          console.error(res);
+        } else { return res.text(); }
+      })
+      .then((txt) => {
+        if (txt=="OK") {
+          alert("Installation complete, this page will now reload.");
+          location.reload();
+        } else { alert(txt); }
+      })
+      .catch((err) => {
+        alert(`Fetch error - ${err.message}`);
+        console.error(err);
+      });
+      return false;
     }
 
-    // (D2B) RESHUFFLE PATH
-    if (count($_PATH)==1) { $_PATH[0] = ""; }
-    else { array_shift($_PATH); }
-    $_HFILE = PATH_PAGES . "ADMIN-";
-  } else { $_HFILE = PATH_PAGES . "PAGE-"; }
+    // CREDITS https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript
+    function rnd () {
+      var result = "";
+      var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~!-_=.";
+      var charactersLength = characters.length;
+      for ( var i = 0; i < 48; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      }
+      document.getElementsByName("jwtkey")[0].value = result;
+    }
+    </script>
+  </head>
+  <body>
+    <?php if ($isapache === false) { ?>
+    <div class="danger">
+      You are not running Apache Web Server.
+      This will still work, but you need to manually enable URL rewrite and "translate" /.htaccess and /api/.htaccess on your own.
+    </div>
+    <?php } ?>
 
-  // (D3) PAGE TO LOAD
-  // IF $_PATH == [], WILL LOAD PAGES/PAGE-HOME.HTML
-  // IF $_PATH == ["SINGLE"], WILL LOAD PAGES/PAGE-SINGLE.HTML
-  // If $_PATH == ["MANY", "SECTIONS"], WILL LOAD PAGES/PAGE-MANY-SECTIONS.HTML
-  if (count($_PATH)==1) { $_HFILE .= $_PATH[0]=="" ? "home" : $_PATH[0] ; }
-  else { $_HFILE .= implode("-", $_PATH) ; }
-  $_HFILE .= ".php";
+    <form id="iForm" onsubmit="return install()">
+      <div class="iSec">
+        <h1>HOST</h1>
+        <label>HTTP or HTTPS</label>
+        <select name="https">
+          <option value="0">http://</option>
+          <option value="1"<?=$uHTTPS?" selected":""?>>https://</option>
+        </select>
+        <label>Domain AND Path</label>
+        <input type="text" name="host" required value="<?=$uHOST?>"/>
+        <div class="notes">Change this only if wrong, include the path if not deployed in root. E.G. site.com/i-was-here/</div>
+      </div>
 
-  // (D4) THROW 404 IF FILE NOT FOUND
-  if (file_exists($_HFILE)) { require $_HFILE; }
-  else { require PATH_PAGES . "PAGE-404.php"; }
+      <div class="iSec">
+        <h1>API ENDPOINT</h1>
+        <label>Enforce HTTPS?</label>
+        <select name="apihttps">
+          <option value="0">No</option>
+          <option value="1"<?=$uHTTPS?" selected":""?>>Yes</option>
+        </select>
+        <div class="notes">If enforced, API will only respond to HTTPS calls - Recommended to set "yes" for live servers.</div>
+        <label>CORS</label>
+        <select name="apicors">
+          <option value="0">Disallow</option>
+          <option value="1">Allow</option>
+        </select>
+        <div class="notes">Set "allow" if you intend to develop your own mobile app.</div>
+      </div>
+
+      <div class="iSec">
+        <h1>DATABASE</h1>
+        <label>Host</label>
+        <input type="text" name="dbhost" required value="localhost"/>
+        <label>Name</label>
+        <input type="text" name="dbname" required value="iwashere"/>
+        <label>User</label>
+        <input type="text" name="dbuser" required value="root"/>
+        <label>Password</label>
+        <input type="password" name="dbpass"/>
+      </div>
+
+      <div class="iSec">
+        <h1>JSON WEB TOKEN</h1>
+        <label>Secret Key <span onclick="rnd()">[RANDOM]</span></label>
+        <input type="text" name="jwtkey" required/>
+        <label>Issuer</label>
+        <input type="text" name="jwyiss" required value="<?=$_SERVER["HTTP_HOST"]?>"/>
+        <div class="notes">Your company name or domain name.</div>
+      </div>
+
+      <div class="iSec">
+        <h1>ADMIN USER</h1>
+        <label>Name</label>
+        <input type="text" name="aname" required value="Admin"/>
+        <label>Email</label>
+        <input type="text" name="aemail" required value="admin@site.com"/>
+        <label>Password</label>
+        <input type="password" name="apass" required/>
+        <label>Confirm Password</label>
+        <input type="password" name="apassc" required/>
+      </div>
+
+      <input type="submit" value="Go!"/>
+    </form>
+  </body>
+</html>
+<?php }
+
+// (D) INSTALLATION
+if ($mode=="D") {
+  // (D1) TRY CONNECT TO DATABASE
+  try {
+    $pdo = new PDO(
+      "mysql:host=".$_POST["dbhost"].";charset=utf8",
+      $_POST["dbuser"], $_POST["dbpass"], [
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+    ]);
+  } catch (Exception $ex) { exit("Unable to connect to database - " . $ex->getMessage()); }
+
+  // (D2) CREATE DATABASE
+  try {
+    $pdo->exec("CREATE DATABASE `".$_POST["dbname"]."`");
+    $pdo->exec("USE `".$_POST["dbname"]."`");
+  } catch (Exception $ex) { exit("Unable to create database - " . $ex->getMessage()); }
+
+  // (D3) IMPORT SQL FILE
+  try {
+    $pdo->exec(file_get_contents($pLIB."i-was-here.sql"));
+  } catch (Exception $ex) { exit("Unable to create database - " . $ex->getMessage()); }
+
+  // (D4) CREATE ADMIN USER
+  try {
+    $stmt = $pdo->prepare("REPLACE INTO `users` (`user_name`, `user_email`, `user_role`, `user_password`) VALUES (?,?,?,?)");
+    $stmt->execute([$_POST["aname"], $_POST["aemail"], "A", password_hash($_POST["apass"], PASSWORD_DEFAULT)]);
+  } catch (Exception $ex) {
+    exit("Error creating admin user - " . $ex->getMessage());
+  }
+
+  // (D5) SETTINGS TO UPDATE
+  $hbase = $_POST["https"]=="1" ? "https://" : "http://" . $_POST["host"];
+  $hbase = rtrim($hbase, "/") . "/";
+  $replace = [
+    "HOST_BASE" => $hbase,
+    "DB_HOST" => $_POST["dbhost"],
+    "DB_NAME" => $_POST["dbname"],
+    "DB_USER" => $_POST["dbuser"],
+    "DB_PASSWORD" => $_POST["dbpass"],
+    "API_CORS" => ($_POST["apicors"]=="1" ? "true" : "false"),
+    "API_HTTPS" => ($_POST["apihttps"]=="1" ? "true" : "false"),
+    "JWT_SECRET" => $_POST["jwtkey"],
+    "JWT_ISSUER" => $_POST["jwyiss"]
+  ];
+  unset($_POST);
+
+  // (D6) CREATE LIB/GO.PHP
+  $go = file($pLIB . "GO.foo") or exit("Cannot read $pLIB" . "GO.foo");
+  foreach ($go as $j=>$line) { foreach ($replace as $k=>$v) {
+    if (strpos($line, "\"$k\"") !== false) {
+      if ($k!="API_HTTPS" && $k!="API_CORS") { $v = "\"$v\""; }
+      $go[$j] = "define(\"$k\", $v); // CHANGED BY INSTALLER\r\n";
+      unset($replace[$k]);
+      if (count($replace)==0) { break; }
+    }
+  }}
+  try {
+    file_put_contents($pLIB . "GO.php", implode("", $go));
+  } catch (Exception $ex) {
+    exit("Error writing to ${pLIB}GO.php");
+  }
+  unset($go);
+
+  // (D7) GENERATE HTACCESS
+  $hbasepath = parse_url($hbase, PHP_URL_PATH);
+  $htaccess = $pBASE . ".htaccess";
+  if (file_put_contents($htaccess, implode("\r\n", [
+    "RewriteEngine On",
+    "RewriteBase $hbasepath",
+    "RewriteRule ^index\.php$ - [L]",
+    "RewriteCond %{REQUEST_FILENAME} !-f",
+    "RewriteCond %{REQUEST_FILENAME} !-d",
+    "RewriteRule . ".$hbasepath."index.php [L]"
+  ])) === false) { exit("Failed to create $htaccess"); }
+
+  // (D8) GENERATE API HTACCESS
+  $htaccess = $pAPI . ".htaccess";
+  if (file_put_contents($htaccess, implode("\r\n", [
+    "RewriteEngine On",
+    "RewriteBase ${hbasepath}api/",
+    "RewriteRule ^index\.php$ - [L]",
+    "RewriteCond %{REQUEST_FILENAME} !-f",
+    "RewriteCond %{REQUEST_FILENAME} !-d",
+    "RewriteRule . ${hbasepath}api/index.php [L]"
+  ])) === false) { exit("Failed to create $htaccess"); }
+
+  // (D9) REMOVE THIS INSTALLER SCRIPT
+  rename($pBASE."index.php", $pLIB."install.foo");
+  rename($pBASE."index.foo", $pBASE."index.php");
+
+  // (D10) DONE!
+  echo "OK";
 }
