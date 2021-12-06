@@ -4,11 +4,8 @@ var cb = {
   //  show : boolean, show or hide spinner
   loady : null,
   loading : (show) => {
-    if (show) {
-      cb.loady.classList.remove("cb-hide");
-    } else {
-      cb.loady.classList.add("cb-hide");
-    }
+    if (show) { cb.loady.classList.remove("cb-hide"); }
+    else { cb.loady.classList.add("cb-hide"); }
   },
 
   // (A2) TOAST MESSAGE
@@ -50,9 +47,11 @@ var cb = {
     mhead.innerHTML = head;
     mbody.innerHTML = body;
 
-    // SET FOOTER
+    // SET FOOTER (NONE)
     if (foot===undefined || foot===null) { foot = ""; }
-    if (typeof foot == "function") {
+
+    // SET FOOTER (FUNCTION)
+    else if (typeof foot == "function") {
       // AUTO GENERATE NO BUTTON
       mfoot.innerHTML = "";
       let btn = document.createElement("button");
@@ -68,10 +67,10 @@ var cb = {
       btn.setAttribute("data-bs-dismiss", "modal");
       btn.addEventListener("click", foot);
       mfoot.appendChild(btn);
-    } else {
-      // SET TEXT
-      mfoot.innerHTML = foot;
     }
+
+    // SET FOOTER (STRING)
+    else { mfoot.innerHTML = foot; }
 
     // SHOW
     cb.mody.show();
@@ -82,20 +81,18 @@ var cb = {
   page : (num) => {
     for (let i=1; i<=5; i++) {
       let pg = document.getElementById("cb-page-"+i);
-      if (i==num) {
-        pg.classList.remove("cb-pg-hide");
-      } else {
-        pg.classList.add("cb-pg-hide");
-      }
+      if (i==num) { pg.classList.remove("cb-pg-hide"); }
+      else { pg.classList.add("cb-pg-hide"); }
     }
   },
 
   // (B) AJAX CALL
   //  url : string, target URL
   //  data : optional object, data to send
+  //  loading : boolean, show "now loading" screen? default true.
+  //  debug : boolean, debug mode. default false.
   //  onpass : function, run this function on server response
   //  onerr : optional function, run this function on error
-  //  loading : boolean, show "now loading" screen? default true.
   ajax : (opt) => {
     // (B1) CHECKS
     let err = null;
@@ -118,6 +115,7 @@ var cb = {
     if (opt.loading) { cb.loading(true); } // NOW LOADING
     fetch(opt.url, { method:"POST", credentials:"include", body:data })
     .then((res) => {
+      if (opt.debug) { console.log(res); }
       if (res.status==200) { return res.text(); }
       else {
         cb.modal("SERVER ERROR", "Bad server response - " + res.status);
@@ -125,7 +123,10 @@ var cb = {
         if (opt.onerr) { opt.onerr(); }
       }
     })
-    .then((txt) => { opt.onpass(txt); })
+    .then((txt) => {
+      if (opt.debug) { console.log(txt); }
+      opt.onpass(txt);
+    })
     .catch((err) => {
       cb.modal("AJAX ERROR", err.message);
       console.error(err);
@@ -141,6 +142,7 @@ var cb = {
   //  req : string, request
   //  data : object, data to send
   //  loading : boolean, show loading screen?
+  //  debug : boolean, optional debug mode. default false.
   //  passmsg : boolean false to supress toast "success message".
   //            boolean true to use server response message.
   //            string to override "OK" message.
@@ -151,9 +153,10 @@ var cb = {
   api : (opt) => {
     // (C1) INIT OPTIONS
     var options = {};
-    options.url = iwhhost.api + `${opt.mod}/${opt.req}/`;
+    options.url = cbhost.api + `${opt.mod}/${opt.req}/`;
     if (opt.data) { options.data = opt.data; }
     if (opt.loading) { options.loading = opt.loading; }
+    if (opt.debug) { options.debug = opt.debug; }
     if (opt.onerr) { options.onerr = opt.onerr; }
     if (opt.passmsg === undefined) { opt.passmsg = "OK"; }
     if (opt.nofail === undefined) { opt.nofail = false; }
@@ -169,12 +172,10 @@ var cb = {
       }
 
       // RESULTS FEEBACK
-      if (res.status=="E") { location.href = iwhhost.base + "login/"; }
+      if (res.status=="E") { location.href = cbhost.base + "login/"; }
       else if (res.status) {
         if (opt.passmsg !== false) {
-          cb.toast(1, "Success",
-            opt.passmsg===true ? res.message : opt.passmsg
-          );
+          cb.toast(1, "Success", opt.passmsg===true ? res.message : opt.passmsg);
         }
         if (opt.onpass) { opt.onpass(res); }
       } else {
@@ -192,19 +193,21 @@ var cb = {
   //  target : string, ID of target HTML element
   //  data : object, data to send
   //  loading : boolean, show loading screen? Default false.
+  //  debug : boolean, optional debug mode. default false.
   //  onload : optional function, do this on loaded
   //  onerr : optional function, do this on ajax error
   load : (opt) => {
     // (D1) INIT OPTIONS
     var options = {};
-    options.url = iwhhost.base + `a/${opt.page}/`;
+    options.url = cbhost.base + `a/${opt.page}/`;
     options.loading = opt.loading ? opt.loading : false;
+    if (opt.debug) { options.debug = opt.debug; }
     if (opt.onerr) { options.onerr = opt.onerr; }
     if (opt.data) { options.data = opt.data; }
 
     // (D2) ON AJAX LOAD
     options.onpass = (res) => {
-      if (res=="SE") { location.href = iwhhost.base + "login/"; }
+      if (res=="SE") { location.href = cbhost.base + "login/"; }
       else {
         document.getElementById(opt.target).innerHTML = res;
         if (opt.onload) { opt.onload(); }
@@ -222,7 +225,7 @@ var cb = {
       cb.api({
         mod : "session", req : "logout",
         nopass : true,
-        onpass : () => { location.href = iwhhost.base + "login/"; }
+        onpass : () => { location.href = cbhost.base + "login/"; }
       });
     } else {
       cb.modal("Please Confirm", "Sign off?", () => { cb.bye(true); });
@@ -233,8 +236,6 @@ var cb = {
 // (F) INIT INTERFACE
 window.addEventListener("load", () => {
   cb.loady = document.getElementById("cb-loading");
-  cb.toasty = new bootstrap.Toast(document.getElementById("cb-toast"), {
-    delay: 3500
-  });
+  cb.toasty = new bootstrap.Toast(document.getElementById("cb-toast"), { delay: 3500 });
   cb.mody = new bootstrap.Modal(document.getElementById("cb-modal"));
 });

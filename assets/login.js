@@ -6,7 +6,7 @@ function signin () {
       password : document.getElementById("user_password").value
     },
     passmsg : false,
-    onpass : () => { location.href = iwhhost.base; }
+    onpass : () => { location.href = cbhost.base; }
   });
   return false;
 }

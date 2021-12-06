@@ -13,17 +13,25 @@
     <link rel="stylesheet" href="<?=HOST_ASSETS?>bootstrap.min.css"/>
     <script defer src="<?=HOST_ASSETS?>bootstrap.bundle.min.js"></script>
 
-    <!-- (A3) GOOGLE MATERIAL ICONS -->
-    <!-- https://fonts.google.com/icons -->
+    <!-- (A3) BURN-IN CSS -->
     <style>
+    /* GOOGLE MATERIAL ICONS */
+    /* https://fonts.google.com/icons */
     @font-face{font-family:"Material Icons";font-style:normal;font-weight:400;src:url(<?=HOST_ASSETS?>maticon.woff2) format("woff2");}
     .mi{font-family:"Material Icons";font-weight:400;font-style:normal;font-size:24px;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:"liga";-webkit-font-smoothing:antialiased}
     .mi-big{font-size:32px}.mi-smol{font-size:18px}
+    /* SHOW-HIDE */
+    #cb-loading{transition:opacity .3s}.cb-hide{opacity:0;visibility:hidden;height:0}.cb-pg-hide{display:none}
+    /* NOW LOADING */
+    #cb-loading{width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:999;background:rgba(0,0,0,.7)}#cb-loading .spinner-border{width:80px;height:80px}
+    /* TOAST */
+    #cb-toast{z-index:99}
+    /* COMMON FORM */
+    .searchBar{padding:0 .8rem .5rem .8rem}.cb-grey,.searchBar{background-color:#efefef}.zebra .row:nth-child(odd){background-color:#f2f2f2}
     </style>
 
-    <!-- (A4) I WASH HERE CLIENT ENGINE -->
-    <link rel="stylesheet" href="<?=HOST_ASSETS?>cb.css"/>
-    <script>var iwhhost={base:"<?=HOST_BASE?>",assets:"<?=HOST_ASSETS?>",api:"<?=HOST_API_BASE?>"};</script>
+    <!-- (A4) JS ENGINE -->
+    <script>var cbhost={base:"<?=HOST_BASE?>",api:"<?=HOST_API_BASE?>",assets:"<?=HOST_ASSETS?>"};</script>
     <script async src="<?=HOST_ASSETS?>cb.js"></script>
   </head>
   <body>
