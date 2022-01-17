@@ -1,6 +1,6 @@
 <?php
-// (A) MUST BE SIGNED IN
-if ($_USER===false || $_USER["user_role"]!="A") {
+// (A) ADMIN ONLY
+if (!isset($_SESS["user"]) || $_SESS["user"]["user_role"]!="A") {
   $_CORE->respond("E", "No permission or session expired", null, null, 403);
 }
 
@@ -10,17 +10,27 @@ switch ($_REQ) {
     $_CORE->respond(0, "Invalid request", null, null, 400);
     break;
 
-  // (C) SAVE USER
+  // (C) GET USER
+  case "get":
+    $_CORE->autoGETAPI("Users", "get");
+    break;
+
+  // (D) GET OR SEARCH USERS
+  case "getAll":
+    $_CORE->autoGETAPI("Users", "getAll");
+    break;
+
+  // (E) SAVE USER
   case "save":
     $_CORE->autoAPI("Users", "save");
     break;
 
-  // (D) "FORCE SAVE" USER
+  // (F) IMPORT USER (ALWAYS OVERRIDE)
   case "saveO":
     $_CORE->autoAPI("Users", "saveO");
     break;
 
-  // (E) DELETE USER
+  // (G) "DELETE" USER
   case "del":
     $_CORE->autoAPI("Users", "del");
     break;

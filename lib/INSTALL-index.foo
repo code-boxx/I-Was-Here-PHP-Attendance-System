@@ -1,0 +1,23 @@
+<?php
+// (A) LOAD CORE ENGINE
+require __DIR__ . DIRECTORY_SEPARATOR . "lib" . DIRECTORY_SEPARATOR . "CORE-go.php";
+$_CORE->load("Route");
+
+// (B) AUTO RESOLVE ROUTE
+$_CORE->Route->run(
+  // (B1) REDIRECT TO LOGIN PAGE IF NOT SIGNED IN
+  function ($_PATH) {
+    global $_SESS;
+    if (!isset($_SESS["user"]) && ($_PATH!="login/" && $_PATH!="forgot/")) {
+      if (isset($_POST["ajax"])) { exit("E"); }
+      else {
+        header("Location: ".HOST_BASE."login");
+        exit();
+      }
+    }
+    return $_PATH ;
+  },
+
+  // (B2) PAGE PREFIX
+  (isset($_SESS["user"])) ? strtoupper(USER_ROLES[$_SESS["user"]["user_role"]]) : "PAGE"
+);

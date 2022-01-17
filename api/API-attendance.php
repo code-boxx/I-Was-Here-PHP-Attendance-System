@@ -1,6 +1,6 @@
 <?php
-// (A) MUST BE SIGNED IN
-if ($_USER===false || ($_USER["user_role"]!="A" && $_USER["user_role"]!="T")) {
+// (A) ADMIN ONLY
+if (!isset($_SESS["user"]) || ($_SESS["user"]["user_role"]!="A" && $_SESS["user"]["user_role"]!="T")) {
   $_CORE->respond("E", "No permission or session expired", null, null, 403);
 }
 

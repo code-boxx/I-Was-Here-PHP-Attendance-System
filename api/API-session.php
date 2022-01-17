@@ -6,13 +6,22 @@ switch ($_REQ) {
     break;
 
   // (B) LOGIN
-  case "logon": case "login":
-    $_CORE->autoAPI("Users", "inJWT");
+  case "login":
+    $_CORE->autoAPI("Users", "login");
     break;
 
-  // (C) LOGOFF
-  case "logoff": case "logout":
-    setcookie("jwt", null, -1, "/", HOST_NAME, API_HTTPS);
-    $_CORE->respond(1, "OK");
+  // (C) LOGOUT
+  case "logout":
+    $_CORE->autoAPI("Users", "logout");
+    break;
+
+  // (D) REQUEST PASSWORD RESET
+  case "forgotA":
+    $_CORE->autoAPI("Forgot", "request");
+    break;
+
+  // (E) PROCESS PASSWORD RESET
+  case "forgotB":
+    $_CORE->autoAPI("Forgot", "reset");
     break;
 }
