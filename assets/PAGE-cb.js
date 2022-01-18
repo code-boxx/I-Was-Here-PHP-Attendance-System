@@ -238,7 +238,7 @@ var cb = {
   }
 };
 
-// (F) INIT INTERFACE
+// (G) INIT INTERFACE
 window.addEventListener("load", () => {
   cb.loady = document.getElementById("cb-loading");
   cb.toasty = new bootstrap.Toast(document.getElementById("cb-toast"), { delay: 3500 });
