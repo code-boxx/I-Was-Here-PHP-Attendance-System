@@ -1,7 +1,34 @@
----
-## LICENSE
----
+## I WAS HERE
+I Was Here is a simple, free, and open-source PHP Student Attendance Management System. Not the best in the world, but it will help small schools to get started quickly without all the hassle.
+<br><br>
 
+
+## SCREENSHOTS
+<p float="left">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-1.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-2.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-3.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-4.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-5.png">
+</p><br>
+
+
+## INSTALLATION & DOCUMENTATION
+Just access `index.php` and walk through the installer.
+
+Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the documentation.
+<br><br>
+
+
+## REQUIREMENTS
+1) Not extensively tested, but should work with at least PHP 7.4.
+2) PHP MYSQL PDO extension.
+3) Apache server with MOD REWRITE enabled.
+4) "Grade A" browser.
+<br><br>
+
+
+## LICENSE
 Copyright by Code Boxx
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,24 +48,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
----
-## INSTALLATION
----
-Just access your website and walk through the installer.
-
-
----
-## REQUIREMENTS
----
-1) Not extensively tested, but should work with at least PHP 7.4.
-2) PHP PDO extension.
-3) Apache server with MOD REWRITE enabled.
-4) "Grade A" browser.
-
-
----
-## DOCUMENTATION
----
-Please visit https://code-boxx.com/i-was-here/ for the documentation.
