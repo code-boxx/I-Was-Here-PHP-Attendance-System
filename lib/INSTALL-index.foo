@@ -3,9 +3,14 @@
 require __DIR__ . DIRECTORY_SEPARATOR . "lib" . DIRECTORY_SEPARATOR . "CORE-go.php";
 $_CORE->load("Route");
 
-// (B) AUTO RESOLVE ROUTE
+// (B) MANUAL ROUTES
+$_CORE->Route->set([
+  "account/" => "PAGE-my-account.php"
+]);
+
+// (C) AUTO RESOLVE ROUTE
 $_CORE->Route->run(
-  // (B1) REDIRECT TO LOGIN PAGE IF NOT SIGNED IN
+  // (C1) REDIRECT TO LOGIN PAGE IF NOT SIGNED IN
   function ($_PATH) {
     global $_SESS;
     if (!isset($_SESS["user"]) && ($_PATH!="login/" && $_PATH!="forgot/")) {
@@ -18,6 +23,6 @@ $_CORE->Route->run(
     return $_PATH ;
   },
 
-  // (B2) PAGE PREFIX
+  // (C2) PAGE PREFIX
   (isset($_SESS["user"])) ? strtoupper(USER_ROLES[$_SESS["user"]["user_role"]]) : "PAGE"
 );

@@ -1,0 +1,10 @@
+.selWrap {
+  width: 100%;
+  position: relative;
+}
+.selSuggest {
+  position: absolute;
+  top: 100%;
+  z-index: 9;
+}
+.selWrap .form-control { height: 100%; }

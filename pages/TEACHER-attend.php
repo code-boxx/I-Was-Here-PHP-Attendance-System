@@ -23,8 +23,8 @@ $course = $_CORE->Courses->get($class["course_id"]); ?>
   </div>
 
   <!-- (B2) ADD USER TO CLASS -->
-  <form class="d-flex align-items-stretch p-3" onsubmit="return att.add()">
-    <input type="email" required id="att-add" required placeholder="Email" class="form-control form-control-sm"/>
+  <form class="d-flex align-items-stretch p-3" onsubmit="return attend.add()">
+    <input type="email" required id="attend-add" required placeholder="Email" class="form-control form-control-sm"/>
     <button class="btn btn-primary">
       <span class="mi">add</span>
     </button>

@@ -12,7 +12,15 @@ var attend = {
         cid : classes.id, // COURSE ID
         id : id // CLASS ID
       },
-      onload : () => { attend.list(); }
+      onload : () => {
+        selector.attach({
+          field : document.getElementById("attend-add"),
+          mod : "attendance", req : "search",
+          data : { role : "S" },
+          pick : (d, v) => { attend.add(); }
+        });
+        attend.list();
+      }
     });
   },
 

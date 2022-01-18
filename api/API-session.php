@@ -24,4 +24,9 @@ switch ($_REQ) {
   case "forgotB":
     $_CORE->autoAPI("Forgot", "reset");
     break;
+
+  // (F) UPDATE "MY ACCOUNT"
+  case "saveL":
+    $_CORE->autoAPI("Users", "saveL");
+    break;
 }

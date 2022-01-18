@@ -8,7 +8,14 @@ var cuser = {
       page : "course/user",
       target : "cb-page-2",
       data : { id : id },
-      onload : () => { cuser.list(); }
+      onload : () => {
+        selector.attach({
+          field : document.getElementById("course-user-add"),
+          mod : "attendance", req : "search",
+          pick : (d, v) => { cuser.add(); }
+        });
+        cuser.list();
+      }
     });
   },
 

@@ -12,6 +12,11 @@ var attend = {
       data : { id : id },
       onload : () => {
         attend.cid = document.getElementById("class_course").value;
+        selector.attach({
+          field : document.getElementById("attend-add"),
+          mod : "attendance", req : "search",
+          pick : (d, v) => { attend.add(); }
+        });
         attend.list();
       }
     });
@@ -31,7 +36,7 @@ var attend = {
 
   // (C) MANUALLY ADD A STUDENT
   add : () => {
-    var field = document.getElementById("att-add");
+    var field = document.getElementById("attend-add");
     cb.api({
       mod : "attendance",
       req : "attend",

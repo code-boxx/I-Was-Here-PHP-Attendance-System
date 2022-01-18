@@ -1,5 +1,5 @@
 <?php
-// (A) ADMIN ONLY
+// (A) ADMIN & TEACHERS ONLY
 if (!isset($_SESS["user"]) || ($_SESS["user"]["user_role"]!="A" && $_SESS["user"]["user_role"]!="T")) {
   $_CORE->respond("E", "No permission or session expired", null, null, 403);
 }
@@ -23,5 +23,10 @@ switch ($_REQ) {
   // (E) SAVE ATTENDANCE (FOR CLASS)
   case "save":
     $_CORE->autoAPI("Classes", "attendance");
+    break;
+
+  // (F) SEARCH USER - FOR AUTOCOMPLETE
+  case "search":
+    $_CORE->autoGETAPI("Users", "search");
     break;
 }

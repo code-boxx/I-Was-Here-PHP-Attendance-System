@@ -1,5 +1,7 @@
 <?php
 $_PMETA = ["load" => [
+  ["l", HOST_ASSETS."CB-selector.css"],
+  ["s", HOST_ASSETS."CB-selector.js", "defer"],
   ["s", HOST_ASSETS."TEACHER-classes.js", "defer"],
   ["s", HOST_ASSETS."TEACHER-attend.js", "defer"]
 ]];

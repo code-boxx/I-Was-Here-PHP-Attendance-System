@@ -2,7 +2,7 @@
 <nav class="bg-white border mb-3">
 <div class="d-flex align-items-center p-3">
   <div class="flex-grow-1">
-    <h4>Import Users</h4>
+    <h3>IMPORT USERS</h3>
     <small>Existing users will be overridden!</small>
   </div>
   <button class="btn btn-danger" onclick="cb.page(1)">

@@ -2,21 +2,36 @@
 const cName = "iwashere",
 cFiles = [
   // (A1) BOOTSTRAP
- "assets/bootstrap.bundle.min.js",
- "assets/bootstrap.bundle.min.js.map",
- "assets/bootstrap.min.css",
- "assets/bootstrap.min.css.map",
- // (A2) ICONS + IMAGES
- "assets/favicon.png",
- "assets/ico-512.png",
- "assets/desk.jpg",
- "assets/question.jpg",
- // (A3) COMMON INTERFACE
- "assets/PAGE-cb.js",
- "assets/maticon.woff2",
- // (A4) PAGES
- "assets/PAGE-login.js",
- "assets/PAGE-forgot.js"
+  "assets/bootstrap.bundle.min.js",
+  "assets/bootstrap.bundle.min.js.map",
+  "assets/bootstrap.min.css",
+  "assets/bootstrap.min.css.map",
+  // (A2) ICONS + IMAGES
+  "assets/favicon.png",
+  "assets/ico-512.png",
+  "assets/desk.jpg",
+  "assets/question.jpg",
+  // (A3) COMMON INTERFACE
+  "assets/CB-selector.css",
+  "assets/CB-selector.js",
+  "assets/PAGE-cb.js",
+  "assets/maticon.woff2",
+  // (A4) PAGES
+  "assets/PAGE-login.js",
+  "assets/PAGE-forgot.js",
+  // (A5) ADMIN
+  "assets/ADMIN-course.js",
+  "assets/ADMIN-course-attend.js",
+  "assets/ADMIN-course-class.js",
+  "assets/ADMIN-course-user.js",
+  "assets/ADMIN-course-user-import.js",
+  "assets/ADMIN-users.js",
+  "assets/ADMIN-users-import.js",
+  // (A6) TEACHER
+  "assets/TEACHER-attend.js",
+  "assets/TEACHER-classes.js",
+  // (A7) STUDENT
+  "assets/STUDENT-class.js"
 ];
 
 // (B) CREATE/INSTALL CACHE

@@ -230,6 +230,11 @@ var cb = {
         onpass : () => { location.href = cbhost.base + "login/"; }
       });
     });
+  },
+
+  // (F) PASSWORD/HASH STRENGTH CHECKER
+  checker : (hash) => {
+    return /^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i.test(hash);
   }
 };
 

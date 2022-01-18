@@ -130,8 +130,11 @@
 
       <!-- (C3) RIGHT ITEMS -->
       <div class="d-flex align-items-center">
-        <button class="btn btn-danger btn-sm" onclick="cb.bye()">
-          <span class="mi">logout</span>
+        <a class="btn btn-primary btn-sm me-2 mi" href="<?=HOST_BASE?>account">
+          person
+        </a>
+        <button class="btn btn-danger btn-sm mi" onclick="cb.bye()">
+          logout
         </button>
       </div>
     </div></nav>

@@ -1,6 +1,7 @@
 <!-- (A) NAVIGATION -->
-<nav class="navbar cb-grey"><div class="container-fluid">
-  <h4>Import Users Into Course</h4>
+<nav class="bg-white border mb-3">
+<div class="d-flex align-items-center p-3">
+  <h3 class="flex-grow-1">IMPORT USERS INTO COURSE</h3>
   <div class="d-flex">
     <button class="btn btn-danger" onclick="cb.page(2)">
       <span class="mi">reply</span>
