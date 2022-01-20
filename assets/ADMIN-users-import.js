@@ -28,7 +28,7 @@ var uin = {
         csv.forEach(r => {
           r = r.split(",");
           row = document.createElement("div");
-          row.className = "d-flex align-items-center p-2";
+          row.className = "d-flex align-items-center border p-2";
           valid = true;
           for (let i=0; i<4; i++) {
             if (r[i]=="") { valid = false; }

@@ -30,7 +30,7 @@ ini_set("log_errors", 0);
 define("ERR_SHOW", true);
 
 // (D) JSON WEB TOKEN
-define("JWT_SECRET", "7t98AVx~_DzVP9i~Z~OMKCcneRo7Knt2nF8=7fgo6F98n7lC"); // CHANGED BY INSTALLER
+define("JWT_SECRET", "!OcjniAcVtBpbCvSkedcdLkx!b~11SDMhilyMA1Q0gYnapFA"); // CHANGED BY INSTALLER
 define("JWT_ISSUER", "localhost"); // CHANGED BY INSTALLER
 define("JWT_ALGO", "HS256");
 define("JWT_EXPIRE", 0); // in seconds, 0 for none
@@ -50,11 +50,7 @@ define("PATH_API", PATH_BASE . "api" . DIRECTORY_SEPARATOR);
 define("PATH_ASSETS", PATH_BASE . "assets" . DIRECTORY_SEPARATOR);
 define("PATH_PAGES", PATH_BASE . "pages" . DIRECTORY_SEPARATOR);
 
-// (G) EMAIL
-define("EMAIL_FROM", "sys@site.com"); // CHANGED BY INSTALLER
-
-// (H) MISC
-define("PAGE_PER", 20); // 20 entries per page by default
+// (G) MISC
 define("USER_ROLES", [
   "A" => "Admin", "T" => "Teacher", "S" => "Student", "I" => "Inactive"
 ]);

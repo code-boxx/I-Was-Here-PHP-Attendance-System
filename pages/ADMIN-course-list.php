@@ -4,7 +4,7 @@ $courses = $_CORE->autoCall("Courses", "getAll");
 
 // (B) DRAW COURSES LIST
 if (is_array($courses["data"])) { foreach ($courses["data"] as $id=>$c) { ?>
-<div class="d-flex align-items-center p-2">
+<div class="d-flex align-items-center border p-2">
   <div class="flex-grow-1">
     <strong>[<?=$c["course_code"]?>] <?=$c["course_name"]?></strong><br>
     <small><?=$c["course_start"]?> TO <?=$c["course_end"]?></small><br>
@@ -26,7 +26,7 @@ if (is_array($courses["data"])) { foreach ($courses["data"] as $id=>$c) { ?>
   </div>
 </div>
 <?php }} else { ?>
-<div class="d-flex align-items-center p-2">No courses found.</div>
+<div class="d-flex align-items-center border p-2">No courses found.</div>
 <?php }
 
 // (C) PAGINATION

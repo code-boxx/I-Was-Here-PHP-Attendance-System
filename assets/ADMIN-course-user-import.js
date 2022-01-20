@@ -26,7 +26,7 @@ var cuserin = {
         csv = reader.result.split("\r\n");
         csv.forEach(r => {
           row = document.createElement("div");
-          row.className = "d-flex align-items-center p-2";
+          row.className = "d-flex align-items-center border p-2";
           col = document.createElement("div");
           col.className = "col";
           col.innerHTML = r;
@@ -46,7 +46,7 @@ var cuserin = {
         // START BUTTON
         if (hasValid) {
           row = document.createElement("div");
-          row.className = "d-flex align-items-center p-2";
+          row.className = "d-flex align-items-center border p-2";
           col = document.createElement("div");
           col.innerHTML = "<button id='in-user-go' class='btn btn-primary' onclick='cuserin.go(1)'>Start Import</button>";
           row.appendChild(col);

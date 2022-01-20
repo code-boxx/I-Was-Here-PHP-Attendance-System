@@ -2,10 +2,9 @@
 // (A) GET COURSE
 $course = $_CORE->autoCall("Courses", "get"); ?>
 <!-- (B) NAVIGATION -->
-<nav class="bg-white border mb-3">
-<div class="d-flex align-items-center p-3">
+<div class="d-flex align-items-center mb-3">
   <div class="flex-grow-1">
-    <h4>COURSE CLASSES</h4>
+    <h3>COURSE CLASSES</h3>
     <small>
       [<?=$course["course_code"]?>] <?=$course["course_name"]?>
     </small>
@@ -17,7 +16,6 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
     <span class="mi">add</span>
   </button>
 </div>
-</nav>
 
 <!-- (C) CLASSES LIST -->
-<div id="class-list" class="bg-white border zebra my-4"></div>
+<div id="class-list" class="zebra bg-white border my-4"></div>

@@ -7,19 +7,19 @@ if ($edit) {
 
 // (B) COURSE FORM ?>
 <form onsubmit="return course.save()">
-  <h3 class="mb-4"><?=$edit?"EDIT":"ADD"?> COURSE</h3>
+  <h3 class="mb-3"><?=$edit?"EDIT":"ADD"?> COURSE</h3>
   <input type="hidden" id="course_id" value="<?=isset($course)?$course["course_id"]:""?>"/>
 
-  <div class="bg-white border p-4 mb-4">
-    <h5 class="mb-4">BASIC COURSE INFORMATION</h5>
-    <div class="input-group mb-4">
+  <div class="bg-white border p-4 mb-3">
+    <h5 class="mb-3">BASIC COURSE INFORMATION</h5>
+    <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">code</span>
       </div>
       <input type="text" class="form-control" id="course_code" required value="<?=isset($course)?$course["course_code"]:""?>" placeholder="Course Code"/>
     </div>
 
-    <div class="input-group mb-4">
+    <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">format_quote</span>
       </div>
@@ -34,9 +34,9 @@ if ($edit) {
     </div>
   </div>
 
-  <div class="bg-white border p-4 mb-4">
-    <h5 class="mb-4">START-END DATE</h5>
-    <div class="input-group mb-4">
+  <div class="bg-white border p-4 mb-3">
+    <h5 class="mb-3">START-END DATE</h5>
+    <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">today</span>
       </div>

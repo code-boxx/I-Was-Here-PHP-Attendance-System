@@ -5,7 +5,8 @@ $_CORE->load("Route");
 
 // (B) MANUAL ROUTES
 $_CORE->Route->set([
-  "account/" => "PAGE-my-account.php"
+  "account/" => "PAGE-my-account.php",
+  "about/" => "PAGE-about.php"
 ]);
 
 // (C) AUTO RESOLVE ROUTE

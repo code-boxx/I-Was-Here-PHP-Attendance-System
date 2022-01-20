@@ -5,7 +5,7 @@ $classes = $_CORE->autoCall("Classes", "getByTeacher");
 
 // (B) DRAW CLASSES LIST
 if (is_array($classes["data"])) { foreach ($classes["data"] as $id=>$c) { ?>
-<div class="d-flex align-items-center p-2">
+<div class="d-flex align-items-center border p-2">
   <div class="flex-grow-1">
     <strong><?=$c["class_date"]?></strong><br>
     [<?=$c["course_code"]?>] <?=$c["course_name"]?><br>
@@ -16,7 +16,7 @@ if (is_array($classes["data"])) { foreach ($classes["data"] as $id=>$c) { ?>
   </button>
 </div>
 <?php }} else { ?>
-<div class="d-flex align-items-center p-2">No classes found.</div>
+<div class="d-flex align-items-center border p-2">No classes found.</div>
 <?php }
 
 // (C) PAGINATION

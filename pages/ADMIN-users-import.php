@@ -1,6 +1,5 @@
 <!-- (A) NAVIGATION -->
-<nav class="bg-white border mb-3">
-<div class="d-flex align-items-center p-3">
+<div class="d-flex align-items-center">
   <div class="flex-grow-1">
     <h3>IMPORT USERS</h3>
     <small>Existing users will be overridden!</small>
@@ -9,11 +8,10 @@
     <span class="mi">reply</span>
   </button>
 </div>
-</nav>
 
 <!-- (B) USERS IMPORT LIST -->
-<div id="user-in-list" class="bg-white border zebra my-4">
-  <div class="d-flex align-items-center p-2">
+<div id="user-in-list" class="bg-white zebra my-4">
+  <div class="d-flex align-items-center border p-2">
     <div class="col fw-bold">Name</div>
     <div class="col fw-bold">Email</div>
     <div class="col fw-bold">Role</div>
