@@ -19,14 +19,16 @@ cFiles = [
   // (A4) PAGES
   "assets/PAGE-login.js",
   "assets/PAGE-forgot.js",
+  "assets/PAGE-my-account.js",
   // (A5) ADMIN
-  "assets/ADMIN-course.js",
   "assets/ADMIN-course-attend.js",
   "assets/ADMIN-course-class.js",
-  "assets/ADMIN-course-user.js",
   "assets/ADMIN-course-user-import.js",
-  "assets/ADMIN-users.js",
+  "assets/ADMIN-course-user.js",
+  "assets/ADMIN-course.js",
+  "assets/ADMIN-settings.js",
   "assets/ADMIN-users-import.js",
+  "assets/ADMIN-users.js",
   // (A6) TEACHER
   "assets/TEACHER-attend.js",
   "assets/TEACHER-classes.js",

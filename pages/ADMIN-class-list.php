@@ -11,14 +11,14 @@ if (is_array($classes["data"])) { foreach ($classes["data"] as $id=>$c) { ?>
     <small><?=$c["class_desc"]?></small>
   </div>
   <div>
-    <button class="btn btn-danger btn-sm" onclick="classes.del(<?=$id?>)">
-      <span class="mi">delete</span>
+    <button class="btn btn-danger btn-sm mi" onclick="classes.del(<?=$id?>)">
+      delete
     </button>
-    <button class="btn btn-primary btn-sm" onclick="attend.show(<?=$id?>)">
-      <span class="mi">checklist</span>
+    <button class="btn btn-primary btn-sm mi" onclick="attend.show(<?=$id?>)">
+      checklist
     </button>
-    <button class="btn btn-primary btn-sm" onclick="classes.addEdit(<?=$id?>)">
-      <span class="mi">edit</span>
+    <button class="btn btn-primary btn-sm mi" onclick="classes.addEdit(<?=$id?>)">
+      edit
     </button>
   </div>
 </div>

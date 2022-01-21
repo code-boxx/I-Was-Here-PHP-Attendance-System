@@ -12,12 +12,12 @@ if (is_array($users["data"])) { foreach ($users["data"] as $id=>$u) { ?>
   </div>
   <div>
     <?php if ($u["user_role"]!="I") { ?>
-    <button class="btn btn-danger btn-sm" onclick="usr.del(<?=$id?>)">
-      <span class="mi">delete</span>
+    <button class="btn btn-danger btn-sm mi" onclick="usr.del(<?=$id?>)">
+      delete
     </button>
     <?php } ?>
-    <button class="btn btn-primary btn-sm" onclick="usr.addEdit(<?=$id?>)">
-      <span class="mi">edit</span>
+    <button class="btn btn-primary btn-sm mi" onclick="usr.addEdit(<?=$id?>)">
+      edit
     </button>
   </div>
 </div>

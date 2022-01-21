@@ -9,20 +9,20 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
       [<?=$course["course_code"]?>] <?=$course["course_name"]?>
     </small>
   </div>
-  <label class="btn btn-primary me-1" for="course-user-import">
-    <span class="mi">upload</span>
+  <label class="btn btn-primary me-1 mi" for="course-user-import">
+    upload
   </label>
   <input type="file" class="d-none" accept=".csv" id="course-user-import" onchange="cuserin.init()"/>
-  <button class="btn btn-danger" onclick="cb.page(1)">
-    <span class="mi">reply</span>
+  <button class="btn btn-danger mi" onclick="cb.page(1)">
+    reply
   </button>
 </div>
 
 <!-- (B) ADD SINGLE USER TO COURSE -->
 <form class="d-flex align-items-stretch bg-white border mb-3 p-3" onsubmit="return cuser.add()">
   <input type="email" required id="course-user-add" placeholder="Student/Teacher Email" class="form-control form-control-sm"/>
-  <button class="btn btn-primary">
-    <span class="mi">add</span>
+  <button class="btn btn-primary mi">
+    add
   </button>
 </form>
 

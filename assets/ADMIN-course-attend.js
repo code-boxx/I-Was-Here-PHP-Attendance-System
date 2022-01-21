@@ -59,18 +59,17 @@ var attend = {
   // (C) TOGGLE ATTENDANCE STATUS
   toggle : (uid) => {
     // (C1) GET BUTTON
-    let btn = document.getElementById("att"+uid),
-        ico = btn.getElementsByTagName("span")[0];
+    let btn = document.getElementById("att"+uid);
 
     // (C2) TOGGLE STATUS
     if (btn.classList.contains("btn-primary")) {
       btn.classList.remove("btn-primary");
       btn.classList.add("btn-danger");
-      ico.innerHTML = "close";
+      btn.innerHTML = "close";
     } else {
       btn.classList.remove("btn-danger");
       btn.classList.add("btn-primary");
-      ico.innerHTML = "done";
+      btn.innerHTML = "done";
     }
   },
 

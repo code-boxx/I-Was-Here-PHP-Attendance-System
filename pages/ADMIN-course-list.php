@@ -11,17 +11,17 @@ if (is_array($courses["data"])) { foreach ($courses["data"] as $id=>$c) { ?>
     <small><?=$c["course_desc"]?></small>
   </div>
   <div>
-    <button class="btn btn-danger btn-sm" onclick="course.del(<?=$id?>)">
-      <span class="mi">delete</span>
+    <button class="btn btn-danger btn-sm mi" onclick="course.del(<?=$id?>)">
+      delete
     </button>
-    <button class="btn btn-primary btn-sm" onclick="classes.show(<?=$id?>)">
-      <span class="mi">class</span>
+    <button class="btn btn-primary btn-sm mi" onclick="classes.show(<?=$id?>)">
+      class
     </button>
-    <button class="btn btn-primary btn-sm" onclick="cuser.show(<?=$id?>)">
-      <span class="mi">people</span>
+    <button class="btn btn-primary btn-sm mi" onclick="cuser.show(<?=$id?>)">
+      people
     </button>
-    <button class="btn btn-primary btn-sm" onclick="course.addEdit(<?=$id?>)">
-      <span class="mi">edit</span>
+    <button class="btn btn-primary btn-sm mi" onclick="course.addEdit(<?=$id?>)">
+      edit
     </button>
   </div>
 </div>

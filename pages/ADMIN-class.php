@@ -9,11 +9,11 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
       [<?=$course["course_code"]?>] <?=$course["course_name"]?>
     </small>
   </div>
-  <button class="btn btn-danger me-1" onclick="cb.page(1)">
-    <span class="mi">reply</span>
+  <button class="btn btn-danger me-1 mi" onclick="cb.page(1)">
+    reply
   </button>
-  <button class="btn btn-primary" onclick="classes.addEdit()">
-    <span class="mi">add</span>
+  <button class="btn btn-primary mi" onclick="classes.addEdit()">
+    add
   </button>
 </div>
 

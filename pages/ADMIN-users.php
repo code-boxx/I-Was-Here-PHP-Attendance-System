@@ -7,12 +7,12 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <!-- (A) HEADER -->
 <div class="d-flex align-items-center mb-3">
   <h3 class="flex-grow-1">MANAGE USERS</h3>
-  <label class="btn btn-primary me-1" for="cu-import">
-    <span class="mi">upload</span>
+  <label class="btn btn-primary me-1 mi" for="cu-import">
+    upload
   </label>
   <input type="file" class="d-none" accept=".csv" id="cu-import" onchange="uin.init()"/>
-  <button class="btn btn-primary" onclick="usr.addEdit()">
-    <span class="mi">add</span>
+  <button class="btn btn-primary mi" onclick="usr.addEdit()">
+    add
   </button>
 </div>
 
@@ -25,8 +25,8 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <option value="<?=$code?>"><?=$role?></option>
     <?php } ?>
   </select>
-  <button class="btn btn-primary">
-    <span class="mi">search</span>
+  <button class="btn btn-primary mi">
+    search
   </button>
 </form>
 

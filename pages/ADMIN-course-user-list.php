@@ -11,8 +11,8 @@ if (is_array($users["data"])) { foreach ($users["data"] as $id=>$u) { ?>
     <small><?=$u["user_email"]?></small>
   </div>
   <div>
-    <button class="btn btn-danger btn-sm" onclick="cuser.del(<?=$id?>)">
-      <span class="mi">delete</span>
+    <button class="btn btn-danger btn-sm mi" onclick="cuser.del(<?=$id?>)">
+      delete
     </button>
   </div>
 </div>

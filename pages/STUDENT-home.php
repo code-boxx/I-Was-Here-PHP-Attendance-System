@@ -15,8 +15,8 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <option value="0">On</option>
   </select>
   <input type="date" id="search-date" class="form-control form-control-sm" disabled value="<?=date("Y-m-d")?>"/>
-  <button class="btn btn-primary">
-    <span class="mi">search</span>
+  <button class="btn btn-primary mi">
+    search
   </button>
 </form>
 

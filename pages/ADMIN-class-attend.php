@@ -22,8 +22,8 @@ $class = $_CORE->autoCall("Classes", "get"); ?>
 <!-- (C) ADD USER TO CLASS -->
 <form class="d-flex align-items-stretch bg-white border mb-3 p-2" onsubmit="return attend.add()">
   <input type="email" required id="attend-add" required placeholder="Email" class="form-control form-control-sm"/>
-  <button class="btn btn-primary">
-    <span class="mi">add</span>
+  <button class="btn btn-primary mi">
+    add
   </button>
 </form>
 

@@ -4,8 +4,8 @@
     <h3>IMPORT USERS</h3>
     <small>Existing users will be overridden!</small>
   </div>
-  <button class="btn btn-danger" onclick="cb.page(1)">
-    <span class="mi">reply</span>
+  <button class="btn btn-danger mi" onclick="cb.page(1)">
+    reply
   </button>
 </div>
 

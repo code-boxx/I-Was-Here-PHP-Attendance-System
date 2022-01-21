@@ -11,8 +11,8 @@ if (is_array($classes["data"])) { foreach ($classes["data"] as $id=>$c) { ?>
     [<?=$c["course_code"]?>] <?=$c["course_name"]?><br>
     <small><?=$c["class_desc"]?></small>
   </div>
-  <button class="btn btn-primary btn-sm" onclick="attend.show(<?=$id?>)">
-    <span class="mi">checklist</span>
+  <button class="btn btn-primary btn-sm mi" onclick="attend.show(<?=$id?>)">
+    checklist
   </button>
 </div>
 <?php }} else { ?>

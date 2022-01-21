@@ -6,8 +6,8 @@ $students = $_CORE->autoCall("Classes", "getStudents");
 if (is_array($students)) {
   foreach ($students as $id=>$s) { ?>
   <div class="d-flex align-items-center border p-2">
-    <button id="att<?=$id?>" class="me-2 btn btn-<?=isset($s["a"])?"primary":"danger"?> btn-sm" value="<?=$id?>" onclick="attend.toggle(<?=$id?>)">
-      <span class="mi"><?=isset($s["a"])?"done":"close"?></span>
+    <button id="att<?=$id?>" class="mi me-2 btn btn-<?=isset($s["a"])?"primary":"danger"?> btn-sm" value="<?=$id?>" onclick="attend.toggle(<?=$id?>)">
+      <?=isset($s["a"])?"done":"close"?>
     </button>
     <?=$s["user_name"]?> | <?=$s["user_email"]?>
   </div>
