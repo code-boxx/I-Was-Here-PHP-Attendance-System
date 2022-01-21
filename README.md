@@ -22,7 +22,7 @@ Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the documentat
 
 ## UPDATING
 * If your existing copy has an `options` table - Just override all the existing files and access `index.php`. The installer will take care of database updates (if any).
-* If not – Manually import the `options` table from `SQL-storage-boxx.sql`, create a `STOREBOXX_VER` entry with value of `0` and group `0`. Thereafter, just copy the new files and let the installer do the magic.
+* If not – Manually import the `options` table from `SQL-iwashere.sql.sql`, create a `IWH_VER` entry with value of `0` and group `0`. Thereafter, just copy the new files and let the installer do the magic.
 <br><br>
 
 
