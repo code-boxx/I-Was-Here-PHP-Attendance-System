@@ -20,6 +20,12 @@ Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the documentat
 <br><br>
 
 
+## UPDATING
+* If your existing copy has an `options` table - Just override all the existing files and access `index.php`. The installer will take care of database updates (if any).
+* If not – Manually import the `options` table from `SQL-storage-boxx.sql`, create a `STOREBOXX_VER` entry with value of `0` and group `0`. Thereafter, just copy the new files and let the installer do the magic.
+<br><br>
+
+
 ## REQUIREMENTS
 1) Not extensively tested, but should work with at least PHP 7.4.
 2) PHP MYSQL PDO extension.
