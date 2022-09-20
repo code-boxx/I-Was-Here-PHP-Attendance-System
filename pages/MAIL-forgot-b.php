@@ -1,5 +1,3 @@
 <html><body>
-  <p>
-    Your new password is <strong><?=$password?></strong>.
-  </p>
+  Your new password is <strong><?=$password?></strong>
 </body></html>

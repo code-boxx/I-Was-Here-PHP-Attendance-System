@@ -56,7 +56,6 @@ class Forgot extends Core {
       "subject" => "Password Reset",
       "template" => PATH_PAGES . "MAIL-forgot-a.php",
       "vars" => [
-        "name" => $user["user_name"],
         "link" => HOST_BASE."forgot?i={$user["user_id"]}&h={$hash}"
       ]
     ]);

@@ -10,7 +10,7 @@ var selector = {
   //  req : api request to fetch data from
   //  data : object, additional data to send
   //  pick : function to call on pick
-  attach : (instance) => {
+  attach : instance => {
     // (B1) GENERATE HTML
     instance.wrapper = document.createElement("div"); // wrapper
     instance.suggest = document.createElement("ul"); // suggestion box
@@ -45,12 +45,11 @@ var selector = {
 
       // (B5-3) API CALL
       cb.api({
-        mod : instance.mod,
-        req : instance.req,
+        mod : instance.mod, req : instance.req,
         data : data,
         loading : false,
         passmsg : false,
-        onpass : (res) => {
+        onpass : res => {
           // (B5-4) NO RESULTS
           if (res.data==null) { instance.close(); }
 
@@ -76,7 +75,7 @@ var selector = {
     };
 
     // (B6) LISTEN TO KEY PRESS
-    instance.field.addEventListener("keyup", (evt) => {
+    instance.field.addEventListener("keyup", evt => {
       // (B6-1) CLEAR OLD TIMER & SUGGESTION BOX
       instance.close();
 
@@ -88,7 +87,7 @@ var selector = {
   },
 
   // (C) AUTOCLOSE SUGGESTION BOX ON CLICK ELSEWHERE
-  checkclose : (evt) => { if (selector.open != null) {
+  checkclose : evt => { if (selector.open != null) {
     let instance = selector.open;
     if (instance.wrapper.contains(evt.target)==false &&
         instance.field.contains(evt.target)==false) {

@@ -14,14 +14,14 @@ class Users extends Core {
   // (B) ADD OR UPDATE USER
   //  $name : user name
   //  $email : user email
-  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
   //  $password : user password
+  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
   //  $id : user id (for updating only)
-  function save ($name, $email, $role, $password, $id=null) {
+  function save ($name, $email, $password, $role="S", $id=null) {
     // (B1) DATA SETUP + PASSWORD CHECK
     if (!$this->checker($password)) { return false; }
-    $fields = ["user_name", "user_email", "user_role", "user_password"];
-    $data = [$name, $email, $role, password_hash($password, PASSWORD_DEFAULT)];
+    $fields = ["user_name", "user_email", "user_password", "user_role"];
+    $data = [$name, $email, password_hash($password, PASSWORD_DEFAULT), $role];
 
     // (B2) ADD/UPDATE USER
     if ($id===null) {
@@ -33,32 +33,22 @@ class Users extends Core {
     return true;
   }
 
-  // (C) SAVE USER (ALWAYS OVERRIDE, FOR MASS IMPORT)
+  // (C) IMPORT USER (OVERRIDES OLD ENTRY)
   //  $name : user name
   //  $email : user email
-  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
   //  $password : user password
-  function saveO ($name, $email, $role, $password) {
-    // (C1) PASSWORD CHECK
-    if (!$this->checker($password)) { return false; }
-
-    // (C2) GET USER
+  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
+  function import ($name, $email, $password, $role="S") {
+    // (C1) GET USER
     $user = $this->get($email);
 
-    // (C3) UPDATE OR INSERT
-    $fields = ["user_name", "user_email", "user_role", "user_password"];
-    $data = [$name, $email, $role, password_hash($password, PASSWORD_DEFAULT)];
-    if (is_array($user)) {
-      $data[] = $user["user_id"];
-      $this->DB->update("users", $fields, "`user_id`=?", $data);
-    } else {
-      $this->DB->insert("users", $fields, $data);
-    }
+    // (C2) UPDATE OR INSERT
+    $this->save($name, $email, $password, $role, is_array($user)?$user["user_id"]:null);
     return true;
   }
 
-  // (D) "LIMITED SAVE" - FOR MY ACCOUNT
-  function saveL ($password) {
+  // (D) UPDATE ACCOUNT (LIMITED SAVE)
+  function update ($name, $email, $password) {
     // (D1) MUST BE SIGNED IN
     global $_SESS;
     if (!isset($_SESS["user"])) {
@@ -66,19 +56,18 @@ class Users extends Core {
       return false;
     }
 
-    // (D2) UPDATE ACCOUNT
-    return $this->save(
-      $_SESS["user"]["user_name"], $_SESS["user"]["user_email"],
-      $_SESS["user"]["user_role"], $password, $_SESS["user"]["user_id"]
+    // (D2) UPDATE DATABASE
+    $this->DB->update("users",
+      ["user_name", "user_email", "user_password"],
+      "`user_id`=?", [$name, $email, password_hash($password, PASSWORD_DEFAULT), $_SESS["user"]["user_id"]]
     );
+    return true;
   }
 
   // (E) DELETE USER (NON-DESTRUCTIVE)
   //  $id : user id
   function del ($id) {
-    $this->DB->update("users",
-      ["user_role"], "`user_id`=?", ["I", $id]
-    );
+    $this->DB->update("users", ["user_role"], "`user_id`=?", ["I", $id]);
     return true;
   }
 
@@ -94,14 +83,19 @@ class Users extends Core {
   // (G) SEARCH USER - FOR AUTOCOMPLETE USE
   //  $search : user name or email
   //  $role : restrict role
-  function search ($search, $role=null) {
-    $sql = "SELECT * FROM `users` WHERE `user_name` LIKE ? OR `user_email` LIKE ?";
+  function autocomplete ($search, $role=null) {
+    $sql = "SELECT * FROM `users` WHERE (`user_name` LIKE ? OR `user_email` LIKE ?)";
     $data = ["%$search%", "%$search%"];
+    if ($role != null) {
+      $sql .= " AND `user_role`=?";
+      $data[] = $role;
+    }
+    $sql .= " LIMIT 5";
     $this->DB->query($sql, $data);
     $result = [];
     while ($row = $this->DB->stmt->fetch()) {
       $result[] = [
-        "d" => $row["user_name"],
+        "d" => "{$row["user_name"]} ({$row["user_email"]})",
         "v" => $row["user_email"]
       ];
     }
@@ -114,34 +108,29 @@ class Users extends Core {
   //  $page : optional, current page number
   function getAll ($search=null, $role=null, $page=null) {
     // (H1) PARITAL USERS SQL + DATA
-    $sql = "FROM `users`";
-    $data = null;
-    if ($search != null || $role != null) {
-      $sql .= " WHERE";
-      $data = [];
-      if ($search != null) {
-        $sql .= " (`user_name` LIKE ? OR `user_email` LIKE ?)";
-        array_push($data, "%$search%", "%$search%");
-      }
-      if ($role != null) {
-        $sql .= ($search==null?"":" AND") . " `user_role`=?";
-        $data[] = $role;
-      }
+    $sql = "FROM `users` WHERE `user_role`";
+    if ($role==null) {
+      $sql .= "!=?";
+      $data = ["I"];
+    } else {
+      $sql .= "=?";
+      $data = [$role];
+    }
+    if ($search != null) {
+      $sql .= " AND (`user_name` LIKE ? OR `user_email` LIKE ?)";
+      array_push($data, "%$search%", "%$search%");
     }
 
     // (H2) PAGINATION
     if ($page != null) {
-      $pgn = $this->core->paginator(
+      $this->core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
-      $sql .= " LIMIT {$pgn["x"]}, {$pgn["y"]}";
+      $sql .= $this->core->page["lim"];
     }
 
     // (H3) RESULTS
-    $users = $this->DB->fetchAll("SELECT * $sql", $data, "user_id");
-    return $page != null
-     ? ["data" => $users, "page" => $pgn]
-     : $users ;
+    return $this->DB->fetchAll("SELECT * $sql", $data, "user_id");
   }
 
   // (I) VERIFY EMAIL & PASSWORD (LOGIN OR SECURITY CHECK)

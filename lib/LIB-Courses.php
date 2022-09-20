@@ -15,7 +15,7 @@ class Courses extends Core {
     $fields = ["course_code", "course_name", "course_start", "course_end", "course_desc"];
     $data = [$code, $name, $start, $end, $desc];
 
-    // (A2) ADD/UPDATE USER
+    // (A2) ADD/UPDATE COURSE
     if ($id===null) {
       $this->DB->insert("courses", $fields, $data);
     } else {
@@ -25,7 +25,22 @@ class Courses extends Core {
     return true;
   }
 
-  // (B) DELETE COURSE
+  // (B) IMPORT COURSE (OVERRIDES OLD ENTRY)
+  //  $code : course code
+  //  $name : course name
+  //  $start : start date
+  //  $end : end date
+  //  $desc : course description
+  function import ($code, $name, $start, $end, $desc=null) {
+    // (B1) GET COURSE
+    $course = $this->get($code);
+    
+    // (B2) UPDATE OR INSERT
+    $this->save($code, $name, $start, $end, $desc, is_array($course)?$course["course_id"]:null);
+    return true;
+  }
+
+  // (C) DELETE COURSE
   //  $id : course id
   function del ($id) {
     $this->DB->start();
@@ -37,7 +52,7 @@ class Courses extends Core {
     return true;
   }
 
-  // (C) GET COURSE
+  // (D) GET COURSE
   //  $id : course id or code
   function get ($id) {
     return $this->DB->fetch(
@@ -46,11 +61,27 @@ class Courses extends Core {
     );
   }
 
-  // (D) GET ALL OR SEARCH COURSES
+  // (E) SEARCH COURSE - FOR AUTOCOMPLETE USE
+  //  $search : course name or code
+  function autocomplete ($search) {
+    $sql = "SELECT * FROM `courses` WHERE `course_code` LIKE ? OR `course_name` LIKE ? LIMIT 5";
+    $data = ["%$search%", "%$search%"];
+    $this->DB->query($sql, $data);
+    $result = [];
+    while ($row = $this->DB->stmt->fetch()) {
+      $result[] = [
+        "d" => "{$row["course_code"]} ({$row["course_name"]})",
+        "v" => $row["course_id"]
+      ];
+    }
+    return count($result)==0 ? null : $result;
+  }
+
+  // (F) GET ALL OR SEARCH COURSES
   //  $search : optional, course code or name
   //  $page : optional, current page number
   function getAll ($search=null, $page=null) {
-    // (D1) PARITAL SQL + DATA
+    // (F1) PARITAL SQL + DATA
     $sql = "FROM `courses`";
     $data = null;
     if ($search != null) {
@@ -58,26 +89,23 @@ class Courses extends Core {
       $data = ["%$search%", "%$search%"];
     }
 
-    // (D2) PAGINATION
+    // (F2) PAGINATION
     if ($page != null) {
-      $pgn = $this->core->paginator(
+      $this->core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
-      $sql .= " LIMIT {$pgn["x"]}, {$pgn["y"]}";
+      $sql .= $this->core->page["lim"];
     }
 
-    // (D3) RESULTS
-    $courses = $this->DB->fetchAll("SELECT * $sql", $data, "course_id");
-    return $page != null
-     ? ["data" => $courses, "page" => $pgn]
-     : $courses ;
+    // (F3) RESULTS
+    return $this->DB->fetchAll("SELECT * $sql", $data, "course_id");
   }
 
-  // (E) ADD USER TO COURSE
+  // (G) ADD USER TO COURSE
   //  $cid : course id
   //  $uid : user id or email
   function addUser ($cid, $uid) {
-    // (E1) VERIFY VALID USER
+    // (G1) VERIFY VALID USER
     $this->core->load("Users");
     $user = $this->core->Users->get($uid);
     if (!is_array($user) || $user["user_role"]=="I") {
@@ -85,12 +113,12 @@ class Courses extends Core {
       return false;
     }
 
-    // (E2) ADD TO COURSE
+    // (G2) ADD TO COURSE
     $this->DB->replace("courses_users", ["course_id", "user_id"], [$cid, $user["user_id"]]);
     return true;
   }
 
-  // (F) DELETE USER FROM COURSE
+  // (H) DELETE USER FROM COURSE
   //  $cid : course id
   //  $uid : user id or email
   function delUser ($cid, $uid) {
@@ -98,39 +126,37 @@ class Courses extends Core {
     return true;
   }
 
-  // (G) GET ALL USERS IN COURSE
+  // (I) GET ALL USERS IN COURSE
   //  $id : course id
   //  $page : optional, current page number
   function getUsers ($id, $page=null) {
-    // (G1) PARITAL SQL + DATA
+    // (I1) PARITAL SQL + DATA
     $sql = "FROM `courses_users` cu
             JOIN `users` u USING (`user_id`)
             WHERE cu.`course_id`=? AND u.`user_role`!='I'";
     $data = [$id];
 
-    // (G2) PAGINATION
+    // (I2) PAGINATION
     if ($page != null) {
-      $pgn = $this->core->paginator(
+      $this->core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
     }
 
-    // (G3) "MAIN SQL"
+    // (I3) "MAIN SQL"
     $sql .= " ORDER BY FIELD(`user_role`, 'A','T','S'), `user_name`";
-    if ($page != null) { $sql .= " LIMIT {$pgn["x"]}, {$pgn["y"]}"; }
+    if ($page != null) { $sql .= $this->core->page["lim"]; }
 
-    // (G4) RESULTS
-    $users = $this->DB->fetchAll("SELECT * $sql", $data, "user_id");
-    return $page != null
-     ? ["data" => $users, "page" => $pgn]
-     : $users ;
+    // (I4) RESULTS
+    return $this->DB->fetchAll("SELECT * $sql", $data, "user_id");
   }
 
-  // (H) GET TEACHERS IN COURSE
+  // (J) GET TEACHERS IN COURSE
   //  $id : course id
   function getTeachers ($id) {
     return $this->DB->fetchAll(
-      "SELECT u.* FROM `courses_users` c
+      "SELECT u.`user_id`, u.`user_name`, u.`user_email`
+       FROM `courses_users` c
        JOIN `users` u USING (`user_id`)
        WHERE u.`user_role` IN ('A', 'T')
        AND c.`course_id`=?

@@ -2,37 +2,39 @@
 I Was Here is a simple, free, and open-source PHP Student Attendance Management System. Not the best in the world, but it will help small schools to get started quickly without all the hassle.
 <br><br>
 
-
 ## SCREENSHOTS
 <p float="left">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-1.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-2.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-3.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-4.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-ss-5.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-1.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-2.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-3.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-4.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-5.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-6.png">
 </p><br>
 
-
-## INSTALLATION & DOCUMENTATION
-Just access `index.php` and walk through the installer.
-
-Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the documentation.
-<br><br>
-
-
-## UPDATING
-* If your existing copy has an `options` table - Just override all the existing files and access `index.php`. The installer will take care of database updates (if any).
-* If not – Manually import the `options` table from `SQL-iwashere.sql.sql`, create a `IWH_VER` entry with value of `0` and group `0`. Thereafter, just copy the new files and let the installer do the magic.
-<br><br>
-
-
 ## REQUIREMENTS
-1) Not extensively tested, but should work with at least PHP 8.0.
-2) PHP MYSQL PDO extension.
-3) Apache server with MOD REWRITE enabled.
-4) "Grade A" browser.
+1) LAMP/WAMP/MAMP/XAMPP
+2) Apache Mod Rewrite
+3) PHP MYSQL PDO Extension
+4) At least PHP 8.0
 <br><br>
 
+## INSTALLATION
+Just access `http://your-site.com/` in your browser and walk through the installer.
+<br><br>
+
+## FEATURES
+1) Users management.
+2) Attendance management.
+3) Built-in QR code scanner.
+4) Take attendance by scanning QR code or manual.
+5) Progressive web app.
+<br><br>
+
+## DOCUMENTATION & FRAMEWORKS
+1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/) and [Core Boxx](https://code-boxx.com/core-boxx-php-rapid-development-framework/).
+2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
+<br><br>
 
 ## LICENSE
 Copyright by Code Boxx
