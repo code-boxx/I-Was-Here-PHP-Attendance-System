@@ -8,23 +8,31 @@ $_PMETA = ["load" => [
   ["s", HOST_ASSETS."A-course-user-import.js", "defer"]
 ]];
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
-<!-- (A) NAVIGATION -->
-<div class="d-flex align-items-center mb-3">
-  <h3 class="flex-grow-1">MANAGE COURSES</h3>
-  <button class="btn btn-primary mx-1 mi" onclick="cimport.init()">
-    upload
-  </button>
-  <button class="btn btn-primary mi" onclick="course.addEdit()">
-    add
-  </button>
-</div>
+<!-- (A) HEADER -->
+<h3 class="mb-3">MANAGE COURSES</h3>
 
-<!-- (B) SEARCH BAR -->
+<!-- (B) ACTION BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return course.search()">
+  <!-- (B1) SEARCH -->
   <input type="text" id="course-search" placeholder="Search" class="form-control form-control-sm">
   <button class="btn btn-primary mi mx-1">
     search
   </button>
+
+  <!-- (B2) ADD -->
+  <div class="dropdown">
+    <button class="btn btn-primary mi" type="button" data-bs-toggle="dropdown">
+      add
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="course.addEdit()">
+        <i class="mi mi-smil">add</i> Add Single
+      </li>
+      <li class="dropdown-item" onclick="cimport.init()">
+        <i class="mi mi-smil">upload</i> Import CSV
+      </li>
+    </ul>
+  </div>
 </form>
 
 <!-- (C) COURSES LIST -->

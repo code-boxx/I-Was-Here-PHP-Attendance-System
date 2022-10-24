@@ -7,18 +7,19 @@ $_PMETA = ["load" => [
 ]];
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <!-- (A) NAVIGATION -->
-<div class="d-flex align-items-center mb-3">
-  <h3 class="flex-grow-1">MANAGE CLASSES</h3>
-  <button class="btn btn-primary mi" onclick="classes.addEdit()">
-    add
-  </button>
-</div>
-
-<!-- (B) SEARCH BAR -->
+<h3 class="mb3">MANAGE CLASSES</h3>
+  
+<!-- (B) ACTION BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return classes.search()">
+  <!-- (B1) SEARCH -->
   <input type="text" id="class-search" placeholder="Search (course code)" class="form-control form-control-sm">
   <button class="btn btn-primary mi mx-1">
     search
+  </button>
+
+  <!-- (B2) ADD CLASS -->
+  <button class="btn btn-primary mi" onclick="classes.addEdit()">
+    add
   </button>
 </form>
 

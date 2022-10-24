@@ -8,8 +8,8 @@ if ($edit) { $course = $_CORE->autoCall("Courses", "get"); }
 <form onsubmit="return course.save()">
   <input type="hidden" id="course_id" value="<?=isset($course)?$course["course_id"]:""?>">
 
+  <div class="fw-bold text-danger">BASIC COURSE INFORMATION</div>
   <div class="bg-white border p-4 mb-3">
-    <h5 class="mb-3">BASIC COURSE INFORMATION</h5>
     <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">code</span>
@@ -32,8 +32,8 @@ if ($edit) { $course = $_CORE->autoCall("Courses", "get"); }
     </div>
   </div>
 
+  <div class="fw-bold text-danger">START-END DATE</div>
   <div class="bg-white border p-4 mb-3">
-    <h5 class="mb-3">START-END DATE</h5>
     <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">today</span>

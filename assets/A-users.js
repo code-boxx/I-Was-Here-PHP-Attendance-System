@@ -34,14 +34,12 @@ var usr = {
 
   // (D) SHOW ADD/EDIT DOCKET
   // id : user ID, for edit only
-  addEdit : id => {
-    cb.load({
-      page : "a/users/form",
-      target : "cb-page-2",
-      data : { id : id ? id : "" },
-      onload : () => { cb.page(1); }
-    });
-  },
+  addEdit : id => cb.load({
+    page : "a/users/form",
+    target : "cb-page-2",
+    data : { id : id ? id : "" },
+    onload : () => cb.page(1)
+  }),
 
   // (E) SAVE USER
   save : () => {
@@ -73,15 +71,11 @@ var usr = {
 
   // (F) DELETE (INACTIVATE) USER
   //  id : int, user ID
-  del : id => {
-    cb.modal("Suspend User?", "User will no longer be able to sign in, but existing data will be kept.", () => {
-      cb.api({
-        mod : "users", req : "del",
-        data : { id: id },
-        passmsg : "User Suspended",
-        onpass : usr.list
-      });
-    });
-  }
+  del : id => cb.modal("Suspend User?", "User will no longer be able to sign in, but existing data will be kept.", () => cb.api({
+    mod : "users", req : "del",
+    data : { id: id },
+    passmsg : "User Suspended",
+    onpass : usr.list
+  }))
 };
 window.addEventListener("load", usr.list);

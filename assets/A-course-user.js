@@ -21,16 +21,14 @@ var cuser = {
   },
 
   // (B) SHOW ALL USERS IN COURSE
-  list : () => {
-    cb.load({
-      page : "a/course/user/list",
-      target : "course-user-list",
-      data : {
-        page : cuser.pg,
-        id : cuser.id
-      }
-    });
-  },
+  list : () => cb.load({
+    page : "a/course/user/list",
+    target : "course-user-list",
+    data : {
+      page : cuser.pg,
+      id : cuser.id
+    }
+  }),
 
   // (C) GO TO PAGE
   //  pg : int, page number
@@ -62,17 +60,13 @@ var cuser = {
 
   // (E) REMOVE USER FROM COURSE
   //  id : user id
-  del : id => {
-    cb.modal("Please confirm", "User will be removed from the course, but past attendance will be kept.", () => {
-      cb.api({
-        mod : "courses", req : "delUser",
-        data : {
-          cid : cuser.id,
-          uid : id
-        },
-        passmsg : "User removed from course",
-        onpass : cuser.list
-      });
-    });
-  }
+  del : id => cb.modal("Please confirm", "User will be removed from the course, but past attendance will be kept.", () => cb.api({
+    mod : "courses", req : "delUser",
+    data : {
+      cid : cuser.id,
+      uid : id
+    },
+    passmsg : "User removed from course",
+    onpass : cuser.list
+  }))
 };

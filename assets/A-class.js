@@ -31,25 +31,23 @@ var classes = {
 
   // (D) SHOW ADD/EDIT DOCKET
   // id : class ID, for edit only
-  addEdit : id => {
-    cb.load({
-      page : "a/class/form",
-      target : "cb-page-2",
-      data : { id : id ? id : "" },
-      onload : () => {
-        cb.page(1);
-        selector.attach({
-          field : document.getElementById("class_course"),
-          mod : "autocomplete", req : "course",
-          pick : (d, v) => {
-            document.getElementById("class_course").value = d;
-            document.getElementById("class_course_id").value = v;
-            classes.toggle(true);
-          }
-        });
-      }
-    });
-  },
+  addEdit : id => cb.load({
+    page : "a/class/form",
+    target : "cb-page-2",
+    data : { id : id ? id : "" },
+    onload : () => {
+      cb.page(1);
+      selector.attach({
+        field : document.getElementById("class_course"),
+        mod : "autocomplete", req : "course",
+        pick : (d, v) => {
+          document.getElementById("class_course").value = d;
+          document.getElementById("class_course_id").value = v;
+          classes.toggle(true);
+        }
+      });
+    }
+  }),
 
   // (E) TOGGLE ADD/EDIT FORM ON SELECTING COURSE
   toggle : set => {
@@ -142,15 +140,12 @@ var classes = {
 
   // (G) DELETE CLASS
   //  id : int, class ID
-  del : (id) => {
-    cb.modal("Please confirm", "Attendance records of this class will be lost!", () => {
-      cb.api({
-        mod : "classes", req : "del",
-        data : { id: id },
-        passmsg : "Class Deleted",
-        onpass : classes.list
-      });
-    });
-  }
+  del : id => cb.modal("Please confirm", "Attendance records of this class will be lost!", () => cb.api({
+    mod : "classes", req : "del",
+    data : { id: id },
+    passmsg : "Class Deleted",
+    onpass : classes.list
+  }))
+  
 };
 window.addEventListener("load", classes.list);

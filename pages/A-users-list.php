@@ -10,15 +10,20 @@ if (is_array($users)) { foreach ($users as $id=>$u) { ?>
     <strong><?=$u["user_name"]?></strong><br>
     <small><?=USER_ROLES[$u["user_role"]]?> | <?=$u["user_email"]?></small>
   </div>
-  <div>
-    <?php if ($u["user_role"]!="I") { ?>
-    <button class="btn btn-danger btn-sm mi" onclick="usr.del(<?=$id?>)">
-      delete
+  <div class="dropdown">
+    <button class="btn btn-primary btn-sm mi" type="button" data-bs-toggle="dropdown">
+      more_vert
     </button>
-    <?php } ?>
-    <button class="btn btn-primary btn-sm mi" onclick="usr.addEdit(<?=$id?>)">
-      edit
-    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="usr.addEdit(<?=$id?>)">
+        <i class="mi mi-smol">edit</i> Edit
+      </li>
+      <?php if ($u["user_role"]!="I") { ?>
+      <li class="dropdown-item text-warning" onclick="usr.del(<?=$id?>)">
+        <i class="mi mi-smol">delete</i> Delete
+      </li>
+      <?php } ?>
+    </ul>
   </div>
 </div>
 <?php }} else { echo "No users found."; }

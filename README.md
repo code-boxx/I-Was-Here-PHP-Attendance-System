@@ -1,5 +1,12 @@
 ## I WAS HERE
-I Was Here is a simple, free, and open-source PHP Student Attendance Management System. Not the best in the world, but it will help small schools to get started quickly without all the hassle.
+I Was Here is a simple PHP Student Attendance Management System. This is not a "we have a lot of features that you will never use" system, but a basic one to help smaller schools to get started quickly.
+<br><br>
+
+## FEATURES
+1) Users management.
+2) Take attendance manually, or let students scan a QR code.
+3) Progressive web app.
+4) CSV reports.
 <br><br>
 
 ## SCREENSHOTS
@@ -23,16 +30,8 @@ I Was Here is a simple, free, and open-source PHP Student Attendance Management 
 Just access `http://your-site.com/` in your browser and walk through the installer.
 <br><br>
 
-## FEATURES
-1) Users management.
-2) Attendance management.
-3) Built-in QR code scanner.
-4) Take attendance by scanning QR code or manual.
-5) Progressive web app.
-<br><br>
-
 ## DOCUMENTATION & FRAMEWORKS
-1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/) and [Core Boxx](https://code-boxx.com/core-boxx-php-rapid-development-framework/).
+1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/), [PHP-JWT](https://github.com/firebase/php-jwt), and [Core Boxx](https://code-boxx.com/core-boxx-php-rapid-development-framework/).
 2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
 <br><br>
 

@@ -12,9 +12,6 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
   <button class="btn btn-danger mi me-1" onclick="cb.page(0)">
     reply
   </button>
-  <button class="btn btn-primary mi" onclick="uimport.init()">
-    upload
-  </button>
 </div>
 
 <!-- (B) ADD SINGLE USER TO COURSE -->
@@ -22,6 +19,9 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
   <input type="email" required id="course-user-add" placeholder="User Name/Email" class="form-control form-control-sm">
   <button class="btn btn-primary mi mx-1">
     add
+  </button>
+  <button class="btn btn-primary mi" onclick="uimport.init()">
+    upload
   </button>
 </form>
 

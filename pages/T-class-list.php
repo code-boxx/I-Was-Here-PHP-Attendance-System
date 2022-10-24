@@ -11,12 +11,19 @@ if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
     [<?=$c["course_code"]?>] <?=$c["course_name"]?><br>
     <small><?=$c["class_desc"]?></small>
   </div>
-  <a class="btn btn-primary btn-sm mi me-1" target="_blank" href="<?=HOST_BASE?>classqr?c=<?=$id?>">
-    qr_code
-  </a>
-  <button class="btn btn-primary btn-sm mi" onclick="attend.show(<?=$id?>)">
-    checklist
-  </button>
+  <div class="dropdown">
+    <button class="btn btn-primary btn-sm mi" type="button" data-bs-toggle="dropdown">
+      more_vert
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="attend.show(<?=$id?>)">
+        <i class="mi mi-smol">checklist</i> Attendance
+      </li>
+      <li><a class="dropdown-item" target="_blank" href="<?=HOST_BASE?>classqr?c=<?=$id?>">
+        <i class="mi mi-smol">qr_code</i> QR Code
+      </a></li>
+    </ul>
+  </div>
 </div>
 <?php }} else { ?>
 <div class="d-flex align-items-center border p-2">No classes found.</div>

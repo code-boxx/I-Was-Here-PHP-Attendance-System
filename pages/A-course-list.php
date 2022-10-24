@@ -10,16 +10,21 @@ if (is_array($courses)) { foreach ($courses as $id=>$c) { ?>
     <small><?=$c["course_start"]?> TO <?=$c["course_end"]?></small><br>
     <small><?=$c["course_desc"]?></small>
   </div>
-  <div>
-    <button class="btn btn-danger btn-sm mi" onclick="course.del(<?=$id?>)">
-      delete
+  <div class="dropdown">
+    <button class="btn btn-primary btn-sm mi" type="button" data-bs-toggle="dropdown">
+      more_vert
     </button>
-    <button class="btn btn-primary btn-sm mi" onclick="cuser.show(<?=$id?>)">
-      people
-    </button>
-    <button class="btn btn-primary btn-sm mi" onclick="course.addEdit(<?=$id?>)">
-      edit
-    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="course.addEdit(<?=$id?>)">
+        <i class="mi mi-smol">edit</i> Edit
+      </li>
+      <li class="dropdown-item" onclick="cuser.show(<?=$id?>)">
+        <i class="mi mi-smol">people</i> Cohort
+      </li>
+      <li class="dropdown-item text-warning" onclick="course.del(<?=$id?>)">
+        <i class="mi mi-smol">delete</i> Delete
+      </li>
+    </ul>
   </div>
 </div>
 <?php }} else { echo "No courses found."; }

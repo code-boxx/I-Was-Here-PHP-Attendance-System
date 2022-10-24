@@ -14,20 +14,18 @@ $course = $_CORE->Courses->get($class["course_id"]); ?>
   <button class="btn btn-danger mi me-1" onclick="cb.page(0)">
     reply
   </button>
-  <a class="btn btn-primary mi" target="_blank" href="<?=HOST_BASE?>classqr?c=<?=$class["class_id"]?>">
-    qr_code
-  </a>
 </div>
 
 <!-- (C) ADD USER TO CLASS -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return attend.add()">
   <input type="email" required id="attend-add" required placeholder="Email" class="form-control form-control-sm">
+  <input type="submit" class="btn btn-primary btn-sm ms-1 mi" value="add">
 </form>
 
 <!-- (D) ATTENDANCE LIST -->
 <div class="mt-4">
+  * Enter email above to add student not in the course.<br>
   * Blue check "present", red cross "absent".<br>
-  * Remember to "save attendance".<br>
-  * Enter email above to add student not in the course.
+  * Remember to "save attendance" below.
 </div>
 <div id="attend-list" class="zebra my-4"></div>

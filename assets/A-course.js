@@ -31,14 +31,12 @@ var course = {
 
   // (D) SHOW ADD/EDIT DOCKET
   // id : course ID, for edit only
-  addEdit : id => {
-    cb.load({
-      page : "a/course/form",
-      target : "cb-page-2",
-      data : { id : id ? id : "" },
-      onload : () => { cb.page(1); }
-    });
-  },
+  addEdit : id => cb.load({
+    page : "a/course/form",
+    target : "cb-page-2",
+    data : { id : id ? id : "" },
+    onload : () => cb.page(1)
+  }),
 
   // (E) SAVE COURSE
   save : () => {
@@ -65,15 +63,11 @@ var course = {
 
   // (F) DELETE COURSE
   //  id : int, course ID
-  del : id => {
-    cb.modal("Please confirm", "All course data and attendance will be lost!", () => {
-      cb.api({
-        mod : "courses", req : "del",
-        data : { id: id },
-        passmsg : "Course Deleted",
-        onpass : course.list
-      });
-    });
-  }
+  del : id => cb.modal("Please confirm", "All course data and attendance will be lost!", () => cb.api({
+    mod : "courses", req : "del",
+    data : { id: id },
+    passmsg : "Course Deleted",
+    onpass : course.list
+  }))
 };
 window.addEventListener("load", course.list);

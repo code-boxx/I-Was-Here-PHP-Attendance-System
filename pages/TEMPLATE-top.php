@@ -27,7 +27,7 @@
 
     <!-- (A4) SERVICE WORKER -->
     <script>if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("<?=HOST_BASE?>CB-worker.js", {scope: "/"});
+      navigator.serviceWorker.register("<?=HOST_BASE?>CB-worker.js", {scope: "<?=HOST_BASE_PATH?>"});
     }</script>
     <?php } ?>
 
@@ -45,7 +45,7 @@
     .head{background:#ddd}.zebra .d-flex{background:#fff;margin-bottom:10px}.zebra .d-flex:nth-child(odd){background-color:#f1f1f1}.pagination{border:1px solid #d0e8ff;background:#f0f8ff}
     #cb-body,body{min-height:100vh}#cb-toggle{display:none}#cb-side{width:155px;flex-shrink:0}#cb-side a{color:#fff}#cb-side .mi{color:#6a6a6a}@media screen and (max-width:768px){#cb-toggle{display:block}#cb-side{display:none}#cb-side.show{display:block}}#reader{max-width:380px}
     </style>
-    <script>var cbhost={base:"<?=HOST_BASE?>",api:"<?=HOST_API_BASE?>",assets:"<?=HOST_ASSETS?>"};</script>
+    <script>var cbhost={base:"<?=HOST_BASE?>",basepath:"<?=HOST_BASE_PATH?>",api:"<?=HOST_API_BASE?>",assets:"<?=HOST_ASSETS?>"};</script>
     <script defer src="<?=HOST_ASSETS?>PAGE-cb.js"></script>
 
     <!-- (A6) ADDITIONAL SCRIPTS -->
@@ -68,14 +68,14 @@
     </div>
 
     <!-- (B2) TOAST MESSAGE -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index:11">
+    <div class="position-fixed top-50 start-50 translate-middle" style="z-index:11">
       <div id="cb-toast" class="toast hide" role="alert">
         <div class="toast-header">
           <span id="cb-toast-icon" class="mi"></span>
           <strong id="cb-toast-head" class="me-auto p-1"></strong>
           <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
         </div>
-        <div id="cb-toast-body" class="toast-body"></div>
+        <div id="cb-toast-body" class="toast-body bg-light"></div>
       </div>
     </div>
 
@@ -110,13 +110,21 @@
             </button>
           </div>
           <div class="d-flex align-items-center">
-            <a class="dropdown-toggle text-decoration-none text-white mx-2"
+            <a class="text-decoration-none text-white mx-2"
               data-bs-toggle="dropdown">
                 <span class="mi">person</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-              <li><a class="dropdown-item" href="<?=HOST_BASE?>account">My Account</a></li>
-              <li><div class="dropdown-item" onclick="cb.bye()">Logout</div></li>
+              <li class="dropdown-header">
+                <?=$_SESS["user"]["user_name"]?><br>
+                <?=$_SESS["user"]["user_email"]?>
+              </li>
+              <li><a class="dropdown-item" href="<?=HOST_BASE?>account">
+                <i class="mi mi-smol">person</i> My Account
+              </a></li>
+              <li class="dropdown-item text-warning" onclick="cb.bye()">
+                <i class="mi mi-smol">logout</i> Logout
+              </li>
             </ul>
           </div>
         </nav>

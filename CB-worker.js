@@ -1,21 +1,26 @@
 // (A) FILES TO CACHE
-const cName = "cb-pwa",
+const cName = "iwashere",
 cFiles = [
-  "CB-manifest.json",
-  "assets/ico-512.png",
-  "assets/favicon.png",
-  "assets/book.jpg",
-  "assets/maticon.woff2",
+  // (A1) BOOTSTRAP
   "assets/bootstrap.bundle.min.js",
   "assets/bootstrap.bundle.min.js.map",
   "assets/bootstrap.min.css",
   "assets/bootstrap.min.css.map",
+  // (A2) ICONS + IMAGES
+  "assets/ico-512.png",
+  "assets/favicon.png",
+  "assets/book.jpg",
+  // (A3) COMMON INTERFACE
+  "assets/PAGE-cb.js",
   "assets/CB-selector.css",
   "assets/CB-selector.js",
+  "assets/maticon.woff2",
+  "CB-manifest.json",
+  // (A4) HTML QR CODE + SCANNER
   "assets/html5-qrcode.min.js",
   "assets/qrcode.min.js",
+  // (A5) PAGES
   "assets/PAGE-account.js",
-  "assets/PAGE-cb.js",
   "assets/PAGE-forgot.js",
   "assets/PAGE-login.js",
   "assets/A-class.js",
@@ -36,18 +41,13 @@ cFiles = [
 ];
 
 // (B) CREATE/INSTALL CACHE
-self.addEventListener("install", evt => {
-  evt.waitUntil(
-    caches.open(cName)
-    .then(cache => cache.addAll(cFiles))
-    .catch(err => console.error(err))
-  );
-});
+self.addEventListener("install", evt => evt.waitUntil(
+  caches.open(cName)
+  .then(cache => cache.addAll(cFiles))
+  .catch(err => console.error(err))
+));
 
-// (C) CACHE STRATEGY
-self.addEventListener("fetch", evt => {
-  // (C1) LOAD FROM CACHE FIRST, FALLBACK TO NETWORK IF NOT FOUND
-  evt.respondWith(
-    caches.match(evt.request).then(res => res || fetch(evt.request))
-  );
-});
+// (C) LOAD FROM CACHE FIRST, FALLBACK TO NETWORK IF NOT FOUND
+self.addEventListener("fetch", evt => evt.respondWith(
+  caches.match(evt.request).then(res => res || fetch(evt.request))
+));

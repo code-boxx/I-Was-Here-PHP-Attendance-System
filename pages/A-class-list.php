@@ -11,16 +11,24 @@ if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
     <small><?=$c["user_name"]?></small><br>
     <small><?=$c["class_desc"]?></small>
   </div>
-  <div>
-    <button class="btn btn-danger btn-sm mi" onclick="classes.del(<?=$id?>)">
-      delete
+  <div class="dropdown">
+    <button class="btn btn-primary btn-sm mi" type="button" data-bs-toggle="dropdown">
+      more_vert
     </button>
-    <button class="btn btn-primary btn-sm mi" onclick="attend.show(<?=$id?>)">
-      checklist
-    </button>
-    <button class="btn btn-primary btn-sm mi" onclick="classes.addEdit(<?=$id?>)">
-      edit
-    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="classes.addEdit(<?=$id?>)">
+        <i class="mi mi-smol">edit</i> Edit
+      </li>
+      <li class="dropdown-item" onclick="attend.show(<?=$id?>)">
+        <i class="mi mi-smol">checklist</i> Attendance
+      </li>
+      <li><a class="dropdown-item" target="_blank" href="<?=HOST_BASE?>classqr?c=<?=$id?>">
+        <i class="mi mi-smol">qr_code</i> QR Code
+      </a></li>
+      <li class="dropdown-item text-warning" onclick="classes.del(<?=$id?>)">
+        <i class="mi mi-smol">delete</i> Delete
+      </li>
+    </ul>
   </div>
 </div>
 <?php }} else { echo "No classes found."; }

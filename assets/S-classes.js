@@ -3,17 +3,15 @@ var classes = {
   pg : 1, // current page
   range : "", // search range
   date : "", // search date
-  list : () => {
-    cb.load({
-      page : "s/class/list",
-      target : "class-list",
-      data : {
-        page : classes.pg,
-        range : classes.range,
-        date : classes.date
-      }
-    });
-  },
+  list : () => cb.load({
+    page : "s/class/list",
+    target : "class-list",
+    data : {
+      page : classes.pg,
+      range : classes.range,
+      date : classes.date
+    }
+  }),
 
   // (B) GO TO PAGE
   //  pg : int, page number

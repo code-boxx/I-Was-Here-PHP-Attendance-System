@@ -11,11 +11,9 @@ if (is_array($users)) { foreach ($users as $id=>$u) { ?>
     <small><?=USER_ROLES[$u["user_role"]]?></small> |
     <small><?=$u["user_email"]?></small>
   </div>
-  <div>
-    <button class="btn btn-danger btn-sm mi" onclick="cuser.del(<?=$id?>)">
-      delete
-    </button>
-  </div>
+  <button class="btn btn-danger btn-sm mi" onclick="cuser.del(<?=$id?>)">
+    delete
+  </button>
 </div>
 <?php }} else { echo "No users found."; }
 

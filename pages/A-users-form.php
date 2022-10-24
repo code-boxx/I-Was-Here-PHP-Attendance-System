@@ -43,6 +43,7 @@ if ($edit) { $user = $_CORE->autoCall("Users", "get"); }
       </div>
       <input type="password" class="form-control" id="user_password" required placeholder="Password">
     </div>
+    <div class="mt-2 text-secondary">* At least 8 characters alphanumeric.</div>
   </div>
 
   <input type="button" class="col btn btn-danger" value="Back" onclick="cb.page(0)">

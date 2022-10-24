@@ -21,13 +21,11 @@ var attend = {
   },
 
   // (B) SHOW CLASS ATTENDANCE
-  list : () => {
-    cb.load({
-      page : "t/attend/list",
-      target : "attend-list",
-      data : { id : attend.id }
-    });
-  },
+  list : () => cb.load({
+    page : "t/attend/list",
+    target : "attend-list",
+    data : { id : attend.id }
+  }),
 
   // (C) MANUALLY ADD A STUDENT
   add : () => {

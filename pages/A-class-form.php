@@ -13,8 +13,8 @@ if ($edit) {
 <form onsubmit="return classes.save()">
   <input type="hidden" id="class_id" value="<?=isset($class)?$class["class_id"]:""?>">
 
+  <div class="fw-bold text-danger">COURSE</div>
   <div class="bg-white border p-4 mb-3">
-    <h5 class="mb-3">COURSE</h5>
     <div class="d-flex">
       <div class="input-group-prepend">
         <span class="input-group-text mi">school</span>
@@ -29,8 +29,8 @@ if ($edit) {
     </small>
   </div>
 
+  <div class="fw-bold text-danger">CLASS</div>
   <div class="bg-white border p-4 mb-3">
-    <h5 class="mb-3">CLASS</h5>
     <div class="input-group mb-3">
       <div class="input-group-prepend">
         <span class="input-group-text mi">today</span>
