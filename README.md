@@ -11,12 +11,12 @@ I Was Here is a simple PHP Student Attendance Management System. This is not a "
 
 ## SCREENSHOTS
 <p float="left">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-1.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-2.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-3.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-4.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-5.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/ss-iwh-6.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5.png">
+  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6.png">
 </p><br>
 
 ## REQUIREMENTS
