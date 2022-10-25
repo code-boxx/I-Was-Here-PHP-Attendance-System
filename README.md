@@ -31,7 +31,7 @@ Just access `http://your-site.com/` in your browser and walk through the install
 <br><br>
 
 ## DOCUMENTATION & FRAMEWORKS
-1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/), [PHP-JWT](https://github.com/firebase/php-jwt), and [Core Boxx](https://code-boxx.com/core-boxx-php-rapid-development-framework/).
+1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/), [PHP-JWT](https://github.com/firebase/php-jwt), and [Core Boxx](https://code-boxx.com/core-boxx-php-framework/).
 2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
 <br><br>
 
