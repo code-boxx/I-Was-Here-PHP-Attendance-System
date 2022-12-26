@@ -4,25 +4,27 @@ class Report extends Core {
   function attend ($id) {
     // (A1) GET COURSE
     $course = $this->DB->fetch(
-      "SELECT * FROM `courses` WHERE `course_id`=?", [$id]
+      "SELECT *, DATE_FORMAT(`course_start`, '".D_LONG."') `sd`, DATE_FORMAT(`course_end`, '".D_LONG."') `ed`
+       FROM `courses` WHERE `course_id`=?", [$id]
     );
 
     // (A2) OUTPUT CSV HEADER
     header("Content-Disposition: attachment; filename={$course["course_code"]}.csv;");
     $f = fopen("php://output", "w");
     fputcsv($f, [strtoupper("[{$course["course_code"]}] {$course["course_name"]}")]);
-    fputcsv($f, ["FROM {$course["course_start"]} TO {$course["course_end"]}"]);
+    fputcsv($f, ["FROM {$course["sd"]} TO {$course["ed"]}"]);
     unset($course);
 
     // (A3) CLASSES
     $this->DB->query(
-      "SELECT * FROM `classes` WHERE `course_id`=? ORDER BY `class_date` ASC", [$id]
+      "SELECT *, DATE_FORMAT(`class_date`, '".DT_LONG."') `cd`
+       FROM `classes` WHERE `course_id`=? ORDER BY `class_date` ASC", [$id]
     );
     $class = [];
     $classdate = ["STUDENT/CLASS"];
     while ($r = $this->DB->stmt->fetch()) {
       $class[] = $r["class_id"];
-      $classdate[] = $r["class_date"];
+      $classdate[] = $r["cd"];
     }
     fputcsv($f, $classdate);
     unset($classdate);

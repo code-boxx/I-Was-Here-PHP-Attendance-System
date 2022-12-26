@@ -70,7 +70,7 @@ class Classes extends Core {
     $sql .= " ORDER BY `class_date` DESC";
     if ($page != null) { $sql .= $this->core->page["lim"]; }
     return $this->DB->fetchAll(
-      "SELECT cl.*, co.`course_code`, co.`course_name`, u.`user_name` $sql",
+      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name` $sql",
       $data, "class_id"
     );
   }

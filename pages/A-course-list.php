@@ -7,7 +7,7 @@ if (is_array($courses)) { foreach ($courses as $id=>$c) { ?>
 <div class="d-flex align-items-center border p-2">
   <div class="flex-grow-1">
     <strong>[<?=$c["course_code"]?>] <?=$c["course_name"]?></strong><br>
-    <small><?=$c["course_start"]?> TO <?=$c["course_end"]?></small><br>
+    <small><?=$c["sd"]?> TO <?=$c["ed"]?></small><br>
     <small><?=$c["course_desc"]?></small>
   </div>
   <div class="dropdown">

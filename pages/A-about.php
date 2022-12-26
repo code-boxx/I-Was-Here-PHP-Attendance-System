@@ -1,6 +1,7 @@
 <?php require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <h3>I WAS HERE</h3>
 <div class="mb-3">open source php attendance management system</div>
+<img class="img-fluid d-block mx-auto mb-3" style="max-height:350px;" src="<?=HOST_ASSETS?>HEAD-iwh.jpg">
 <div class="bg-white border p-3">
   <h6>Links & Documentation</h6>
   <ul>

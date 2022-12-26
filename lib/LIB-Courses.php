@@ -98,7 +98,10 @@ class Courses extends Core {
     }
 
     // (F3) RESULTS
-    return $this->DB->fetchAll("SELECT * $sql", $data, "course_id");
+    return $this->DB->fetchAll(
+      "SELECT *, DATE_FORMAT(`course_start`, '".D_SHORT."') `sd`, DATE_FORMAT(`course_end`, '".D_SHORT."') `ed` $sql",
+       $data, "course_id"
+    );
   }
 
   // (G) ADD USER TO COURSE

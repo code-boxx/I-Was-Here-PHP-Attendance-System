@@ -18,7 +18,7 @@ define("API_CORS", false);
 // (C) DATABASE
 define("DB_HOST", "localhost");
 define("DB_NAME", "iwashere");
-define("DB_CHARSET", "utf8");
+define("DB_CHARSET", "utf8mb4");
 define("DB_USER", "root");
 define("DB_PASSWORD", "");
 
@@ -31,8 +31,8 @@ define("PATH_PAGES", PATH_BASE . "pages" . DIRECTORY_SEPARATOR);
 // (E) JSON WEB TOKEN
 define("JWT_ALGO", "HS256");
 define("JWT_EXPIRE", 0);
-define("JWT_ISSUER", "localhost");
-define("JWT_SECRET", "EfgS.R7!!~slCQ~mFYA!=iT2Dn.pJYtXoF~mxji8ZoEDbdVL");
+define("JWT_ISSUER", "YOUR-NAME");
+define("JWT_SECRET", "YOUR-SECRET-KEY");
 
 /* ENABLE THIS SECTION IF USING PUSH NOTIFICATION MODULE
 // (F) PUSH NOTIFICATION KEYS

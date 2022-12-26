@@ -14,12 +14,13 @@ if ($edit) {
   <input type="hidden" id="class_id" value="<?=isset($class)?$class["class_id"]:""?>">
 
   <div class="fw-bold text-danger">COURSE</div>
+  <small class="text-secondary">Enter course code/name, and select from the autocomplete.</small>
   <div class="bg-white border p-4 mb-3">
     <div class="d-flex">
       <div class="input-group-prepend">
         <span class="input-group-text mi">school</span>
       </div>
-      <input type="text" class="form-control" id="class_course"
+      <input type="text" class="form-control" id="class_course" placeholder="Search"
              <?=isset($class)?" readonly onclick='classes.toggle(false)'":""?>
              value="<?=isset($class)?"[{$class["course_code"]}] {$class["course_name"]}":""?>">
       <input type="hidden" id="class_course_id" value="<?=isset($class)?$class["course_id"]:""?>">
