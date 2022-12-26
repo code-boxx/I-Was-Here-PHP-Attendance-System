@@ -8,7 +8,7 @@ $course = $_CORE->Courses->get($class["course_id"]); ?>
   <div class="flex-grow-1">
     <h3 class="mb-0">[<?=$course["course_code"]?>] <?=$course["course_name"]?></h3>
     <small class="fw-bold">
-      <?=$class["class_date"]?>
+      <?=$class["cd"]?>
     </small>
   </div>
   <button class="btn btn-danger mi me-1" onclick="cb.page(0)">

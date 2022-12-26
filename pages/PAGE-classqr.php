@@ -30,8 +30,9 @@ if (!is_array($class)) { exit("Invalid request"); }
       font-size: 0.9em;
     }
     #qrtime {
+      margin-top: 5px;
       text-transform: uppercase;
-      font-size: 1.7em;
+      font-size: 1em;
     }
     </style>
     <script src="<?=HOST_ASSETS?>qrcode.min.js"></script>
@@ -54,7 +55,7 @@ if (!is_array($class)) { exit("Invalid request"); }
     <div id="qrwrap">
       <div id="qrcode"></div>
       <div id="qrcourse">[<?=$class["course_code"]?>] <?=$class["course_name"]?></div>
-      <div id="qrtime"><?=$class["class_date"]?></div>
+      <div id="qrtime"><?=$class["cd"]?></div>
     </div>
   </body>
 </html>

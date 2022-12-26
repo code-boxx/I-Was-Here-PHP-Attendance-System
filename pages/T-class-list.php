@@ -7,7 +7,7 @@ $classes = $_CORE->autoCall("Classes", "getByTeacher");
 if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
 <div class="d-flex align-items-center border p-2">
   <div class="flex-grow-1">
-    <strong><?=$c["class_date"]?></strong><br>
+    <strong><?=$c["cd"]?></strong><br>
     [<?=$c["course_code"]?>] <?=$c["course_name"]?><br>
     <small><?=$c["class_desc"]?></small>
   </div>

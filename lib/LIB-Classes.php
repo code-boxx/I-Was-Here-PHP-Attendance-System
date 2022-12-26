@@ -37,7 +37,7 @@ class Classes extends Core {
   //  $id : class id
   function get ($id) {
     return $this->DB->fetch(
-      "SELECT cl.*, co.`course_code`, co.`course_name`, u.`user_name`
+      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name`
        FROM `classes` cl 
        LEFT JOIN `courses` co USING (`course_id`)
        LEFT JOIN `users` u USING (`user_id`)
@@ -227,7 +227,7 @@ class Classes extends Core {
     }
 
     // (J3) GET CLASSES
-    $sql = "SELECT cl.*, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` DESC";
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` DESC";
     if ($page != null) { $sql .= $this->core->page["lim"]; }
 
     // (J4) RESULTS
@@ -269,7 +269,7 @@ class Classes extends Core {
     }
 
     // (K3) GET CLASSES
-    $sql = "SELECT cl.*, co.`course_code`, co.`course_name`, a.`sign_date`
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, a.`sign_date`
             FROM `classes` cl
             LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
             LEFT JOIN `courses` co ON (cl.`course_id`=co.`course_id`)
