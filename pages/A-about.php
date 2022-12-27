@@ -24,6 +24,7 @@
     <li><a href="https://code-boxx.com/core-boxx-php-framework/" target="_blank">Core Boxx</a></li>
     <li><a href="https://github.com/firebase/php-jwt" target="_blank">PHP JSON Web Token</a></li>
     <li><a href="https://getbootstrap.com/" target="_blank">Bootstrap</a></li>
+    <li><a href="https://github.com/okfn/csv.js/" target="_blank">CSV.js</a></li>
     <li><a href="https://davidshimjs.github.io/qrcodejs/" target="_blank">QRCode.js</a></li>
     <li><a href="https://github.com/mebjas/html5-qrcode" target="_blank">HTML5-QRCode</a></li>
     <li><a href="https://developers.google.com/fonts/docs/material_icons" target="_blank">Material Icons</a></li>

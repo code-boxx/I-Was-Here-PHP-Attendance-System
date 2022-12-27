@@ -22,11 +22,10 @@ var uimport = {
     let reader = new FileReader(),
     vMail = new RegExp("[a-z0-9]+@[a-z]+\.[a-z]{2,3}"),
     csv = hFile.files[0], row, col, valid = false;
+
     reader.addEventListener("loadend", () => { try {
       // (B2-1) READ ROW-BY-ROW INTO HTML + CHECK VALID
-      csv = reader.result.split("\r\n");
-      csv.forEach(r => {
-        r = r.split(",");
+      for (let r of CSV.parse(reader.result)) {
         row = document.createElement("tr");
         if (r.length != 1) {
           row.className = "table-danger fw-bold";
@@ -46,8 +45,8 @@ var uimport = {
           row.appendChild(col);
         }
         hList.appendChild(row);
-      });
-      
+      }
+
       // (B2-2) START BUTTON
       if (valid) {
         row = document.createElement("tr");
@@ -87,7 +86,8 @@ var uimport = {
           col[1].innerHTML = "OK";
           uimport.go();
         },
-        onfail : (msg) => {
+        onfail : msg => {
+          row.className = "table-danger fw-bold";
           col[1].innerHTML = msg;
           uimport.go();
         }
@@ -98,7 +98,7 @@ var uimport = {
     else {
       let btn = document.getElementById("user-import-go");
       btn.innerHTML = "Done - Go Back";
-      btn.onclick = () => { cb.page(1); };
+      btn.onclick = () => cb.page(1);
       btn.disabled = false;
       cuser.list();
       cb.loading(false);

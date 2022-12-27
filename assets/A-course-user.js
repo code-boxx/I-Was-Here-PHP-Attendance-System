@@ -13,7 +13,7 @@ var cuser = {
         selector.attach({
           field : document.getElementById("course-user-add"),
           mod : "autocomplete", req : "user",
-          pick : (d, v) => { cuser.add(); }
+          pick : (d, v) => cuser.add()
         });
         cuser.list();
       }

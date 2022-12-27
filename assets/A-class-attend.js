@@ -13,7 +13,7 @@ var attend = {
           field : document.getElementById("attend-add"),
           mod : "autocomplete", req : "user",
           data : { role : "S" },
-          pick : (d, v) => { attend.add(); }
+          pick : (d, v) => attend.add()
         });
         attend.list();
       }

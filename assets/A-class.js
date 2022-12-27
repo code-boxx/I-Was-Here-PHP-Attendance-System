@@ -91,7 +91,7 @@ var classes = {
           hDesc.disabled = false;
 
           // (E2-5) CLICK COURSE TO CHANGE
-          hCourse.onclick = () => { classes.toggle(false); };
+          hCourse.onclick = () => classes.toggle(false);
           hCNote.classList.remove("d-none");
         }
       });
@@ -146,6 +146,5 @@ var classes = {
     passmsg : "Class Deleted",
     onpass : classes.list
   }))
-  
 };
 window.addEventListener("load", classes.list);

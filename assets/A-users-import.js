@@ -27,9 +27,7 @@ var uimport = {
 
     reader.addEventListener("loadend", () => { try {
       // (B2-1) READ ROW-BY-ROW INTO HTML + CHECK VALID
-      csv = reader.result.split("\r\n");
-      csv.forEach(r => {
-        r = r.split(",");
+      for (let r of CSV.parse(reader.result)) {
         row = document.createElement("tr");
         if (r.length != 4) {
           row.className = "table-danger fw-bold";
@@ -54,7 +52,7 @@ var uimport = {
           } else { row.className = "table-danger fw-bold"; }
         }
         hList.appendChild(row);
-      });
+      }
 
       // (B2-2) START BUTTON
       if (valid) {
@@ -98,6 +96,7 @@ var uimport = {
           uimport.go();
         },
         onfail : msg => {
+          row.className = "table-danger fw-bold";
           col[4].innerHTML = msg;
           uimport.go();
         }

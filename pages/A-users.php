@@ -1,6 +1,7 @@
 <?php
 $_CORE->Settings->defineN("USER_ROLES", true);
 $_PMETA = ["load" => [
+  ["s", HOST_ASSETS."csv.min.js", "defer"],
   ["s", HOST_ASSETS."A-users.js", "defer"],
   ["s", HOST_ASSETS."A-users-import.js", "defer"]
 ]];

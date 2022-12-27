@@ -23,12 +23,10 @@ var cimport = {
     let reader = new FileReader(),
     vDate = /^\d{4}-\d{2}-\d{2}$/,
     csv = hFile.files[0], row, col, err, valid = false;
-    
+
     reader.addEventListener("loadend", () => { try {
       // (B2-1) READ ROW-BY-ROW INTO HTML + CHECK VALID
-      csv = reader.result.split("\r\n");
-      csv.forEach(r => {
-        r = r.split(",");
+      for (let r of CSV.parse(reader.result)) {
         row = document.createElement("tr");
         if (r.length != 5) {
           row.className = "table-danger fw-bold";
@@ -54,7 +52,7 @@ var cimport = {
           } else { row.className = "table-danger fw-bold"; }
         }
         hList.appendChild(row);
-      });
+      }
 
       // (B2-2) START BUTTON
       if (valid) {
@@ -99,6 +97,7 @@ var cimport = {
           cimport.go();
         },
         onfail : msg => {
+          row.className = "table-danger fw-bold";
           col[5].innerHTML = msg;
           cimport.go();
         }

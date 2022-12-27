@@ -6,7 +6,7 @@ function login () {
       password : document.getElementById("login-pass").value
     },
     passmsg : false,
-    onpass : () => { location.href = cbhost.base; }
+    onpass : () => location.href = cbhost.base
   });
   return false;
 }

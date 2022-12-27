@@ -44,7 +44,7 @@ class Courses extends Core {
   //  $id : course id
   function del ($id) {
     $this->DB->start();
-    $this->DB->delete("attendance", "`course_id`=?", [$id]);
+    $this->DB->query("DELETE `attendance` FROM `attendance` LEFT JOIN `classes` USING (`class_id`) WHERE `course_id`=?", [$id]);
     $this->DB->delete("classes", "`course_id`=?", [$id]);
     $this->DB->delete("courses_users", "`course_id`=?", [$id]);
     $this->DB->delete("courses", "`course_id`=?", [$id]);

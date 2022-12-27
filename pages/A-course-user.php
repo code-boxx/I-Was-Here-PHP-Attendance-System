@@ -20,7 +20,7 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
   <button class="btn btn-primary mi mx-1">
     add
   </button>
-  <button class="btn btn-primary mi" onclick="uimport.init()">
+  <button class="btn btn-primary mi" type="button" onclick="uimport.init()">
     upload
   </button>
 </form>
