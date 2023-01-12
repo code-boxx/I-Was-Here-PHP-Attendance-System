@@ -13,6 +13,7 @@ self.addEventListener("install", evt => {
       "assets/ico-512.png",
       "assets/favicon.png",
       "assets/login.jpg",
+      "assets/forgot.jpg",
       // (A3) COMMON INTERFACE
       "assets/PAGE-cb.js",
       "assets/CB-selector.css",
@@ -28,6 +29,7 @@ self.addEventListener("install", evt => {
       "assets/PAGE-login.js",
       "assets/A-class.js",
       "assets/A-class-attend.js",
+      "assets/A-class-import.js",
       "assets/A-course.js",
       "assets/A-course-import.js",
       "assets/A-course-user.js",

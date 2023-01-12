@@ -280,4 +280,35 @@ class Classes extends Core {
     // (K4) RESULTS
     return $this->DB->fetchAll($sql, $data, "class_id");
   }
+
+  // (L) IMPORT CLASS
+  function import ($code, $date, $email, $desc) {
+    // (L1) CHECK - COURSE CODE
+    $this->core->load("Courses");
+    $course = $this->core->Courses->get($code);
+    if (!is_array($course)) {
+      $this->error = "Invalid course - $code";
+      return false;
+    }
+
+    // (L2) CHECK - CLASS DATE
+    $udate = strtotime($date);
+    if ($udate<strtotime("{$course["course_start"]} 00:00:00") || $udate>strtotime("{$course["course_end"]} 23:59:59")) {
+      $this->error = "Class date does not fall within course period";
+      return false;
+    }
+
+    // (L3) CHECK TEACHER
+    $teacher = $this->DB->fetch("SELECT * FROM `courses_users` c
+    LEFT JOIN `users` u USING (`user_id`)
+    WHERE c.`course_id`=? AND u.`user_email`=?", [$course["course_id"], $email]);
+    if (!is_array($teacher)) {
+      $this->error = "$email is not a teacher of this course";
+      return false;
+    }
+
+    // (L4) IMPORT CLASS
+    $this->save($course["course_id"], $teacher["user_id"], $date, $desc);
+    return true;
+  }
 }

@@ -15,10 +15,11 @@
     <input type="file" class="form-control" required accept=".csv" 
     id="course-import-file" onchange="cimport.read()">
   </div>
-  
+
   <small>
-    * CSV file format - code | name | description | start date | end date<br>
-    * date format - YYYY-MM-DD
+    * CSV Columns - Code | Name | Description | Start date | End date<br>
+    * Date Format - YYYY-MM-DD<br>
+    * <a href="<?=HOST_ASSETS?>0b-dummy-courses.csv">Example</a>
   </small>
 </div>
 

@@ -2,8 +2,8 @@ var classes = {
   // (A) SHOW COURSE CLASSES PAGE
   pg : 1, // current page
   find : "", // current search
-  list : () => {
-    cb.page(0);
+  list : silent => {
+    if (silent!==true) { cb.page(0); }
     cb.load({
       page : "a/class/list",
       target : "class-list",

@@ -19,4 +19,9 @@ switch ($_REQ) {
   case "del":
     $_CORE->autoAPI("Classes", "del");
     break;
+
+  // (E) IMPORT CLASS
+  case "import":
+    $_CORE->autoAPI("Classes", "import");
+    break;
 }

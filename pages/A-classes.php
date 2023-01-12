@@ -2,8 +2,10 @@
 $_PMETA = ["load" => [
   ["l", HOST_ASSETS."CB-selector.css"],
   ["s", HOST_ASSETS."CB-selector.js", "defer"],
+  ["s", HOST_ASSETS."csv.min.js", "defer"],
   ["s", HOST_ASSETS."A-class.js", "defer"],
-  ["s", HOST_ASSETS."A-class-attend.js", "defer"]
+  ["s", HOST_ASSETS."A-class-attend.js", "defer"],
+  ["s", HOST_ASSETS."A-class-import.js", "defer"]
 ]];
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <!-- (A) NAVIGATION -->
@@ -18,9 +20,19 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
   </button>
 
   <!-- (B2) ADD CLASS -->
-  <button class="btn btn-primary mi" onclick="classes.addEdit()">
-    add
-  </button>
+  <div class="dropdown">
+    <button class="btn btn-primary mi" type="button" data-bs-toggle="dropdown">
+      add
+    </button>
+    <ul class="dropdown-menu dropdown-menu-dark">
+      <li class="dropdown-item" onclick="classes.addEdit()">
+        <i class="mi mi-smil">add</i> Add Single
+      </li>
+      <li class="dropdown-item" onclick="cimport.init()">
+        <i class="mi mi-smil">upload</i> Import CSV
+      </li>
+    </ul>
+  </div>
 </form>
 
 <!-- (C) CLASSES LIST -->

@@ -16,7 +16,8 @@
   </div>
 
   <small>
-    * CSV file should only have one column of emails
+    * CSV Columns - Email<br>
+    * <a href="<?=HOST_ASSETS?>0c-dummy-course-users.csv">Example</a>
   </small>
 </div>
 

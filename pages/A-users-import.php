@@ -15,10 +15,11 @@
     <input type="file" class="form-control" required accept=".csv" 
     id="user-import-file" onchange="uimport.read()">
   </div>
-  
+
   <small>
-    * CSV file format - name | email | role | password<br>
-    * Roles - <u>A</u>dmin, <u>T</u>eacher, <u>S</u>tudent
+    * CSV Columns - Name | Email | Role | Password<br>
+    * Roles - <u>A</u>dmin, <u>T</u>eacher, <u>S</u>tudent<br>
+    * <a href="<?=HOST_ASSETS?>0a-dummy-users.csv">Example</a>
   </small>
 </div>
 

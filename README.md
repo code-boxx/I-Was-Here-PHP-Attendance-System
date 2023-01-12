@@ -5,18 +5,18 @@ I Was Here is a simple PHP Student Attendance Management System. This is not a "
 ## FEATURES
 1) Users management.
 2) Take attendance manually, or let students scan a QR code.
-3) Progressive web app.
+3) Installble progressive web app.
 4) CSV reports.
 <br><br>
 
 ## SCREENSHOTS
 <p float="left">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5.png">
-  <img width="250" style="inline-block" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6a.png">
 </p><br>
 
 ## REQUIREMENTS
