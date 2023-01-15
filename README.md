@@ -2,14 +2,14 @@
 I Was Here is a simple PHP Student Attendance Management System. This is not a "we have a lot of features that you will never use" system, but a basic one to help smaller schools to get started quickly.
 <br><br>
 
-## FEATURES
+## :white_check_mark: FEATURES
 1) Users management.
 2) Take attendance manually, or let students scan a QR code.
 3) Installble progressive web app.
 4) CSV reports.
 <br><br>
 
-## SCREENSHOTS
+## :camera: SCREENSHOTS
 <p float="left">
   <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1a.png">
   <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2a.png">
@@ -19,23 +19,23 @@ I Was Here is a simple PHP Student Attendance Management System. This is not a "
   <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6a.png">
 </p><br>
 
-## REQUIREMENTS
+## :ballot_box_with_check: REQUIREMENTS
 1) LAMP/WAMP/MAMP/XAMPP
 2) Apache Mod Rewrite
 3) PHP MYSQL PDO Extension
 4) At least PHP 8.0
 <br><br>
 
-## INSTALLATION
+## :floppy_disk: INSTALLATION
 Just access `http://your-site.com/` in your browser and walk through the installer.
 <br><br>
 
-## DOCUMENTATION & FRAMEWORKS
+## :bulb: DOCUMENTATION & FRAMEWORKS
 1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/), [PHP-JWT](https://github.com/firebase/php-jwt), and [Core Boxx](https://code-boxx.com/core-boxx-php-framework/).
 2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
 <br><br>
 
-## LICENSE
+## :newspaper: LICENSE
 Copyright by Code Boxx
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
