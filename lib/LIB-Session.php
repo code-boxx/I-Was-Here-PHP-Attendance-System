@@ -69,7 +69,7 @@ class Session extends Core {
   }
 
   // (C) CREATE CBSESS COOKIE
-  function create () {
+  function create () : void {
     // (C1) GRAB ALL DATA FROM $_SESS - EXCEPT USER
     global $_SESS;
     $data = $_SESS;
@@ -94,7 +94,7 @@ class Session extends Core {
   }
 
   // (D) DESTROY SESSION + COOKIE
-  function destroy () {
+  function destroy () : void {
     // (D1) EXPIRE HTTP COOKIE
     $options = $this->cookie;
     $options["expires"] = -1;

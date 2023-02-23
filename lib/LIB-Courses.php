@@ -91,10 +91,10 @@ class Courses extends Core {
 
     // (F2) PAGINATION
     if ($page != null) {
-      $this->core->paginator(
+      $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
-      $sql .= $this->core->page["lim"];
+      $sql .= $this->Core->page["lim"];
     }
 
     // (F3) RESULTS
@@ -109,8 +109,8 @@ class Courses extends Core {
   //  $uid : user id or email
   function addUser ($cid, $uid) {
     // (G1) VERIFY VALID USER
-    $this->core->load("Users");
-    $user = $this->core->Users->get($uid);
+    $this->Core->load("Users");
+    $user = $this->Users->get($uid);
     if (!is_array($user) || $user["user_role"]=="I") {
       $this->error = "Invalid user";
       return false;
@@ -141,14 +141,14 @@ class Courses extends Core {
 
     // (I2) PAGINATION
     if ($page != null) {
-      $this->core->paginator(
+      $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
     }
 
     // (I3) "MAIN SQL"
     $sql .= " ORDER BY FIELD(`user_role`, 'A','T','S'), `user_name`";
-    if ($page != null) { $sql .= $this->core->page["lim"]; }
+    if ($page != null) { $sql .= $this->Core->page["lim"]; }
 
     // (I4) RESULTS
     return $this->DB->fetchAll("SELECT * $sql", $data, "user_id");

@@ -123,10 +123,10 @@ class Users extends Core {
 
     // (H2) PAGINATION
     if ($page != null) {
-      $this->core->paginator(
+      $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
-      $sql .= $this->core->page["lim"];
+      $sql .= $this->Core->page["lim"];
     }
 
     // (H3) RESULTS
@@ -169,7 +169,7 @@ class Users extends Core {
 
     // (J3) SESSION START
     $_SESS["user"] = $user;
-    $this->core->Session->create();
+    $this->Session->create();
     return true;
   }
 
@@ -180,7 +180,7 @@ class Users extends Core {
     if (!isset($_SESS["user"])) { return true; }
 
     // (K2) END SESSION
-    $this->core->Session->destroy();
+    $this->Session->destroy();
     return true;
   }
 }

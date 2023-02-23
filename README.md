@@ -35,6 +35,10 @@ Just access `http://your-site.com/` in your browser and walk through the install
 2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
 <br><br>
 
+## :star: SUPPORT
+Like this project? Just give it a star. That will indirectly help grow my blog a little bit. :wink:
+<br><br>
+
 ## :newspaper: LICENSE
 Copyright by Code Boxx
 

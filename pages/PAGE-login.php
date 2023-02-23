@@ -8,7 +8,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border" style="max-width:1000px">
 <div class="row">
-  <div class="col-3" style="background:url('<?=HOST_ASSETS?>login.jpg') center;background-size:cover"></div>
+  <div class="col-3" style="background:url('<?=HOST_ASSETS?>login.webp') center;background-size:cover"></div>
   <form class="col-9 p-4"onsubmit="return login();">
     <img src="<?=HOST_ASSETS?>favicon.png" class="p-2 rounded-circle" style="background:#f1f1f1">
     <h3 class="my-4">PLEASE SIGN IN</h3>

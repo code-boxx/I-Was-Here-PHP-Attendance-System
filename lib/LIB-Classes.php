@@ -14,7 +14,7 @@ class Classes extends Core {
     // (A2) ADD/UPDATE CLASS
     if ($id==null) {
       $fields[] = "class_hash";
-      $data[] = $this->core->random(12);
+      $data[] = $this->Core->random(12);
       $this->DB->insert("classes", $fields, $data);
     } else {
       $data[] = $id;
@@ -61,14 +61,14 @@ class Classes extends Core {
 
     // (D2) PAGINATION
     if ($page != null) {
-      $this->core->paginator($this->DB->fetchCol(
+      $this->Core->paginator($this->DB->fetchCol(
         "SELECT COUNT(*) $sql", $data
       ), $page);
     }
 
     // (D3) RESULT
     $sql .= " ORDER BY `class_date` DESC";
-    if ($page != null) { $sql .= $this->core->page["lim"]; }
+    if ($page != null) { $sql .= $this->Core->page["lim"]; }
     return $this->DB->fetchAll(
       "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name` $sql",
       $data, "class_id"
@@ -80,8 +80,8 @@ class Classes extends Core {
   //  $uid : user id or email
   function attend ($id, $uid) {
     // (E1) VERIFY VALID USER
-    $this->core->load("Users");
-    $user = $this->core->Users->get($uid);
+    $this->Core->load("Users");
+    $user = $this->Users->get($uid);
     if (!is_array($user) || $user["user_role"]!="S") {
       $this->error = "Invalid user";
       return false;
@@ -221,14 +221,14 @@ class Classes extends Core {
 
     // (J2) PAGINATION
     if ($page != null) {
-      $this->core->paginator(
+      $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
     }
 
     // (J3) GET CLASSES
     $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` DESC";
-    if ($page != null) { $sql .= $this->core->page["lim"]; }
+    if ($page != null) { $sql .= $this->Core->page["lim"]; }
 
     // (J4) RESULTS
     return $this->DB->fetchAll($sql, $data, "class_id");
@@ -263,7 +263,7 @@ class Classes extends Core {
 
     // (K2) PAGINATION
     if ($page != null) {
-      $this->core->paginator(
+      $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) FROM `classes` cl $sql", $data), $page
       );
     }
@@ -274,7 +274,7 @@ class Classes extends Core {
             LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
             LEFT JOIN `courses` co ON (cl.`course_id`=co.`course_id`)
             $sql  ORDER BY `class_date` DESC";
-    if ($page != null) { $sql .= $this->core->page["lim"]; }
+    if ($page != null) { $sql .= $this->Core->page["lim"]; }
     array_unshift($data, $uid);
 
     // (K4) RESULTS
@@ -284,8 +284,8 @@ class Classes extends Core {
   // (L) IMPORT CLASS
   function import ($code, $date, $email, $desc) {
     // (L1) CHECK - COURSE CODE
-    $this->core->load("Courses");
-    $course = $this->core->Courses->get($code);
+    $this->Core->load("Courses");
+    $course = $this->Courses->get($code);
     if (!is_array($course)) {
       $this->error = "Invalid course - $code";
       return false;
