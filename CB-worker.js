@@ -12,8 +12,8 @@ self.addEventListener("install", evt => {
       // (A2) ICONS + IMAGES
       "assets/ico-512.png",
       "assets/favicon.png",
-      "assets/login.jpg",
-      "assets/forgot.jpg",
+      "assets/login.webp",
+      "assets/forgot.webp",
       // (A3) COMMON INTERFACE
       "assets/PAGE-cb.js",
       "assets/CB-selector.css",

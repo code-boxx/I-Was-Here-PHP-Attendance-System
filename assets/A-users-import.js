@@ -22,7 +22,7 @@ var uimport = {
     // (B2) READ SELECTED FILE
     let reader = new FileReader(),
         vMail = new RegExp("[a-z0-9]+@[a-z]+\.[a-z]{2,3}"),
-        vRoles = ["A", "T", "S", "I"],
+        vLvl = ["A", "T", "S", "I"],
         csv = hFile.files[0], row, col, err, valid = false;
 
     reader.addEventListener("loadend", () => { try {
@@ -41,7 +41,7 @@ var uimport = {
             row.appendChild(col);
           }
           if (err==null && !vMail.test(r[1])) { err = "Invalid Email"; }
-          if (err==null && !vRoles.includes(r[2])) { err = "Invalid Role"; }
+          if (err==null && !vLvl.includes(r[2])) { err = "Invalid Level"; }
           if (err==null && !cb.checker(r[3])) { err = "Invalid Password"; }
           col = document.createElement("td");
           col.innerHTML = err==null ? "" : err;
@@ -87,7 +87,7 @@ var uimport = {
         data : {
           name : col[0].innerHTML,
           email : col[1].innerHTML,
-          role : col[2].innerHTML,
+          lvl : col[2].innerHTML,
           password : col[3].innerHTML
         },
         onpass : () => {

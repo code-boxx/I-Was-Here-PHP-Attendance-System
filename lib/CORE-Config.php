@@ -6,8 +6,8 @@ define("HOST_BASE_PATH", parse_url(HOST_BASE, PHP_URL_PATH));
 define("HOST_ASSETS", HOST_BASE . "assets/");
 
 // (B) API ENDPOINT
-define("HOST_API", HOST_BASE_PATH . "api/");
-define("HOST_API_BASE", HOST_BASE . "api/");
+define("HOST_API", "api/");
+define("HOST_API_BASE", HOST_BASE . HOST_API);
 define("API_HTTPS", false);
 define("API_CORS", false);
 // define("API_CORS", false); // no cors, accept host_name only
@@ -34,11 +34,9 @@ define("JWT_EXPIRE", 0);
 define("JWT_ISSUER", "YOUR-NAME");
 define("JWT_SECRET", "YOUR-SECRET-KEY");
 
-/* ENABLE THIS SECTION IF USING PUSH NOTIFICATION MODULE
-// (F) PUSH NOTIFICATION KEYS
+/* (F) PUSH NOTIFICATION KEYS
 define("PUSH_PUBLIC", "PUBLIC-KEY");
-define("PUSH_PRIVATE", "SECRET-KEY");
-*/
+define("PUSH_PRIVATE", "SECRET-KEY"); */
 
 // (G) ERROR HANDLING
 /* (G1) RECOMMENDED FOR LIVE SERVER
@@ -53,3 +51,8 @@ error_reporting(E_ALL & ~E_NOTICE);
 ini_set("display_errors", 1);
 ini_set("log_errors", 0);
 define("ERR_SHOW", true);
+
+// (H) USER LEVELS
+define("USR_LVL", [
+  "A" => "Admin", "T" => "Teacher", "S" => "Student"
+]);

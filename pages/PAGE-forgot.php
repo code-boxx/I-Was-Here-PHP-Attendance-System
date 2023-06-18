@@ -1,7 +1,7 @@
 <?php
 // (A) ALREADY SIGNED IN
-if (isset($_SESS["user"])) {
-  $_CORE->redirect($_SESS["user"]["user_level"]=="A" ? "admin/" : "user/");
+if (isset($_SESSION["user"])) {
+  $_CORE->redirect(strtolower($_SESSION["user"]["user_level"]));
 }
 
 // (B) PART 1 - ENTER EMAIL

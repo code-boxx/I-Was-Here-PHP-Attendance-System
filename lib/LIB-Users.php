@@ -15,13 +15,13 @@ class Users extends Core {
   //  $name : user name
   //  $email : user email
   //  $password : user password
-  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
+  //  $lvl : "A"dmin | "T"eacher | "S"tudent | "I"nactive
   //  $id : user id (for updating only)
-  function save ($name, $email, $password, $role="S", $id=null) {
+  function save ($name, $email, $password, $lvl="S", $id=null) {
     // (B1) DATA SETUP + PASSWORD CHECK
     if (!$this->checker($password)) { return false; }
-    $fields = ["user_name", "user_email", "user_password", "user_role"];
-    $data = [$name, $email, password_hash($password, PASSWORD_DEFAULT), $role];
+    $fields = ["user_name", "user_email", "user_password", "user_level"];
+    $data = [$name, $email, password_hash($password, PASSWORD_DEFAULT), $lvl];
 
     // (B2) ADD/UPDATE USER
     if ($id===null) {
@@ -37,21 +37,20 @@ class Users extends Core {
   //  $name : user name
   //  $email : user email
   //  $password : user password
-  //  $role : "A"dmin | "T"eacher | "S"tudent | "I"nactive
-  function import ($name, $email, $password, $role="S") {
+  //  $lvl : "A"dmin | "T"eacher | "S"tudent | "I"nactive
+  function import ($name, $email, $password, $lvl="S") {
     // (C1) GET USER
     $user = $this->get($email);
 
     // (C2) UPDATE OR INSERT
-    $this->save($name, $email, $password, $role, is_array($user)?$user["user_id"]:null);
+    $this->save($name, $email, $password, $lvl, is_array($user)?$user["user_id"]:null);
     return true;
   }
 
   // (D) UPDATE ACCOUNT (LIMITED SAVE)
   function update ($name, $email, $password) {
     // (D1) MUST BE SIGNED IN
-    global $_SESS;
-    if (!isset($_SESS["user"])) {
+    if (!isset($_SESSION["user"])) {
       $this->error = "Please sign in first";
       return false;
     }
@@ -59,7 +58,7 @@ class Users extends Core {
     // (D2) UPDATE DATABASE
     $this->DB->update("users",
       ["user_name", "user_email", "user_password"],
-      "`user_id`=?", [$name, $email, password_hash($password, PASSWORD_DEFAULT), $_SESS["user"]["user_id"]]
+      "`user_id`=?", [$name, $email, password_hash($password, PASSWORD_DEFAULT), $_SESSION["user"]["user_id"]]
     );
     return true;
   }
@@ -67,7 +66,7 @@ class Users extends Core {
   // (E) DELETE USER (NON-DESTRUCTIVE)
   //  $id : user id
   function del ($id) {
-    $this->DB->update("users", ["user_role"], "`user_id`=?", ["I", $id]);
+    $this->DB->update("users", ["user_level"], "`user_id`=?", ["I", $id]);
     return true;
   }
 
@@ -82,13 +81,13 @@ class Users extends Core {
 
   // (G) SEARCH USER - FOR AUTOCOMPLETE USE
   //  $search : user name or email
-  //  $role : restrict role
-  function autocomplete ($search, $role=null) {
+  //  $lvl : restrict level
+  function autocomplete ($search, $lvl=null) {
     $sql = "SELECT * FROM `users` WHERE (`user_name` LIKE ? OR `user_email` LIKE ?)";
     $data = ["%$search%", "%$search%"];
-    if ($role != null) {
-      $sql .= " AND `user_role`=?";
-      $data[] = $role;
+    if ($lvl != null) {
+      $sql .= " AND `user_level`=?";
+      $data[] = $lvl;
     }
     $sql .= " LIMIT 5";
     $this->DB->query($sql, $data);
@@ -104,17 +103,17 @@ class Users extends Core {
 
   // (H) GET ALL OR SEARCH USERS
   //  $search : optional, user name or email
-  //  $role : optional, restrict to this role only
+  //  $lvl : optional, restrict to this level only
   //  $page : optional, current page number
-  function getAll ($search=null, $role=null, $page=null) {
+  function getAll ($search=null, $lvl=null, $page=null) {
     // (H1) PARITAL USERS SQL + DATA
-    $sql = "FROM `users` WHERE `user_role`";
-    if ($role==null) {
+    $sql = "FROM `users` WHERE `user_level`";
+    if ($lvl==null) {
       $sql .= "!=?";
       $data = ["I"];
     } else {
       $sql .= "=?";
-      $data = [$role];
+      $data = [$lvl];
     }
     if ($search != null) {
       $sql .= " AND (`user_name` LIKE ? OR `user_email` LIKE ?)";
@@ -160,24 +159,22 @@ class Users extends Core {
   //  $password : user password
   function login ($email, $password) {
     // (J1) ALREADY SIGNED IN
-    global $_SESS;
-    if (isset($_SESS["user"])) { return true; }
+    if (isset($_SESSION["user"])) { return true; }
 
     // (J2) VERIFY EMAIL PASSWORD
     $user = $this->verify($email, $password);
     if ($user===false) { return false; }
 
     // (J3) SESSION START
-    $_SESS["user"] = $user;
-    $this->Session->create();
+    $_SESSION["user"] = $user;
+    $this->Session->save();
     return true;
   }
 
   // (K) LOGOUT
   function logout () {
     // (K1) ALREADY SIGNED OFF
-    global $_SESS;
-    if (!isset($_SESS["user"])) { return true; }
+    if (!isset($_SESSION["user"])) { return true; }
 
     // (K2) END SESSION
     $this->Session->destroy();

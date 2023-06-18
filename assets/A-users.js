@@ -2,7 +2,7 @@ var usr = {
   // (A) SHOW ALL USERS
   pg : 1, // current page
   find : "", // current search
-  role : "", // current role
+  lvl : "", // current level
   list : silent => {
     if (silent!==true) { cb.page(0); }
     cb.load({
@@ -11,7 +11,7 @@ var usr = {
       data : {
         page : usr.pg,
         search : usr.find,
-        role : usr.role
+        lvl : usr.lvl
       }
     });
   },
@@ -26,7 +26,7 @@ var usr = {
   // (C) SEARCH USER
   search : () => {
     usr.find = document.getElementById("user-search").value;
-    usr.role = document.getElementById("user-search-role").value;
+    usr.lvl = document.getElementById("user-search-lvl").value;
     usr.pg = 1;
     usr.list();
     return false;
@@ -47,7 +47,7 @@ var usr = {
     var data = {
       name : document.getElementById("user_name").value,
       email : document.getElementById("user_email").value,
-      role : document.getElementById("user_role").value,
+      lvl : document.getElementById("user_level").value,
       password : document.getElementById("user_password").value
     };
     var id = document.getElementById("user_id").value;

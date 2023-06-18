@@ -111,7 +111,7 @@ class Courses extends Core {
     // (G1) VERIFY VALID USER
     $this->Core->load("Users");
     $user = $this->Users->get($uid);
-    if (!is_array($user) || $user["user_role"]=="I") {
+    if (!is_array($user) || $user["user_level"]=="I") {
       $this->error = "Invalid user";
       return false;
     }
@@ -136,7 +136,7 @@ class Courses extends Core {
     // (I1) PARITAL SQL + DATA
     $sql = "FROM `courses_users` cu
             JOIN `users` u USING (`user_id`)
-            WHERE cu.`course_id`=? AND u.`user_role`!='I'";
+            WHERE cu.`course_id`=? AND u.`user_level`!='I'";
     $data = [$id];
 
     // (I2) PAGINATION
@@ -147,7 +147,7 @@ class Courses extends Core {
     }
 
     // (I3) "MAIN SQL"
-    $sql .= " ORDER BY FIELD(`user_role`, 'A','T','S'), `user_name`";
+    $sql .= " ORDER BY FIELD(`user_level`, 'A','T','S'), `user_name`";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
 
     // (I4) RESULTS
@@ -161,7 +161,7 @@ class Courses extends Core {
       "SELECT u.`user_id`, u.`user_name`, u.`user_email`
        FROM `courses_users` c
        JOIN `users` u USING (`user_id`)
-       WHERE u.`user_role` IN ('A', 'T')
+       WHERE u.`user_level` IN ('A', 'T')
        AND c.`course_id`=?
        ORDER BY `user_name` ASC",
        [$id], "user_id"

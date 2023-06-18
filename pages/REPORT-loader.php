@@ -1,11 +1,9 @@
 
 <?php
 // (A) ADMIN ONLY
-if (!isset($_SESS["user"]) || $_SESS["user"]["user_role"]!="A") {
-  $_CORE->redirect();
-}
+$_CORE->ucheck("A");
 
 // (B) LOAD REPORT
-$_PATH = explode("/", $_PATH);
-if (count($_PATH)!=3) { exit("Invalid report"); }
-$_CORE->autoCall("Report", $_PATH[1]);
+$_CORE->Route->path = explode("/", $_CORE->Route->path);
+if (count($_CORE->Route->path)!=3) { exit("Invalid report"); }
+$_CORE->autoCall("Report", $_CORE->Route->path[1]);

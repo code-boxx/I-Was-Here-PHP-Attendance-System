@@ -1,8 +1,6 @@
 <?php
 // (A) ADMIN + TEACHER ONLY
-if (!isset($_SESS["user"]) || ($_SESS["user"]["user_role"]!="A" && $_SESS["user"]["user_role"]!="T")) {
-  $_CORE->redirect();
-}
+$_CORE->ucheck(["A", "T"]);
 
 // (B) GET CLASS
 $_CORE->load("Classes");

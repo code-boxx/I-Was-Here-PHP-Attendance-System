@@ -1,6 +1,6 @@
 <?php
 // (A) GET CLASSES FOR TEACHER
-$_POST["uid"] = $_SESS["user"]["user_id"];
+$_POST["uid"] = $_SESSION["user"]["user_id"];
 $classes = $_CORE->autoCall("Classes", "getByTeacher");
 
 // (B) DRAW CLASSES LIST

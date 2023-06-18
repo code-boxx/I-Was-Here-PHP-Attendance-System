@@ -1,8 +1,10 @@
 <?php
+// CALLED BY $_CORE->ROUTES->RESOLVE()
+// USE THIS TO OVERRIDE URL PAGE ROUTES
+
 // (A) LOGIN CHECK
 $override = function ($path) {
-  global $_SESS;
-  if (!isset($_SESS["user"]) && $path!="login/" && $path!="forgot/") {
+  if (!isset($_SESSION["user"]) && $path!="login/" && $path!="forgot/") {
     if (isset($_POST["ajax"])) { exit("E"); }
     else { header("Location: ".HOST_BASE."login"); exit(); }
   }

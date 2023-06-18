@@ -6,42 +6,48 @@ CREATE TABLE `settings` (
   `setting_group` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+INSERT INTO `settings` (`setting_name`, `setting_description`, `setting_value`, `setting_group`) VALUES
+('APP_VER', 'App version', '1', 0),
+('EMAIL_FROM', 'System email from', 'sys@site.com', 1),
+('PAGE_PER', 'Number of entries per page', '20', 1),
+('D_LONG', 'MYSQL date format (long)', '%e %M %Y', 1),
+('D_SHORT', 'MYSQL date format (short)', '%Y-%m-%d', 1),
+('DT_LONG', 'MYSQL date time format (long)', '%e %M %Y %l:%i:%S %p', 1),
+('DT_SHORT', 'MYSQL date time format (short)', '%Y-%m-%d %H:%i:%S', 1);
+
 ALTER TABLE `settings`
   ADD PRIMARY KEY (`setting_name`),
   ADD KEY `setting_group` (`setting_group`);
 
-INSERT INTO `settings` (`setting_name`, `setting_description`, `setting_value`, `setting_group`) VALUES
-  ('EMAIL_FROM', 'System email from.', 'sys@site.com', 1),
-  ('PAGE_PER', 'Number of entries per page.', '20', 1),
-  ('USER_ROLES', 'User role names.', '{"A":"Admin","T":"Teacher","S":"Student","I":"Inactive"}', 0);
-
 -- (B) USERS
 CREATE TABLE `users` (
   `user_id` bigint(20) NOT NULL,
+  `user_level` varchar(1) NOT NULL DEFAULT 'U',
   `user_name` varchar(255) NOT NULL,
   `user_email` varchar(255) NOT NULL,
-  `user_role` varchar(1) NOT NULL DEFAULT 'S',
   `user_password` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 ALTER TABLE `users`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `user_email` (`user_email`),
   ADD KEY `user_name` (`user_name`),
-  ADD KEY `user_role` (`user_role`);
+  ADD KEY `user_level` (`user_level`);
 
 ALTER TABLE `users`
   MODIFY `user_id` bigint(20) NOT NULL AUTO_INCREMENT;
 
--- (C) PASSWORD RESET
-CREATE TABLE `password_reset` (
+-- (C) HASH
+CREATE TABLE `users_hash` (
   `user_id` bigint(20) NOT NULL,
-  `reset_hash` varchar(64) NOT NULL,
-  `reset_time` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `hash_for` varchar(1) NOT NULL,
+  `hash_code` varchar(64) NOT NULL,
+  `hash_time` datetime NOT NULL,
+  `hash_tries` int(11) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-ALTER TABLE `password_reset`
-  ADD PRIMARY KEY (`user_id`);
+ALTER TABLE `users_hash`
+  ADD PRIMARY KEY (`user_id`, `hash_for`);
 
 -- (D) COURSES
 CREATE TABLE `courses` (

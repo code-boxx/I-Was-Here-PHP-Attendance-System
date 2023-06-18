@@ -20,7 +20,7 @@
     <meta name="msapplication-TileImage" content="<?=HOST_ASSETS?>icon-512.png">
     <meta name="msapplication-TileColor" content="#ffffff">
 
-    <?php if (isset($_SESS["user"])) { ?>
+    <?php if (isset($_SESSION["user"])) { ?>
     <!-- (A3) WEB APP MANIFEST -->
     <!-- https://web.dev/add-manifest/ -->
     <link rel="manifest" href="<?=HOST_BASE?>CB-manifest.json">
@@ -92,42 +92,43 @@
 
     <!-- (C) MAIN INTERFACE -->
     <div id="cb-body" class="d-flex">
-      <?php if (isset($_SESS["user"])) { ?>
+      <?php if (isset($_SESSION["user"])) { ?>
       <!-- (C1) LEFT SIDEBAR -->
       <nav id="cb-side" class="bg-dark text-white p-2"><ul class="navbar-nav"><?php
-        require PATH_PAGES . "TEMPLATE-".$_SESS["user"]["user_role"]."-menu.php";
+        require PATH_PAGES . "TEMPLATE-".$_SESSION["user"]["user_level"]."-menu.php";
       ?></ul></nav>
       <?php } ?>
 
       <!-- (C2) RIGHT CONTENTS -->
       <div class="flex-grow-1">
-        <?php if (isset($_SESS["user"])) { ?>
-        <!-- (C2-1) TOP NAV -->
-        <nav class="d-flex bg-dark text-white p-1">
-          <div class="flex-grow-1">
-            <button id="cb-toggle" class="btn btn-sm mi text-white" onclick="cb.toggle()">
-              menu
-            </button>
-          </div>
+        <?php if (isset($_SESSION["user"])) { ?>
+          <!-- (C2-1) TOP NAV -->
+          <nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container-fluid">
+          <button id="cb-toggle" class="navbar-toggler btn btn-sm mi text-white" onclick="cb.toggle()">
+            menu
+          </button>
+          <div class="navbar-nav me-auto mb-2 mb-lg-0"></div>
+
           <div class="d-flex align-items-center">
-            <a class="text-decoration-none text-white mx-2"
-              data-bs-toggle="dropdown">
-                <span class="mi">person</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-              <li class="dropdown-header">
-                <?=$_SESS["user"]["user_name"]?><br>
-                <?=$_SESS["user"]["user_email"]?>
-              </li>
-              <li><a class="dropdown-item" href="<?=HOST_BASE?>account">
-                <i class="mi mi-smol">person</i> My Account
-              </a></li>
-              <li class="dropdown-item text-warning" onclick="cb.bye()">
-                <i class="mi mi-smol">logout</i> Logout
-              </li>
-            </ul>
+            <div class="dropdown">
+              <button class="btn btn-sm text-white mi" type="button" data-bs-toggle="dropdown">
+                person
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                <li class="dropdown-header">
+                  <?=$_SESSION["user"]["user_name"]?><br>
+                  <?=$_SESSION["user"]["user_email"]?>
+                </li>
+                <li><a class="dropdown-item" href="<?=HOST_BASE?>account">
+                  <i class="mi mi-smol">person</i> My Account
+                </a></li>
+                <li class="dropdown-item text-warning" onclick="cb.bye()">
+                  <i class="mi mi-smol">logout</i> Logout
+                </li>
+              </ul>
+            </div>
           </div>
-        </nav>
+        </div></nav>
         <?php } ?>
 
         <!-- (C2-2) CONTENTS -->

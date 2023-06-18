@@ -1,5 +1,4 @@
 <?php
-$_CORE->Settings->defineN("USER_ROLES", true);
 $_PMETA = ["load" => [
   ["s", HOST_ASSETS."csv.min.js", "defer"],
   ["s", HOST_ASSETS."A-users.js", "defer"],
@@ -19,10 +18,10 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <button class="btn btn-primary mi ms-1">search</button>
     <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
     <ul class="dropdown-menu dropdown-menu-dark">
-      <li class="dropdown-item"><select id="user-search-role" class="form-select">
+      <li class="dropdown-item"><select id="user-search-lvl" class="form-select">
         <option value="">All Active</option>
-        <?php foreach (USER_ROLES as $code=>$role) { ?>
-        <option value="<?=$code?>"><?=$role?></option>
+        <?php foreach (USR_LVL as $code=>$lvl) { ?>
+        <option value="<?=$code?>"><?=$lvl?></option>
         <?php } ?>
       </select></li>
     </ul>

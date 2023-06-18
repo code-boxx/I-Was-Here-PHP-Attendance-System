@@ -82,7 +82,7 @@ class Classes extends Core {
     // (E1) VERIFY VALID USER
     $this->Core->load("Users");
     $user = $this->Users->get($uid);
-    if (!is_array($user) || $user["user_role"]!="S") {
+    if (!is_array($user) || $user["user_level"]!="S") {
       $this->error = "Invalid user";
       return false;
     }
@@ -136,7 +136,7 @@ class Classes extends Core {
     $sql = "SELECT u.`user_id`, u.`user_name`, u.`user_email`
             FROM `courses_users` cu
             JOIN `users` u USING (`user_id`)
-            WHERE cu.`course_id`=? AND u.`user_role`='S'
+            WHERE cu.`course_id`=? AND u.`user_level`='S'
             ORDER BY `user_name`";
     $data = [$cid];
     $students = $this->DB->fetchAll($sql, $data, "user_id");

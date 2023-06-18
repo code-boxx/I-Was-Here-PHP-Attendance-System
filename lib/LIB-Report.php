@@ -35,7 +35,7 @@ class Report extends Core {
        FROM `courses_users` cu 
        LEFT JOIN `users` u ON (cu.`user_id`=u.`user_id`)
        LEFT JOIN `attendance` a ON (cu.`user_id`=a.`user_id`)
-       WHERE cu.`course_id`=? AND u.`user_role`='S'
+       WHERE cu.`course_id`=? AND u.`user_level`='S'
        ORDER BY u.`user_id`, a.`class_id`", [$id]
     );
     $uid = 0; $user = null; $attended = null;

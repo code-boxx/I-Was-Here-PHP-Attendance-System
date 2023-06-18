@@ -1,6 +1,5 @@
 <?php
 // (A) GET USER
-$_CORE->Settings->defineN("USER_ROLES", true);
 $edit = isset($_POST["id"]) && $_POST["id"]!="";
 if ($edit) { $user = $_CORE->autoCall("Users", "get"); }
 
@@ -28,10 +27,10 @@ if ($edit) { $user = $_CORE->autoCall("Users", "get"); }
       <div class="input-group-prepend">
         <span class="input-group-text mi">verified_user</span>
       </div>
-      <select class="form-select" id="user_role"><?php
-        foreach (USER_ROLES as $k=>$v) {
+      <select class="form-select" id="user_level"><?php
+        foreach (USR_LVL as $k=>$v) {
           printf("<option %svalue='%s'>%s</option>",
-          ($edit && $k==$user["user_role"] ? "selected  " : ""), $k, $v
+          ($edit && $k==$user["user_level"] ? "selected  " : ""), $k, $v
         );
       }
       ?></select>

@@ -1,5 +1,4 @@
 <?php
-$_CORE->Settings->defineN("USER_ROLES", true);
 $_PMETA = ["load" => [["s", HOST_ASSETS."PAGE-account.js"]]];
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <form class="bg-white border p-4" onsubmit="return save()">
@@ -9,21 +8,21 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <div class="input-group-prepend">
       <span class="input-group-text mi">person</span>
     </div>
-    <input type="text" id="user-name" class="form-control" required placeholder="Name" value=<?=$_SESS["user"]["user_name"]?>>
+    <input type="text" id="user-name" class="form-control" required placeholder="Name" value=<?=$_SESSION["user"]["user_name"]?>>
   </div>
 
   <div class="input-group mb-4">
     <div class="input-group-prepend">
       <span class="input-group-text mi">email</span>
     </div>
-    <input type="email" id="user-email" class="form-control" required placeholder="Email" value="<?=$_SESS["user"]["user_email"]?>">
+    <input type="email" id="user-email" class="form-control" required placeholder="Email" value="<?=$_SESSION["user"]["user_email"]?>">
   </div>
 
   <div class="input-group mb-3">
     <div class="input-group-prepend">
       <span class="input-group-text mi">verified_user</span>
     </div>
-    <input type="text" class="form-control" readonly value="<?=USER_ROLES[$_SESS["user"]["user_role"]]?>">
+    <input type="text" class="form-control" readonly value="<?=USR_LVL[$_SESSION["user"]["user_level"]]?>">
   </div>
 
   <div class="input-group mb-4">
