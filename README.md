@@ -10,12 +10,12 @@ I Was Here is an open-source PHP Inventory Management System. Featuring NFC and 
 
 ## :camera: SCREENSHOTS
 <p float="left">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-1.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-2.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-3.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-4.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-5.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-6.png">
 </p><br>
 
 ## :ballot_box_with_check: REQUIREMENTS
