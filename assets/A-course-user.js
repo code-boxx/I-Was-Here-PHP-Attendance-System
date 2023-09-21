@@ -1,19 +1,19 @@
 var cuser = {
   // (A) SHOW COURSE USERS PAGE
   pg : 1, // current page
-  id : null, // current course id
-  show : id => {
-    cuser.id = id;
-    cb.page(1);
+  code : null, // current course code
+  show : code => {
+    cuser.code = code;
+    cb.page(2);
     cb.load({
-      page : "a/course/user",
+      page : "A/course/user",
       target : "cb-page-2",
-      data : { id : id },
+      data : { code : code },
       onload : () => {
-        selector.attach({
-          field : document.getElementById("course-user-add"),
-          mod : "autocomplete", req : "user",
-          pick : (d, v) => cuser.add()
+        autocomplete.attach({
+          target : document.getElementById("course-user-add"),
+          mod : "autocomplete", act : "userEmail",
+          onpick : res => cuser.add()
         });
         cuser.list();
       }
@@ -22,11 +22,11 @@ var cuser = {
 
   // (B) SHOW ALL USERS IN COURSE
   list : () => cb.load({
-    page : "a/course/user/list",
+    page : "A/course/user/list",
     target : "course-user-list",
     data : {
       page : cuser.pg,
-      id : cuser.id
+      code : cuser.code
     }
   }),
 
@@ -44,9 +44,9 @@ var cuser = {
 
     // (D2) AJAX
     cb.api({
-      mod : "courses", req : "addUser",
+      mod : "courses", act : "addUser",
       data : {
-        cid : cuser.id,
+        code : cuser.code,
         uid : field.value
       },
       passmsg : "User Added",
@@ -61,12 +61,25 @@ var cuser = {
   // (E) REMOVE USER FROM COURSE
   //  id : user id
   del : id => cb.modal("Please confirm", "User will be removed from the course, but past attendance will be kept.", () => cb.api({
-    mod : "courses", req : "delUser",
+    mod : "courses", act : "delUser",
     data : {
-      cid : cuser.id,
+      code : cuser.code,
       uid : id
     },
     passmsg : "User removed from course",
     onpass : cuser.list
-  }))
+  })),
+
+  // (F) IMPORT USERS TO COURSE
+  import : () => im.init({
+    name : "USERS TO COURSE",
+    at : 3, back : 2,
+    eg : "dummy-course-users.csv",
+    api : { mod : "courses", act : "addUser" },
+    after : () => cuser.list(),
+    data : { code : cuser.code },
+    cols : [
+      ["User's Email", "uid", true]
+    ]
+  })
 };

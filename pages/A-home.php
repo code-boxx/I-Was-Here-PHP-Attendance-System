@@ -1,16 +1,21 @@
 <?php
+// (A) PAGE META
 $_PMETA = ["load" => [
-  ["l", HOST_ASSETS."CB-selector.css"],
-  ["s", HOST_ASSETS."CB-selector.js", "defer"],
+  ["s", HOST_ASSETS."CB-autocomplete.js", "defer"],
   ["s", HOST_ASSETS."A-reports.js", "defer"]
 ]];
+
+// (B) HTML
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <div class="d-flex flex-wrap">
-  <!-- (A) ATTENDANCE -->
+  <!-- (B1) ATTENDANCE -->
   <form class="m-1 p-4 bg-white border" id="report-attend" method="post" target="_blank" action="<?=HOST_BASE?>report/attend">
-    <h5 class="mb-3">ATTENDANCE REPORT</h5>
-    <input type="text" class="form-control" id="attend-course" placeholder="Course Name/Code">
-    <input type="hidden" id="attend-id" name="id">
+    <div class="fw-bold text-danger mb-2">ATTENDANCE REPORT</div>
+    <div class="form-floating">
+      <input type="text" class="form-control" id="attend-course">
+      <label>Course Code/Name</label>
+    </div>
+    <input type="hidden" id="attend-code" name="code">
   </form>
 </div>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

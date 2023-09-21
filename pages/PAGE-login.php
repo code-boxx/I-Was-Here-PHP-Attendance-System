@@ -2,33 +2,60 @@
 // (A) ALREADY SIGNED IN
 if (isset($_SESSION["user"])) { $_CORE->redirect(); }
 
-// (B) HTML PAGE
-$_PMETA = ["load" => [["s", HOST_ASSETS."PAGE-login.js", "defer"]]];
+// (B) PAGE META & SCRIPTS
+$_PMETA = ["load" => [
+  ["s", HOST_ASSETS."PAGE-wa-helper.js", "defer"],
+  ["s", HOST_ASSETS."PAGE-login-wa.js", "defer"],
+  ["s", HOST_ASSETS."PAGE-nfc.js", "defer"],
+    ["s", HOST_ASSETS."PAGE-login-nfc.js", "defer"],
+  ["s", HOST_ASSETS."PAGE-login.js", "defer"]
+]];
+
+// (C) HTML PAGE
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
+<?php if ($_CORE->error!="") { ?>
+<!-- (C1) ERROR MESSAGE -->
+<div class="p-2 mb-3 text-light bg-danger"><?=$_CORE->error?></div>  
+<?php } ?>
+
+<!-- (C2) LOGIN FORM -->
 <div class="row justify-content-center">
-<div class="col-md-10 bg-white border" style="max-width:1000px">
+<div class="col-md-10 bg-white border">
 <div class="row">
-  <div class="col-3" style="background:url('<?=HOST_ASSETS?>login.webp') center;background-size:cover"></div>
-  <form class="col-9 p-4"onsubmit="return login();">
-    <img src="<?=HOST_ASSETS?>favicon.png" class="p-2 rounded-circle" style="background:#f1f1f1">
-    <h3 class="my-4">PLEASE SIGN IN</h3>
+  <div class="col-4" style="background:url('<?=HOST_ASSETS?>users.webp') center;background-size:cover"></div>
+  <div class="col-8 p-4">
+    <form onsubmit="return login();">
+      <!-- (C2-1) NORMAL LOGIN -->
+      <img src="<?=HOST_ASSETS?>favicon.png" class="p-2 rounded-circle" style="width:128px;height:128px;background:#f1f1f1">
+      <h3 class="my-4">PLEASE SIGN IN</h3>
 
-    <div class="input-group mb-4">
-      <div class="input-group-prepend">
-        <span class="input-group-text mi">email</span>
+      <div class="form-floating mb-4">
+        <input type="email" id="login-email" class="form-control" required>
+        <label>Email</label>
       </div>
-      <input type="email" id="login-email" class="form-control" placeholder="Email" required>
-    </div>
 
-    <div class="input-group mb-4">
-      <div class="input-group-prepend">
-        <span class="input-group-text mi">lock</span>
+      <div class="form-floating mb-4">
+        <input type="password" id="login-pass" class="form-control" required>
+        <label>Password</label>
       </div>
-      <input type="password" id="login-pass" class="form-control" placeholder="Password" required>
-    </div>
 
-    <input type="submit" class="btn btn-primary py-2 mb-4" value="Sign in">
-    <div>
+      <button type="submit" class="my-1 btn btn-primary d-flex-inline">
+        <i class="ico-sm icon-enter"></i> Sign In
+      </button>
+
+      <!-- (C2-2) MORE LOGIN -->
+      <button type="button" id="wa-in" onclick="wa.go()" disabled class="my-1 btn btn-primary d-flex-inline">
+        <i class="ico-sm icon-key"></i> Passwordless
+      </button>
+      <button type="button" id="nfc-a" onclick="nin.go()" disabled class="my-1 btn btn-primary d-flex-inline">
+        <i class="ico-sm icon-feed"></i> <span id="nfc-b">NFC</span>
+      </button>
+    </form>
+
+    <!-- (C2-3) SOCIAL LOGIN -->
+
+    <!-- (C2-4) FORGOT & NEW ACCOUNT -->
+    <div class="text-secondary mt-3">
       <a href="<?=HOST_BASE?>forgot">Forgot Password</a>
     </div>
   </div>

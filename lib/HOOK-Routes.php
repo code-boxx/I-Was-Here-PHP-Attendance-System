@@ -2,7 +2,23 @@
 // CALLED BY $_CORE->ROUTES->RESOLVE()
 // USE THIS TO OVERRIDE URL PAGE ROUTES
 
-// (A) LOGIN CHECK
+// (A) EXACT PATH ROUTING
+$routes = [
+  // EXAMPLES
+  // "/" => "myhome.php", // http://site.com/ > pages/myhome.php
+  // "foo/" => "bar.php", // http://site.com/foo/ > pages/bar.php
+];
+
+// (B) WILDCARD PATH ROUTING
+$wild = [
+  "T/" => "USR-check.php",
+  "A/" => "USR-check.php",
+  "TA/" => "USR-check.php",
+  "U/" => "USR-check.php",
+  "report/" => "REPORT-loader.php"
+];
+
+// (C) MANUAL PATH OVERRIDE - LOGIN CHECK
 $override = function ($path) {
   if (!isset($_SESSION["user"]) && $path!="login/" && $path!="forgot/") {
     if (isset($_POST["ajax"])) { exit("E"); }
@@ -10,11 +26,3 @@ $override = function ($path) {
   }
   return $path;
 };
-
-// (B) WILDCARD PATH ROUTING
-$wild = [
-  "t/" => "TSA-check.php",
-  "s/" => "TSA-check.php",
-  "a/" => "TSA-check.php",
-  "report/" => "REPORT-loader.php"
-];

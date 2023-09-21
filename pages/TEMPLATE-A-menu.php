@@ -1,31 +1,31 @@
 <li class="nav-item">
-  <img src="<?=HOST_ASSETS?>favicon.png" loading="lazy" width="32" height="32">
+  <img src="<?=HOST_ASSETS?>favicon.png" loading="lazy" width="42" height="42">
   <hr>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a">
-    <span class="mi mi-smol">library_books</span> Reports
-  </a>
-  <hr>
-</li>
-<li class="nav-item">
-  <div class="mb-2">Institute</div>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a/users">
-    <span class="mi mi-smol">people</span> Users
-  </a>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a/courses">
-    <span class="mi mi-smol">school</span> Courses
-  </a>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a/classes">
-    <span class="mi mi-smol">book</span> Classes
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/">
+    <i class="text-secondary ico-sm icon-pie-chart"></i> Reports
   </a>
   <hr>
 </li>
 <li class="nav-item">
-  <div class="my-2">System</div>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a/settings">
-    <span class="mi mi-smol">settings</span> Settings
+  <div class="mb-2 fw-bold">Institute</div>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/users">
+    <i class="text-secondary ico-sm icon-users"></i> Users
   </a>
-  <a class="nav-link ms-2" href="<?=HOST_BASE?>a/about">
-    <i class="mi mi-smol">info</i> About
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/courses">
+    <i class="text-secondary ico-sm icon-briefcase"></i> Courses
+  </a>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/classes">
+    <i class="text-secondary ico-sm icon-file-text2"></i> Classes
+  </a>
+  <hr>
+</li>
+<li class="nav-item">
+  <div class="my-2 fw-bold">System</div>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/settings">
+    <i class="text-secondary ico-sm icon-cog"></i> Settings
+  </a>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/about">
+    <i class="text-secondary ico-sm icon-info"></i> Help &amp; About
   </a>
   <hr>
 </li>

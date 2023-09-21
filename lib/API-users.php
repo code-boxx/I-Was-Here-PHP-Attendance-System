@@ -7,8 +7,8 @@ $_CORE->autoAPI([
   "get" => ["Users", "get"],
   "getAll" => ["Users", "getAll"],
   "save" => ["Users", "save"],
-  "import" => ["Users", "import"],
-  "del" => ["Users", "del"]
+  "suspend" => ["Users", "suspend"],
+  "import" => ["Users", "import"]
 ]);
 
 // (C) INVALID REQUEST

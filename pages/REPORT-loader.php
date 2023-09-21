@@ -1,4 +1,3 @@
-
 <?php
 // (A) ADMIN ONLY
 $_CORE->ucheck("A");

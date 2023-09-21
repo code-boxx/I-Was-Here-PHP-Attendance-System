@@ -2,46 +2,54 @@
 self.addEventListener("install", evt => {
   self.skipWaiting();
   evt.waitUntil(
-    caches.open("IWasHere")
+    caches.open("IWASHERE")
     .then(cache => cache.addAll([
-      // (A1) BOOTSTRAP
+      // (A1) ADMIN
+      "assets/A-classes.js",
+      "assets/A-course.js",
+      "assets/A-course-user.js",
+      "assets/A-import.js",
+      "assets/A-reports.js",
+      "assets/A-settings.js",
+      "assets/A-users.js",
+      "assets/A-users-nfc.js",
+
+      // (A2) BOOTSTRAP
       "assets/bootstrap.bundle.min.js",
       "assets/bootstrap.bundle.min.js.map",
       "assets/bootstrap.min.css",
       "assets/bootstrap.min.css.map",
-      // (A2) ICONS + IMAGES
-      "assets/ico-512.png",
-      "assets/favicon.png",
-      "assets/login.webp",
-      "assets/forgot.webp",
+
       // (A3) COMMON INTERFACE
-      "assets/PAGE-cb.js",
-      "assets/CB-selector.css",
-      "assets/CB-selector.js",
-      "assets/maticon.woff2",
-      "CB-manifest.json",
-      // (A4) HTML QR CODE + SCANNER
+      "assets/CB-autocomplete.js",
+      "assets/csv.min.js",
       "assets/html5-qrcode.min.js",
+      "assets/icomoon.woff",
+      "assets/PAGE-cb.js",
+      "assets/PAGE-cb.css",
       "assets/qrcode.min.js",
+      "CB-manifest.json",
+
+      // (A4) ICONS + IMAGES
+      "assets/favicon.png",
+      "assets/ico-512.png",
+      "assets/users.webp",
+
       // (A5) PAGES
-      "assets/PAGE-account.js",
       "assets/PAGE-forgot.js",
       "assets/PAGE-login.js",
-      "assets/A-class.js",
-      "assets/A-class-attend.js",
-      "assets/A-class-import.js",
-      "assets/A-course.js",
-      "assets/A-course-import.js",
-      "assets/A-course-user.js",
-      "assets/A-course-user-import.js",
-      "assets/A-reports.js",
-      "assets/A-settings.js",
-      "assets/A-users.js",
-      "assets/A-users-import.js",
-      "assets/T-attend.js",
+      "assets/PAGE-login-nfc.js",
+      "assets/PAGE-login-wa.js",
+      "assets/PAGE-myaccount.js",
+      "assets/PAGE-nfc.js",
+      "assets/PAGE-wa.js",
+      "assets/PAGE-wa-helper.js",
+      
+      // (A6) TEACHER & STUDENT
+      "assets/TA-attend.js",
       "assets/T-classes.js",
-      "assets/S-classes.js",
-      "assets/S-qr.js"
+      "assets/U-classes.js",
+      "assets/U-qr.js",
     ]))
     .catch(err => console.error(err))
   );

@@ -1,11 +1,13 @@
 <?php
 class Report extends Core {
   // (A) ATTENDANCE REPORT
-  function attend ($id) {
+  function attend ($code) {
     // (A1) GET COURSE
     $course = $this->DB->fetch(
       "SELECT *, DATE_FORMAT(`course_start`, '".D_LONG."') `sd`, DATE_FORMAT(`course_end`, '".D_LONG."') `ed`
-       FROM `courses` WHERE `course_id`=?", [$id]
+       FROM `courses`
+       WHERE `course_code`=?",
+       [$code]
     );
 
     // (A2) OUTPUT CSV HEADER
@@ -18,58 +20,51 @@ class Report extends Core {
     // (A3) CLASSES
     $this->DB->query(
       "SELECT *, DATE_FORMAT(`class_date`, '".DT_LONG."') `cd`
-       FROM `classes` WHERE `course_id`=? ORDER BY `class_date` ASC", [$id]
+       FROM `classes`
+       WHERE `course_code`=?
+       ORDER BY `class_date` ASC", [$code]
     );
-    $class = [];
+    $class = []; $i = 1;
     $classdate = ["STUDENT/CLASS"];
     while ($r = $this->DB->stmt->fetch()) {
-      $class[] = $r["class_id"];
+      $class[$r["class_id"]] = $i; $i++;
       $classdate[] = $r["cd"];
     }
     fputcsv($f, $classdate);
-    unset($classdate);
+    unset($classdate); unset($i);
 
-    // (A4) STUDENTS
+    // (A4) ASSUME "ABSENT" IF NO ATTENDANCE RECORDS ARE FOUND
+    $preattend = [];
+    for ($i=0; $i<count($class); $i++) { $preattend[] = 0; }
+
+    // (A5) STUDENTS & ATTENDANCE
     $this->DB->query(
-      "SELECT cu.`user_id`, a.`class_id`, a.`sign_date`, u.`user_name`, u.`user_email`
-       FROM `courses_users` cu 
-       LEFT JOIN `users` u ON (cu.`user_id`=u.`user_id`)
-       LEFT JOIN `attendance` a ON (cu.`user_id`=a.`user_id`)
-       WHERE cu.`course_id`=? AND u.`user_level`='S'
-       ORDER BY u.`user_id`, a.`class_id`", [$id]
+      "SELECT u.`user_name`, u.`user_email`, a.`user_id`, a.`class_id`
+       FROM `attendance` a
+       LEFT JOIN `users` u ON (a.`user_id`=u.`user_id`)
+       LEFT JOIN `courses_users` cu  ON (a.`user_id`=cu.`user_id`)
+       WHERE a.`a_status`=? AND cu.`course_code`=? AND u.`user_level`='U'
+       ORDER BY u.`user_id`, a.`class_id`",
+       [1, $code]
     );
-    $uid = 0; $user = null; $attended = null;
+    $uid = 0;
     while ($r = $this->DB->stmt->fetch()) {
-      // (A4-1) OUTPUT + NEXT STUDENT
+      // (A5-1) NEXT STUDENT
       if ($r["user_id"]!=$uid) {
-        if ($uid!=0) {
-          $row = ["{$user["n"]} ({$user["e"]})"];
-          foreach ($class as $cid) {
-            $row[] = isset($attended[$cid]) ? "1" : "" ;
-          }
-          fputcsv($f, $row);
-          unset($row);
-        }
+        if ($uid!=0) { fputcsv($f, $row); }
+        $row = ["{$r["user_name"]} ({$r["user_email"]})"];
+        $row = array_merge($row, $preattend);
         $uid = $r["user_id"];
-        $user = ["n" => $r["user_name"], "e" => $r["user_email"]];
-        $attended = [];
       }
-      
-      // (A4-2) COLLECT ATTENDANCE
-      if ($r["class_id"]!=null) { $attended[$r["class_id"]] = $r["sign_date"]; }
+
+      // (A5-2) ATTENDANCE RECORD
+      $row[$class[$r["class_id"]]] = 1;
     }
 
-    // (A4-3) LAST STUDENT
-    if ($uid!=0) {
-      $row = ["{$user["n"]} ({$user["e"]})"];
-      foreach ($class as $cid) {
-        $row[] = isset($attended[$cid]) ? "1" : "" ;
-      }
-      fputcsv($f, $row);
-      unset($row);
-    }
+    // (A5-3) LAST STUDENT
+    if ($uid!=0) { fputcsv($f, $row); }
 
-    // (A5) DONE
+    // (A6) DONE
     fclose($f);
   }
 }

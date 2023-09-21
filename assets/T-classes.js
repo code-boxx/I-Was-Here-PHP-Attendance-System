@@ -4,7 +4,7 @@ var classes = {
   range : "", // search range
   date : "", // search date
   list : () => cb.load({
-    page : "t/class/list",
+    page : "T/class/list",
     target : "class-list",
     data : {
       page : classes.pg,
@@ -21,14 +21,9 @@ var classes = {
   }},
 
   // (C) SEARCH FORM TOGGLE
-  stog : () => {
-    // (C1) GET ELEMENTS
-    let range = document.getElementById("search-range"),
-        date = document.getElementById("search-date");
-
-    // (C2) TOGGLE DATE FIELD
-    date.disabled = range.value=="" ? true : false ;
-  },
+  stog : () => 
+    document.getElementById("search-date").disabled = 
+    document.getElementById("search-range").value=="" ? true : false ,
 
   // (D) SEARCH FOR CLASS
   search : () => {
@@ -39,4 +34,4 @@ var classes = {
     return false;
   }
 };
-window.addEventListener("load", classes.list);
+window.addEventListener("load", () => classes.list());

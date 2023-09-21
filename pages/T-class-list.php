@@ -12,15 +12,13 @@ if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
     <small><?=$c["class_desc"]?></small>
   </div>
   <div class="dropdown">
-    <button class="btn btn-primary btn-sm mi" type="button" data-bs-toggle="dropdown">
-      more_vert
-    </button>
+    <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
     <ul class="dropdown-menu dropdown-menu-dark">
       <li class="dropdown-item" onclick="attend.show(<?=$id?>)">
-        <i class="mi mi-smol">checklist</i> Attendance
+        <i class="text-secondary ico-sm icon-users"></i> Attendance
       </li>
-      <li><a class="dropdown-item" target="_blank" href="<?=HOST_BASE?>classqr?c=<?=$id?>">
-        <i class="mi mi-smol">qr_code</i> QR Code
+      <li><a class="dropdown-item" target="_blank" href="<?=HOST_BASE?>TA/classqr?c=<?=$id?>">
+        <i class="text-secondary ico-sm icon-qrcode"></i> QR Code
       </a></li>
     </ul>
   </div>

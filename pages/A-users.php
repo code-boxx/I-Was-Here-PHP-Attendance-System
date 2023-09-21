@@ -1,48 +1,34 @@
 <?php
+// (A) PAGE META
 $_PMETA = ["load" => [
+  ["s", HOST_ASSETS."CB-autocomplete.js", "defer"],
   ["s", HOST_ASSETS."csv.min.js", "defer"],
-  ["s", HOST_ASSETS."A-users.js", "defer"],
-  ["s", HOST_ASSETS."A-users-import.js", "defer"]
+  ["s", HOST_ASSETS."A-import.js", "defer"],
+  ["s", HOST_ASSETS."PAGE-nfc.js", "defer"],
+  ["s", HOST_ASSETS."A-users-nfc.js", "defer"],
+  ["s", HOST_ASSETS."A-users.js", "defer"]
 ]];
+
+// (B) HTML
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
-<!-- (A) HEADER -->
+<!-- (B1) HEADER -->
 <h3 class="mb-3">MANAGE USERS</h3>
 
-<!-- (B) ACTION BAR -->
+<!-- (B2) SEARCH BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return usr.search()">
-  <!-- (B1) SEARCH -->
   <input type="text" id="user-search" placeholder="Search" class="form-control form-control-sm">
-
-  <!-- (B2) SEARCH OPTION -->
-  <div class="btn-group">
-    <button class="btn btn-primary mi ms-1">search</button>
-    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown"></button>
-    <ul class="dropdown-menu dropdown-menu-dark">
-      <li class="dropdown-item"><select id="user-search-lvl" class="form-select">
-        <option value="">All Active</option>
-        <?php foreach (USR_LVL as $code=>$lvl) { ?>
-        <option value="<?=$code?>"><?=$lvl?></option>
-        <?php } ?>
-      </select></li>
-    </ul>
-  </div>
-
-  <!-- (B3) ADD -->
-  <div class="dropdown">
-    <button class="btn btn-primary mi ms-1" type="button" data-bs-toggle="dropdown">
-      add
-    </button>
-    <ul class="dropdown-menu dropdown-menu-dark">
-      <li class="dropdown-item" onclick="usr.addEdit()">
-        <i class="mi mi-smil">add</i> Add Single
-      </li>
-      <li class="dropdown-item" onclick="uimport.init()">
-        <i class="mi mi-smil">upload</i> Import CSV
-      </li>
-    </ul>
-  </div>
+  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-search"></button>
+  <button class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
+  <ul class="dropdown-menu dropdown-menu-dark">
+    <li class="dropdown-item" onclick="usr.addEdit()">
+      <i class="text-secondary ico-sm icon-plus"></i> Add Single
+    </li>
+    <li class="dropdown-item" onclick="usr.import()">
+      <i class="text-secondary ico-sm icon-upload3"></i> Import CSV
+    </li>
+  </ul>
 </form>
 
-<!-- (C) USERS LIST -->
+<!-- (B3) USERS LIST -->
 <div id="user-list" class="zebra my-4"></div>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

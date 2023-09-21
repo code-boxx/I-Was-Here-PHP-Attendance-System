@@ -47,9 +47,9 @@ var cb = {
   //  head : string, title text
   //  body : string, body text
   toast : (status, head, body) => {
-    if (status==1 || status=="1" || status==true) { cb.hToast.i.innerHTML = "thumb_up"; }
-    else if (status==0 || status=="0" || status==false) { cb.hToast.i.innerHTML = "error"; }
-    else { cb.hToast.i.innerHTML = "help"; }
+    if (status==1 || status=="1" || status==true) { cb.hToast.i.className = "ico icon-checkmark"; }
+    else if (status==0 || status=="0" || status==false) { cb.hToast.i.className = "ico icon-cross"; }
+    else { cb.hToast.i.className = "ico icon-question"; }
     cb.hToast.h.innerHTML = head;
     cb.hToast.b.innerHTML = body;
     cb.hToast.o.show();
@@ -76,7 +76,11 @@ var cb = {
 
   // (B4) CHANGE "LOCAL" PAGE
   //  num : int, page number (1 to 5)
-  page : num => { num--; for (let i in cb.hPages) {
+  page : num => {
+    num --;
+    cb.transit(() => cb.pswitch(num));
+  },
+  pswitch : num => { for (let i in cb.hPages) {
     if (i==num) { cb.hPages[i].classList.remove("d-none"); }
     else { cb.hPages[i].classList.add("d-none"); }
   }},
@@ -88,6 +92,7 @@ var cb = {
   //  url : string, target URL
   //  data : optional object, data to send
   //  loading : boolean, show "now loading" screen? default true.
+  //  noerr : boolean, supress modal "AJAX error message"? Default false.
   //  onpass : function, run this function on server response
   //  onerr : optional function, run this function on error
   ajax : opt => {
@@ -95,6 +100,7 @@ var cb = {
     if (opt.url === undefined) { cb.modal("AJAX ERROR", "Target URL is not set!"); return false; }
     if (opt.onpass === undefined) { cb.modal("AJAX ERROR", "Function to call on onpass is not set!"); return false; }
     if (opt.loading === undefined) { opt.loading = true; }
+    if (opt.noerr === undefined) { opt.noerr = false; }
 
     // (C2) DATA TO SEND
     var data = new FormData();
@@ -107,15 +113,15 @@ var cb = {
       if (res.status==200) { return res.text(); }
       else {
         console.error(await res.text());
-        cb.modal("SERVER ERROR", "Bad server response - " + res.status);
+        if (!opt.noerr) { cb.modal("SERVER ERROR", "Bad server response - " + res.status); }
         if (opt.onerr) { opt.onerr(); }
         throw new Error("Bad server response");
       }
     })
     .then(txt => opt.onpass(txt))
     .catch(err => {
-      cb.modal("AJAX ERROR", err.message);
       console.error(err);
+      if (!opt.noerr) { cb.modal("AJAX ERROR", err.message); }
       if (opt.onerr) { opt.onerr(); }
     })
     .finally(() => {
@@ -128,6 +134,7 @@ var cb = {
   //  act : string, action to perform
   //  data : object, data to send
   //  loading : boolean, show loading screen?
+  //  noerr : boolean, supress modal "AJAX error message"? Default false.
   //  passmsg : boolean false to supress toast "success message".
   //            boolean true to use server response message.
   //            string to override "OK" message.
@@ -141,9 +148,10 @@ var cb = {
     options.url = `${cbhost.api}${opt.mod}/${opt.act}/`;
     if (opt.data) { options.data = opt.data; }
     if (opt.loading!=undefined) { options.loading = opt.loading; }
-    if (opt.onerr) { options.onerr = opt.onerr; }
+    if (opt.noerr!=undefined) { options.noerr = opt.noerr; }
     if (opt.passmsg === undefined) { opt.passmsg = "OK"; }
     if (opt.nofail === undefined) { opt.nofail = false; }
+    if (opt.onerr) { options.onerr = opt.onerr; }
 
     // (D2) ON AJAX LOAD
     options.onpass = res => {
@@ -177,6 +185,7 @@ var cb = {
   //  target : string, ID of target HTML element
   //  data : object, data to send
   //  loading : boolean, show loading screen? Default false.
+  //  noerr : boolean, supress modal "AJAX error message"? Default false.
   //  onload : optional function, do this on loaded
   //  onerr : optional function, do this on ajax error
   load : opt => {
@@ -184,6 +193,7 @@ var cb = {
     var options = {};
     options.url = `${cbhost.base}${opt.page}/`;
     if (opt.loading!=undefined) { options.loading = opt.loading; }
+    if (opt.noerr!=undefined) { options.noerr = opt.noerr; }
     if (opt.onerr) { options.onerr = opt.onerr; }
     if (opt.data) {
       opt.data["ajax"] = 1;
@@ -210,7 +220,13 @@ var cb = {
   })),
 
   // (G) PASSWORD/HASH STRENGTH CHECKER
-  checker : hash => /^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i.test(hash)
+  checker : hash => /^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i.test(hash),
+
+  // (H) TRANSITION
+  transit : swap => {
+    if (document.startViewTransition) { document.startViewTransition(swap); }
+    else { swap(); }
+  }
 };
 
 // (H) INIT INTERFACE

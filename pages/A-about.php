@@ -1,33 +1,87 @@
 <?php require PATH_PAGES . "TEMPLATE-top.php"; ?>
-<h3>I WAS HERE</h3>
-<div class="mb-3">open source php attendance management system</div>
-<img class="img-fluid d-block mx-auto mb-3" style="max-height:450px;" src="<?=HOST_ASSETS?>HEAD-iwh.webp">
-<div class="bg-white border p-3">
-  <h6>Links & Documentation</h6>
-  <ul>
-    <li><a href="https://code-boxx.com/i-was-here-php-attendance-system/" target="_blank">I Was Here Official Webpage</a></li>
-    <li><a href="https://github.com/code-boxx/I-Was-Here/" target="_blank">GitHub</a></li>
-  </ul>
+<h1 class="mb-0">I WAS HERE</h1>
+<div class="text-secondary mb-4">open source php attendance system</div>
+<img class="img-fluid d-block mx-auto mb-4" style="max-height:450px;" src="<?=HOST_ASSETS?>head-iwh.webp">
 
-  <h6>Socials</h6>
+<h5 class="text-danger mb-2">
+  <i class="ico-sm icon-sphere"></i> OFFICIAL
+</h5>
+<div class="bg-white border p-4 mb-4">
+  <ul class="mb-0">
+    <li><a href="https://code-boxx.com/i-was-here-php-attendance-system/#sec-use" target="_blank">
+      How To Use?
+    </a></li>
+    <li><a href="https://code-boxx.com/i-was-here-php-attendance-system/#sec-faq" target="_blank">
+      FAQ
+    </a></li>
+    <li><a href="https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev" target="_blank">
+      For The Developers
+    </a></li>
+    <li><a href="https://github.com/code-boxx/I-Was-Here/issues/new/choose" target="_blank">
+      Report a bug
+    </a></li>
+    <li><a href="https://github.com/code-boxx/I-Was-Here" target="_blank">
+      I Was Here GitHub
+    </a></li>
+  </ul>
+</div>
+
+<h5 class="text-danger mb-2">
+  <i class="ico-sm icon-heart"></i> SUPPORT
+</h5>
+<div class="bg-white border p-4 mb-4">
+  <a class="my-1 btn btn-danger d-flex-inline" href="https://www.paypal.com/paypalme/wstoh/5" target="_blank">
+    <i class="ico-sm icon-mug"></i> Buy me a coffee
+  </a>
+  <a class="my-1 btn btn-danger d-flex-inline" href="https://payhip.com/codeboxx" target="_blank">
+    <i class="ico-sm icon-cart"></i> Code Boxx Store
+  </a>
+</div>
+
+<h5 class="text-danger mb-2">
+  <i class="ico-sm icon-power-cord"></i> EQUIPMENT
+</h5>
+<div class="bg-white border p-4 mb-4">
   <ul>
-    <li><a href="https://code-boxx.com/" target="_blank">Code Boxx Webpage</a></li>
-    <li><a href="https://payhip.com/codeboxx" target="_blank">Code Boxx Store (Buy a little something to support us?)</a></li>
-    <li><a href="https://www.youtube.com/c/CodeBoxx" target="_blank">Code Boxx YouTube</a></li>
-    <li><a href="https://www.pinterest.com/codeboxx/" target="_blank">Code Boxx Pinterest</a></li>
+    <li><a href="https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw=nfc+tags&_sacat=0&LH_TitleDesc=0&toolid=10001&rt=nc&mkcid=1&campid=5338785898&_odkw=usb+qr+scanner&_osacat=0&LH_BIN=1&siteid=0&mkrid=711-53200-19255-0&customid=&mkevt=1" target="_blank">
+      NFC Tags
+    </a></li>
+    <li><a href="https://www.ebay.com/sch/i.html?_from=R40&_nkw=label+printer&_sacat=0&LH_TitleDesc=0&rt=nc&LH_ItemCondition=1000&mkcid=1&mkrid=711-53200-19255-0&siteid=0&campid=5338785898&customid=&toolid=10001&mkevt=1" target="_blank">
+      Label Printer
+    </a></li>
+  </ul>
+  <div>
+    * These are affiliate links, I earn a small commission when you make a purchase from eBay.
+  </div>
+</div>
+
+<h5 class="text-danger mb-2">
+  <i class="ico-sm icon-smile2"></i> SOCIALS
+</h5>
+<div class="bg-white border p-4 mb-4">
+  <ul class="mb-0">
+    <li><a href="https://code-boxx.com/" target="_blank">Code Boxx</a></li>
+    <li><a href="https://www.youtube.com/c/CodeBoxx" target="_blank">YouTube</a></li>
+    <li><a href="https://www.pinterest.com/codeboxx/" target="_blank">Pinterest</a></li>
     <li><a href="https://github.com/code-boxx/" target="_blank">GitHub</a></li>
     <li><a href="https://codepen.io/code-boxx" target="_blank">CodePen</a></li>
+    <li><a href="https://dev.to/codeboxx" target="_blank">DEV</a></li>
   </ul>
+</div>
 
-  <h6>Built With</h6>
-  <ul>
+<h5 class="text-danger mb-2">
+  <i class="ico-sm icon-hammer"></i> CREDITS / BUILT WITH
+</h5>
+<div class="bg-white border p-4 mb-4">
+  <ul class="mb-0">
     <li><a href="https://code-boxx.com/core-boxx-php-framework/" target="_blank">Core Boxx</a></li>
-    <li><a href="https://github.com/firebase/php-jwt" target="_blank">PHP JSON Web Token</a></li>
+    <li><a href="https://github.com/firebase/php-jwt" target="_blank">PHP JWT</a></li>
+    <li><a href="https://github.com/lbuchs/WebAuthn/tree/master" target="_blank">PHP WebAuthn</a></li>
     <li><a href="https://getbootstrap.com/" target="_blank">Bootstrap</a></li>
-    <li><a href="https://github.com/okfn/csv.js/" target="_blank">CSV.js</a></li>
+    <li><a href="https://icomoon.io/" target="_blank">IcoMoon</a></li>
+    <li><a href="https://github.com/okfn/csv.js/" target="_blank">csv.js</a></li>
     <li><a href="https://davidshimjs.github.io/qrcodejs/" target="_blank">QRCode.js</a></li>
-    <li><a href="https://github.com/mebjas/html5-qrcode" target="_blank">HTML5-QRCode</a></li>
-    <li><a href="https://developers.google.com/fonts/docs/material_icons" target="_blank">Material Icons</a></li>
+    <li><a href="https://github.com/mebjas/html5-qrcode" target="_blank">HTML5-QRCode Scanner</a></li>
   </ul>
 </div>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

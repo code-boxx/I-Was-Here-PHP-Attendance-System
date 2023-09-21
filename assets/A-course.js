@@ -3,9 +3,9 @@ var course = {
   pg : 1, // current page
   find : "", // current search
   list : silent => {
-    if (silent!==true) { cb.page(0); }
+    if (silent!==true) { cb.page(1); }
     cb.load({
-      page : "a/course/list",
+      page : "A/course/list",
       target : "course-list",
       data : {
         page : course.pg,
@@ -30,12 +30,12 @@ var course = {
   },
 
   // (D) SHOW ADD/EDIT DOCKET
-  // id : course ID, for edit only
-  addEdit : id => cb.load({
-    page : "a/course/form",
+  //  code : course code, for edit only
+  addEdit : code => cb.load({
+    page : "A/course/form",
     target : "cb-page-2",
-    data : { id : id ? id : "" },
-    onload : () => cb.page(1)
+    data : { code : code ? code : "" },
+    onload : () => cb.page(2)
   }),
 
   // (E) SAVE COURSE
@@ -48,12 +48,20 @@ var course = {
       start : document.getElementById("course_start").value,
       end : document.getElementById("course_end").value
     };
-    var id = document.getElementById("course_id").value;
-    if (id!="") { data.id = id; }
+    var ocode = document.getElementById("course_ocode").value;
+    if (ocode!="") { data.ocode = ocode; }
 
-    // (E2) AJAX
+    // (E2) DATE CHECK
+    let start = new Date(data.start),
+        end = new Date(data.end);
+    if (start > end) {
+      cb.modal("Error!", "Start date cannot be later than end date.");
+      return false;
+    }
+
+    // (E3) AJAX
     cb.api({
-      mod : "courses", req : "save",
+      mod : "courses", act : "save",
       data : data,
       passmsg : "Course Saved",
       onpass : course.list
@@ -62,12 +70,36 @@ var course = {
   },
 
   // (F) DELETE COURSE
-  //  id : int, course ID
-  del : id => cb.modal("Please confirm", "All course data and attendance will be lost!", () => cb.api({
-    mod : "courses", req : "del",
-    data : { id: id },
+  //  code : course code
+  del : code => cb.modal("Please confirm", "All course data and attendance will be lost!", () => cb.api({
+    mod : "courses", act : "del",
+    data : { code : code },
     passmsg : "Course Deleted",
     onpass : course.list
-  }))
+  })),
+
+  // (G) IMPORT COURSES
+  import : () => im.init({
+    name : "COURSES",
+    at : 2, back : 1,
+    eg : "dummy-courses.csv",
+    api : { mod : "courses", act : "import" },
+    after : () => course.list(true),
+    cols : [
+      ["Course Code", "code", true],
+      ["Course Name", "name", true],
+      ["Description (if any)", "desc"],
+      ["Start Date (YYYY-MM-DD)", "start", true],
+      ["End Date (YYYY-MM-DD)", "end", true]
+    ]
+  })
 };
-window.addEventListener("load", course.list);
+
+window.addEventListener("load", () => {
+  course.list();
+  autocomplete.attach({
+    target : document.getElementById("course-search"),
+    mod : "autocomplete", act : "course",
+    onpick : res => course.search()
+  });
+});

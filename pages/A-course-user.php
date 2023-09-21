@@ -9,21 +9,15 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
       [<?=$course["course_code"]?>] <?=$course["course_name"]?>
     </small>
   </div>
-  <button class="btn btn-danger mi me-1" onclick="cb.page(0)">
-    reply
-  </button>
+  <button type="button" class="btn btn-danger p-3 ico-sm icon-undo2" onclick="cb.page(1)"></button>
 </div>
 
-<!-- (B) ADD SINGLE USER TO COURSE -->
+<!-- (C) ADD USER TO COURSE -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return cuser.add()">
   <input type="email" required id="course-user-add" placeholder="User Name/Email" class="form-control form-control-sm">
-  <button class="btn btn-primary mi mx-1">
-    add
-  </button>
-  <button class="btn btn-primary mi" type="button" onclick="uimport.init()">
-    upload
-  </button>
+  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-plus"></button>
+  <button type="button" class="btn btn-primary p-3 ico-sm icon-upload3" onclick="cuser.import()"></button>
 </form>
 
-<!-- (C) USERS LIST -->
+<!-- (D) USERS LIST -->
 <div id="course-user-list" class="zebra my-4"></div>

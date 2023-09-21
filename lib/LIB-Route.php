@@ -9,10 +9,20 @@ class Route extends Core {
 
   // (A) RUN URL ROUTING ENGINE
   function run () : void {
-    // (A1) CLEAN CURRENT URL PATH
+    // (A1) GET URL PATH SEGMENT
+    $this->path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+
+    // (A2) SPECIAL CASE
+    // e.g. http://site.com//, http://site.com//XYZ
+    if ($this->path == "") {
+      $this->load("PAGE-404.php", 404);
+      exit();
+    }
+
+    // (A3) CLEAN CURRENT URL PATH
     // http://site.com/ > $this->path = "/"
     // http://site.com/hello/world/ > $this->path = "hello/world/"
-    $this->path = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
+    $this->path = preg_replace("~/{2,}~", "/", $this->path);
     if (substr($this->path, 0, strlen(HOST_BASE_PATH)) == HOST_BASE_PATH) {
       $this->path = substr($this->path, strlen(HOST_BASE_PATH));
     }
@@ -87,7 +97,7 @@ class Route extends Core {
       require PATH_PAGES . $file;
     } else {
       http_response_code(404);
-      require PATH_PAGES . "PAGE-404.php";
+      if (!isset($_POST["ajax"])) { require PATH_PAGES . "PAGE-404.php"; }
     }
   }
 
@@ -147,17 +157,17 @@ class Route extends Core {
   }
 
   // (E) REGENERATE HTACCESS + MANIFEST FILES
-  function init () : void {
+  function init ($hbase=HOST_BASE_PATH) : void {
     // (E1) HTACCESS
     $file = PATH_BASE . ".htaccess";
     if (file_put_contents($file, implode("\r\n", [
       "RewriteEngine On",
       "RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]",
-      "RewriteBase " . HOST_BASE_PATH,
+      "RewriteBase " . $hbase,
       "RewriteRule ^index\.php$ - [L]",
       "RewriteCond %{REQUEST_FILENAME} !-f",
       "RewriteCond %{REQUEST_FILENAME} !-d",
-      "RewriteRule . " . HOST_BASE_PATH . "index.php [L]"
+      "RewriteRule . " . $hbase . "index.php [L]"
     ])) === false) { throw new Exception("Failed to create $file"); }
 
     // (E2) WEB MANIFEST
@@ -165,7 +175,11 @@ class Route extends Core {
     $replace = ["start_url", "scope"];
     $cfg = file($file) or exit("Cannot read $file");
     foreach ($cfg as $j=>$line) { foreach ($replace as $r) { if (strpos($line, "\"$r\"") !== false) {
-      $cfg[$j] = "  \"$r\": \"".HOST_BASE_PATH."\",\r\n";
+      $cfg[$j] = "  \"$r\": \"".$hbase."\",\r\n";
+    }}}
+    $replace = ["short_name", "name"];
+    foreach ($cfg as $j=>$line) { foreach ($replace as $r) { if (strpos($line, "\"$r\"") !== false) {
+      $cfg[$j] = "  \"$r\": \"".SITE_NAME."\",\r\n";
     }}}
     if (file_put_contents($file, implode("", $cfg)) === false) {
       throw new Exception("Failed to write $file");

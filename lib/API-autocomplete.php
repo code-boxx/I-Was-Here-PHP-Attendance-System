@@ -1,19 +1,14 @@
 <?php
-// (A) ADMIN & TEACHERS ONLY
-$_CORE->ucheck(["A", "T"]);
+// (A) ADMIN ONLY
+$_CORE->ucheck("A");
 
 // (B) API ENDPOINTS
 $_CORE->autoAPI([
-  "user" => ["Users", "autocomplete"],
-  "course" => ["Courses", "autocomplete"]
+  "user" => ["Autocomplete", "user"],
+  "userEmail" => ["Autocomplete", "userEmail"],
+  "course" => ["Autocomplete", "course"],
+  "icourse" => ["Autocomplete", "icourse"]
 ]);
-if ($_CORE->Route->act == "icourse") {
-  $_CORE->load("Courses");
-  $_CORE->respond(1, "OK", [
-    "c" => $_CORE->Courses->get($_POST["id"]),
-    "t" => $_CORE->Courses->getTeachers($_POST["id"])
-  ]);
-}
 
 // (C) INVALID REQUEST
 $_CORE->respond(0, "Invalid request", null, null, 400);

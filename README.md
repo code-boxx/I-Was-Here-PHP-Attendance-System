@@ -1,22 +1,21 @@
 ## I WAS HERE
-I Was Here is a simple PHP Student Attendance Management System. This is not a "we have a lot of features that you will never use" system, but a basic one to help smaller schools to get started quickly.
+I Was Here is an open-source PHP Inventory Management System. Featuring NFC and passwordless login, also allowing students to take attendance by scanning a QR code.
 <br><br>
 
 ## :white_check_mark: FEATURES
-1) Users management.
-2) Take attendance manually, or let students scan a QR code.
-3) Installble progressive web app.
-4) CSV reports.
+1) NFC and passwordless login.
+2) Installble progressive web app.
+3) Take attendance manually, or let students scan a QR code.
 <br><br>
 
 ## :camera: SCREENSHOTS
 <p float="left">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1a.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2a.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3a.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4a.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5a.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6a.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-1.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-2.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-3.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-4.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-5.png">
+  <img width="250" src="https://github.com/code-boxx/I-Was-Here/blob/main/assets/iwh-6.png">
 </p><br>
 
 ## :ballot_box_with_check: REQUIREMENTS
@@ -27,12 +26,30 @@ I Was Here is a simple PHP Student Attendance Management System. This is not a "
 <br><br>
 
 ## :floppy_disk: INSTALLATION
-Just access `http://your-site.com/` in your browser and walk through the installer.
+1) Just copy/unzip into your `http` folder.
+2) Access `http://your-site.com/` in your browser and walk through the installer.
 <br><br>
 
-## :bulb: DOCUMENTATION & FRAMEWORKS
-1) Built on [Bootstrap](https://getbootstrap.com/), [Material Icons](https://fonts.google.com/icons), [HTML5 QRCode Scanner](https://github.com/mebjashtml5-qrcode), [QRCodeJS](https://davidshimjs.github.io/qrcodejs/), [PHP-JWT](https://github.com/firebase/php-jwt), and [Core Boxx](https://code-boxx.com/core-boxx-php-framework/).
-2) Visit https://code-boxx.com/i-was-here-php-attendance-system/ for the full documentation!
+## :bulb: DOCUMENTATION
+1) [How To Use](https://code-boxx.com/i-was-here-php-attendance-system/#sec-use)
+2) [FAQ](https://code-boxx.com/i-was-here-php-attendance-system/#sec-faq)
+3) [For The Developers](https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev)
+
+## :electric_plug: FRAMEWORKS
+1) PHP Packages
+   - [Core Boxx](https://code-boxx.com/core-boxx-php-framework/)
+   - [PHP-JWT](https://github.com/firebase/php-jwt)
+   - [PHP WebAuthn](https://github.com/lbuchs/WebAuthn/tree/master)
+2) HTML JS
+   - [Bootstrap](https://getbootstrap.com/)
+   - [IconMoon](https://icomoon.io/)
+   - [HTML5 QRCode Scanner](https://github.com/mebjas/html5-qrcode)
+   - [QRCodeJS](https://davidshimjs.github.io/qrcodejs/)
+   - [csv.js](https://github.com/okfn/csv.js/)
+<br><br>
+
+## :star: SUPPORT
+Like this project? Just give it a star. That will indirectly help grow my blog a little bit. :wink:
 <br><br>
 
 ## :newspaper: LICENSE

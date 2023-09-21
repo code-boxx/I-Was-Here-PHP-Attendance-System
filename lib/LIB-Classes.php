@@ -1,15 +1,15 @@
 <?php
 class Classes extends Core {
   // (A) ADD OR UPDATE CLASS
-  //  $cid : course id
+  //  $code : course code
   //  $uid : user id (teacher in charge)
   //  $date : class date
   //  $desc : class description
   //  $id : class id (for edit only)
-  function save ($cid, $uid, $date, $desc=null, $id=null) {
+  function save ($code, $uid, $date, $desc=null, $id=null) {
     // (A1) DATA SETUP
-    $fields = ["course_id", "user_id", "class_date", "class_desc"];
-    $data = [$cid, $uid, $date, $desc];
+    $fields = ["course_code", "user_id", "class_date", "class_desc"];
+    $data = [$code, $uid, $date, $desc];
 
     // (A2) ADD/UPDATE CLASS
     if ($id==null) {
@@ -23,7 +23,49 @@ class Classes extends Core {
     return true;
   }
 
-  // (B) DELETE CLASS
+  // (B) IMPORT CLASS
+  //  $code : course code
+  //  $date : class date & time
+  //  $email : teacher's email
+  //  $desc : description, optional
+  function import ($code, $date, $email, $desc) {
+    // (B1) CHECK - COURSE CODE
+    $this->Core->load("Courses");
+    $course = $this->Courses->get($code);
+    if (!is_array($course)) {
+      $this->error = "Invalid course - $code";
+      return false;
+    }
+
+    // (B2) CHECK - CLASS DATE
+    $udate = strtotime($date);
+    if ($udate<strtotime("{$course["course_start"]} 00:00:00") || $udate>strtotime("{$course["course_end"]} 23:59:59")) {
+      $this->error = "Class date does not fall within course period";
+      return false;
+    }
+
+    // (B3) CHECK TEACHER
+    $teacher = $this->DB->fetch(
+      "SELECT * FROM `courses_users` c
+      LEFT JOIN `users` u USING (`user_id`)
+      WHERE c.`course_code`=? AND u.`user_email`=?",
+      [$course["course_code"], $email]
+    );
+    if (!is_array($teacher)) {
+      $this->error = "$email is not a teacher of this course";
+      return false;
+    }
+    if ($teacher["user_level"]!="T" && $teacher["user_level"]!="A") {
+      $this->error = "$email is not a teacher of this course";
+      return false;
+    }
+
+    // (B4) IMPORT CLASS
+    $this->save($course["course_code"], $teacher["user_id"], $date, $desc);
+    return true;
+  }
+
+  // (C) DELETE CLASS
   //  $id : class id
   function del ($id) {
     $this->DB->start();
@@ -33,25 +75,25 @@ class Classes extends Core {
     return true;
   }
 
-  // (C) GET CLASS
+  // (D) GET CLASS
   //  $id : class id
   function get ($id) {
     return $this->DB->fetch(
       "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name`
        FROM `classes` cl 
-       LEFT JOIN `courses` co USING (`course_id`)
+       LEFT JOIN `courses` co USING (`course_code`)
        LEFT JOIN `users` u USING (`user_id`)
        WHERE cl.`class_id`=?", [$id]
     );
   }
 
-  // (D) GET CLASSES
+  // (E) GET CLASSES
   //  $search : optional, course code
   //  $page : optional, current page number
   function getAll ($search=null, $page=null) {
-    // (D1) PARTIAL SQL
+    // (E1) PARTIAL SQL
     $sql = " FROM `classes` cl 
-            LEFT JOIN `courses` co USING (`course_id`)
+            LEFT JOIN `courses` co USING (`course_code`)
             LEFT JOIN `users` u USING (`user_id`)";
     $data = null;
     if ($search != null) {
@@ -59,14 +101,14 @@ class Classes extends Core {
       $data = ["%$search%"];
     }
 
-    // (D2) PAGINATION
+    // (E2) PAGINATION
     if ($page != null) {
       $this->Core->paginator($this->DB->fetchCol(
         "SELECT COUNT(*) $sql", $data
       ), $page);
     }
 
-    // (D3) RESULT
+    // (E3) RESULT
     $sql .= " ORDER BY `class_date` DESC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
     return $this->DB->fetchAll(
@@ -75,123 +117,7 @@ class Classes extends Core {
     );
   }
 
-  // (E) SET ATTENDANCE
-  //  $id : class id
-  //  $uid : user id or email
-  function attend ($id, $uid) {
-    // (E1) VERIFY VALID USER
-    $this->Core->load("Users");
-    $user = $this->Users->get($uid);
-    if (!is_array($user) || $user["user_level"]!="S") {
-      $this->error = "Invalid user";
-      return false;
-    }
-
-    // (E2) ADD ATTENDANCE
-    $this->DB->replace("attendance",
-      ["class_id", "user_id", "sign_date"],
-      [$id, $user["user_id"], date("Y-m-d H:i:s")]);
-    return true;
-  }
-
-  // (F) SET ATTENDANCE VIA QR
-  //  $uid : user id
-  //  $id : class id
-  //  $hash : class hash
-  function attendQR ($uid, $id, $hash) {
-    // (F1) GET CLASS
-    $class = $this->get($id);
-    if (!is_array($class)) {
-      $this->error = "Invalid class.";
-      return false;
-    }
-
-    // (F2) VERIFY
-    if ($class["class_hash"]!=$hash) {
-      $this->error = "Invalid class.";
-      return false;
-    }
-
-    // (F3) SAVE ATTENDANCE
-    return $this->attend($id, $uid);
-  }
-
-  // (G) REMOVE ATTENDANCE
-  //  $id : class id
-  //  $uid : user id
-  function absent ($id, $uid) {
-    $this->DB->delete("attendance", "`class_id`=? AND `user_id`=?", [$id, $uid]);
-    return true;
-  }
-
-  // (H) GET STUDENT & ATTENDANCE FOR CLASS
-  //  $id : class id
-  function getStudents ($id) {
-    // (H1) GET COURSE ID
-    $cid = $this->DB->fetchCol(
-      "SELECT `course_id` FROM `classes` WHERE `class_id`=?", [$id]
-    );
-
-    // (H2) GET ALL STUDENTS FOR THE CLASS
-    $sql = "SELECT u.`user_id`, u.`user_name`, u.`user_email`
-            FROM `courses_users` cu
-            JOIN `users` u USING (`user_id`)
-            WHERE cu.`course_id`=? AND u.`user_level`='S'
-            ORDER BY `user_name`";
-    $data = [$cid];
-    $students = $this->DB->fetchAll($sql, $data, "user_id");
-    if (!is_array($students)) { $students = []; }
-
-    // (H3) GET ATTENDANCE
-    $sql = "SELECT u.`user_id`, u.`user_name`, u.`user_email`
-            FROM `attendance` a
-            JOIN `users` u USING (`user_id`)
-            WHERE `class_id`=?";
-    $data = [$id];
-    $this->DB->query($sql, $data);
-    while ($row = $this->DB->stmt->fetch()) {
-      if (!isset($students[$row["user_id"]])) {
-        $students[$row["user_id"]] = $row;
-      }
-      $students[$row["user_id"]]["a"] = 1;
-    }
-
-    // (H4) RESULTS
-    return $students;
-  }
-
-  // (I) SAVE CLASS ATTENDANCE
-  //  $id : class id
-  //  $list : present students (array or json encoded array)
-  //          send empty array to indicate all absent
-  function attendance ($id, $list) {
-    // (I1) SORT OUT THE LIST
-    if (!is_array($list)) {
-      try { $list = json_decode($list); }
-      catch (Exception $ex) {
-        $this->error = $ex->getMessage();
-        return false;
-      }
-    }
-
-    // (I2) DELETE OLD ENTRIES
-    $this->DB->start();
-    $this->DB->delete("attendance", "`class_id`=?", [$id]);
-
-    // (I3) ADD NEW ENTRIES
-    if (count($list)>0) {
-      $fields = ["class_id", "user_id"];
-      $data = [];
-      foreach ($list as $uid) { $data[] = $id; $data[] = $uid; }
-      $this->DB->insert("attendance", $fields, $data);
-    }
-
-    // (I4) RESULTS
-    $this->DB->end();
-    return true;
-  }
-
-  // (J) GET CLASSES FOR TEACHER
+  // (F) GET CLASSES FOR TEACHER
   //  $uid : user id
   //  $date : date range restriction
   //  $range : -1 for all classes before $date
@@ -200,9 +126,9 @@ class Classes extends Core {
   //           "" or null for no restriction
   //  $page : current page number, optional
   function getByTeacher ($uid, $date=null, $range=null, $page=null) {
-    // (J1) PARTIAL SQL
+    // (F1) PARTIAL SQL
     $sql = "FROM `classes` cl
-            JOIN `courses` co USING (`course_id`)
+            JOIN `courses` co USING (`course_code`)
             WHERE `user_id`=?";
     $data = [$uid];
     if ($range=="-1") {
@@ -219,22 +145,22 @@ class Classes extends Core {
       $data[] = "$date 23:59:59";
     }
 
-    // (J2) PAGINATION
+    // (F2) PAGINATION
     if ($page != null) {
       $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) $sql", $data), $page
       );
     }
 
-    // (J3) GET CLASSES
-    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` DESC";
+    // (F3) GET CLASSES
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` ASC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
 
-    // (J4) RESULTS
+    // (F4) RESULTS
     return $this->DB->fetchAll($sql, $data, "class_id");
   }
 
-  // (K) GET CLASSES FOR STUDENT
+  // (G) GET CLASSES FOR STUDENT
   //  $uid : user id
   //  $date : date range restriction
   //  $range : -1 for all classes before $date
@@ -243,9 +169,9 @@ class Classes extends Core {
   //           "" or null for no restriction
   //  $page : current page number, optional
   function getByStudent ($uid, $date=null, $range=null, $page=null) {
-    // (K1) PARTIAL SQL
-    $sql = "WHERE cl.`course_id` IN
-            (SELECT `course_id` FROM `courses_users` WHERE `user_id`=?)";
+    // (G1) PARTIAL SQL
+    $sql = "WHERE cl.`course_code` IN
+            (SELECT `course_code` FROM `courses_users` WHERE `user_id`=?)";
     $data = [$uid];
     if ($range=="-1") {
       $sql .= " AND `class_date`<=?";
@@ -261,54 +187,23 @@ class Classes extends Core {
       $data[] = "$date 23:59:59";
     }
 
-    // (K2) PAGINATION
+    // (G2) PAGINATION
     if ($page != null) {
       $this->Core->paginator(
         $this->DB->fetchCol("SELECT COUNT(*) FROM `classes` cl $sql", $data), $page
       );
     }
 
-    // (K3) GET CLASSES
-    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, a.`sign_date`
+    // (G3) GET CLASSES
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, a.`a_status`
             FROM `classes` cl
             LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
-            LEFT JOIN `courses` co ON (cl.`course_id`=co.`course_id`)
-            $sql  ORDER BY `class_date` DESC";
+            LEFT JOIN `courses` co ON (cl.`course_code`=co.`course_code`)
+            $sql  ORDER BY `class_date` ASC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
     array_unshift($data, $uid);
 
-    // (K4) RESULTS
+    // (G4) RESULTS
     return $this->DB->fetchAll($sql, $data, "class_id");
-  }
-
-  // (L) IMPORT CLASS
-  function import ($code, $date, $email, $desc) {
-    // (L1) CHECK - COURSE CODE
-    $this->Core->load("Courses");
-    $course = $this->Courses->get($code);
-    if (!is_array($course)) {
-      $this->error = "Invalid course - $code";
-      return false;
-    }
-
-    // (L2) CHECK - CLASS DATE
-    $udate = strtotime($date);
-    if ($udate<strtotime("{$course["course_start"]} 00:00:00") || $udate>strtotime("{$course["course_end"]} 23:59:59")) {
-      $this->error = "Class date does not fall within course period";
-      return false;
-    }
-
-    // (L3) CHECK TEACHER
-    $teacher = $this->DB->fetch("SELECT * FROM `courses_users` c
-    LEFT JOIN `users` u USING (`user_id`)
-    WHERE c.`course_id`=? AND u.`user_email`=?", [$course["course_id"], $email]);
-    if (!is_array($teacher)) {
-      $this->error = "$email is not a teacher of this course";
-      return false;
-    }
-
-    // (L4) IMPORT CLASS
-    $this->save($course["course_id"], $teacher["user_id"], $date, $desc);
-    return true;
   }
 }
