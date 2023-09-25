@@ -1,5 +1,5 @@
 ## I WAS HERE
-I Was Here is an open-source PHP Inventory Management System. Featuring NFC and passwordless login, also allowing students to take attendance by scanning a QR code.
+I Was Here is an open-source PHP Student Attendance Management System. Featuring NFC and passwordless login, also allows students to take attendance by scanning a QR code.
 <br><br>
 
 ## :white_check_mark: FEATURES
