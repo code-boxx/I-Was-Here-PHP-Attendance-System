@@ -32,7 +32,7 @@ I Was Here is an open-source PHP Student Attendance Management System. Featuring
 
 ## :bulb: DOCUMENTATION
 1) [How To Use](https://code-boxx.com/i-was-here-php-attendance-system/#sec-use)
-2) [FAQ](https://code-boxx.com/i-was-here-php-attendance-system/#sec-faq)
+2) [FAQ](https://code-boxx.com/core-boxx-php-framework/#sec-faq)
 3) [For The Developers](https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev)
 
 ## :electric_plug: FRAMEWORKS

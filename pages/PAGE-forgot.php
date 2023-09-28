@@ -6,6 +6,7 @@ if (isset($_SESSION["user"])) { $_CORE->redirect(); }
 if (!isset($_GET["i"]) && !isset($_GET["h"])) {
 $_PMETA = ["load" => [["s", HOST_ASSETS."PAGE-forgot.js", "defer"]]];
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
+<div class="container">
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border">
 <div class="row">
@@ -31,6 +32,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 </div>
 </div>
 </div>
+</div>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; }
 
 // (C) PART 2 - VALIDATION
@@ -38,6 +40,7 @@ else {
 $_CORE->load("Forgot");
 $pass = $_CORE->Forgot->reset($_GET["i"], $_GET["h"]);
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
+<div class="container">
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border">
 <div class="row">
@@ -54,6 +57,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
       <a href="<?=HOST_BASE?>login">Back To Login</a>
     </div>
   </div>
+</div>
 </div>
 </div>
 </div>

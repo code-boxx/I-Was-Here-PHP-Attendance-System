@@ -19,6 +19,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <?php } ?>
 
 <!-- (C2) LOGIN FORM -->
+<div class="container">
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border">
 <div class="row">
@@ -59,6 +60,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
       <a href="<?=HOST_BASE?>forgot">Forgot Password</a>
     </div>
   </div>
+</div>
 </div>
 </div>
 </div>

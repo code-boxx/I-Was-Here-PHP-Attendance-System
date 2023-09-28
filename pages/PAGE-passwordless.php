@@ -14,6 +14,7 @@ $regged = is_array($_CORE->Users->hashGet($_SESSION["user"]["user_id"], "PL"));
 
 // (D) HTML PAGE
 require PATH_PAGES . "TEMPLATE-top.php"; ?>
+<div class="container">
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border">
 <div class="row">
@@ -40,6 +41,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <!-- (D3) NOTES -->
     <div id="wa-txt" class="p-3 mt-3 text-white bg-danger d-none"></div>
   </div>
+</div>
 </div>
 </div>
 </div>
