@@ -8,10 +8,11 @@ work includes server-side class authorization, revocable sessions, migration
 tracking, expiring QR tokens with teacher-controlled sessions, student
 attendance summaries, correction requests, and an attendance audit history.
 
-Phase 2 is not a claim that every idea below is finished. Live dashboards,
-lateness rules, offline synchronization, notifications, and the other items
-remain proposed work. QR rotation limits screenshot reuse but cannot prevent
-someone from sharing a currently valid live QR code.
+Phase 2 is not a claim that every idea below is finished. The initial live
+dashboard and student attendance warnings are implemented; lateness rules,
+offline synchronization, notifications, and other ideas remain proposed work.
+QR rotation limits screenshot reuse but cannot prevent someone from sharing a
+currently valid live QR code.
 
 1. High-impact features to add
 Attend-class.com - Revolutionary QR Code Attendance System for Modern Education
@@ -386,7 +387,7 @@ Expiring, server-validated QR tokens and duplicate-check-in prevention.
 Teacher-controlled session open/close controls.
 Student course summaries, class history, and correction-request history.
 Correction requests and attendance audit history.
-Still planned: late-arrival rules, live dashboards, and session summaries.
+Still planned: late-arrival rules and session summaries.
 
 Phase 3
 
@@ -395,8 +396,13 @@ Efficiency release
 
 Initial live attendance dashboard is implemented in Community Edition v2.2.0:
 present, absent, unrecorded, not-present roster, last QR check-in, and session
-status refresh while the teacher view is open. Still planned: configurable
-attendance alerts and thresholds.
+status refresh while the teacher view is open.
+
+Configurable school-wide attendance warning threshold is implemented in
+Community Edition v2.3.0. Admins choose a whole-number threshold from 1% to
+100% (default 75%); the student portal warns below that limit after completed
+classes exist. Notification delivery and teacher follow-up reports remain
+planned.
 
 Advanced reports and printable exports.
 

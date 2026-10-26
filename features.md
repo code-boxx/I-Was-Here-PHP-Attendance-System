@@ -33,6 +33,7 @@ features.
 - Attendance records include status, recorder, timestamp, and optional notes.
 - Attendance status changes are retained in a class-level audit history with the actor, time, old/new status, source, and reason. Manual status corrections and correction decisions require a reason.
 - Students can view completed-class attendance totals and percentages for their enrolled courses.
+- Students see a warning when their attendance percentage falls below the admin-configured school-wide threshold (default 75%).
 - Students can submit one pending correction request per class, and teachers assigned to the class or admins can approve or reject it with a recorded reason.
 - Teachers and admins can view a live class dashboard with present, absent, and unrecorded counts; students not marked present; the latest QR check-in; and session status. It refreshes every 10 seconds while the tab is visible.
 - View student attendance for a class and course attendance reports.
@@ -49,6 +50,7 @@ features.
 - Browser-installable progressive web app with a service worker and cached assets.
 - Installation wizard for database, site URL, system defaults, JWT, and initial admin setup.
 - Configurable timezone, email sender, API HTTPS enforcement, and CORS policy.
+- Admin-configurable attendance warning threshold from 1% to 100%.
 - Log server-side errors while returning generic error messages to visitors.
 - Apply database schema updates when the application starts.
 - Keep PWA scripts in a versioned cache so clients activate updated feature assets.

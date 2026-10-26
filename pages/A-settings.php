@@ -9,9 +9,12 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <form id="set-list" onsubmit="return save()">
   <?php foreach ($settings as $o) { ?>
   <div class="form-floating mb-3">
-    <input type="text" class="form-control" required
-           name="<?=$o["setting_name"]?>" value="<?=$o["setting_value"]?>">
-    <label><?=$o["setting_description"]?></label>
+    <input type="<?=$o["setting_name"]=="ATTENDANCE_THRESHOLD" ? "number" : "text"?>"
+           class="form-control" required
+           name="<?=htmlspecialchars($o["setting_name"], ENT_QUOTES, "UTF-8")?>"
+           value="<?=htmlspecialchars($o["setting_value"], ENT_QUOTES, "UTF-8")?>"
+           <?=$o["setting_name"]=="ATTENDANCE_THRESHOLD" ? 'min="1" max="100" step="1"' : ""?>>
+    <label><?=htmlspecialchars($o["setting_description"], ENT_QUOTES, "UTF-8")?></label>
   </div>
   <?php } ?>
 

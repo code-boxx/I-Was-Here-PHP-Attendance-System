@@ -17,7 +17,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <?php if (is_array($summaries)) { foreach ($summaries as $summary) {
   $total = (int)$summary["total_classes"];
   $present = (int)$summary["present_classes"];
-  $percentage = $total===0 ? null : (int)round(100 * $present / $total);
+  $percentage = $summary["attendance_percentage"];
 ?>
 <div class="border bg-white p-3 mb-2">
   <strong>[<?=htmlspecialchars($summary["course_code"], ENT_QUOTES, "UTF-8")?>]
@@ -25,8 +25,18 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
   <div><?=$present?> present of <?=$total?> completed classes
     (<?=$percentage===null ? "No completed classes" : "$percentage%"?>)
   </div>
+  <?php if ($summary["below_threshold"]) { ?>
+  <p class="alert alert-warning mt-2 mb-0" role="status">
+    Your attendance is below the school threshold of <?=$summary["attendance_threshold"]?>%.
+    Please contact your teacher if you believe a record needs correction.
+  </p>
+  <?php } ?>
 </div>
-<?php }} else { ?>
+<?php }} elseif ($summaries===false) { ?>
+<p class="alert alert-danger" role="alert">
+  <?=htmlspecialchars($_CORE->Attend->error ?: "Unable to load attendance summaries.", ENT_QUOTES, "UTF-8")?>
+</p>
+<?php } else { ?>
 <p>No enrolled courses yet.</p>
 <?php } ?>
 

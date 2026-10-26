@@ -25,7 +25,10 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===4, "Phase 2 database migration was not applied.");
+  )===5, "Attendance policy database migration was not applied.");
+  check((int)$db->fetchCol(
+    "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
+  )===75, "Attendance warning threshold did not default to 75%.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE()
@@ -158,9 +161,31 @@ try {
   check($_CORE->Attend->closeSession($classId), "Teacher could not close an attendance session.");
   check(!$_CORE->Attend->attendQR($qr["token"]), "A QR token remained valid after session closure.");
   check($_CORE->Attend->sessionState($classId)["session_status"]=="closed", "Closed session state was not reported.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "A"];
+  check($_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "80"]), "Admin could not update attendance threshold.");
+  check(!$_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "101"]), "Out-of-range attendance threshold was accepted.");
+  check(!$_CORE->Settings->save(["APP_VER" => "1"]), "Admin settings API accepted a non-editable setting.");
+  check($_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "75"]), "Could not restore test attendance threshold.");
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
   $summary = $_CORE->Attend->getStudentSummary();
-  check((int)$summary[$courseCode]["total_classes"]==1 && (int)$summary[$courseCode]["present_classes"]==0, "Student course summary did not reflect corrected attendance.");
+  check(
+    (int)$summary[$courseCode]["total_classes"]===1 &&
+    (int)$summary[$courseCode]["present_classes"]===0 &&
+    $summary[$courseCode]["attendance_percentage"]===0 &&
+    $summary[$courseCode]["attendance_threshold"]===75 &&
+    $summary[$courseCode]["below_threshold"]===true,
+    "Student course summary or low-attendance warning did not reflect policy."
+  );
+  $_SESSION["user"] = ["user_id" => $otherStudentId, "user_level" => "U"];
+  $otherSummary = $_CORE->Attend->getStudentSummary();
+  check(
+    (int)$otherSummary[$courseCode]["total_classes"]===1 &&
+    (int)$otherSummary[$courseCode]["present_classes"]===0 &&
+    (int)$otherSummary[$courseCode]["absent_classes"]===0 &&
+    $otherSummary[$courseCode]["below_threshold"]===true,
+    "Unrecorded attendance was not considered in the policy warning."
+  );
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
   check(is_array($_CORE->Classes->getByStudent($userId)), "Student class portal query failed.");
   $_CORE->Classes->del($classId);
   foreach (["attendance_sessions", "attendance_corrections", "attendance_audit"] as $table) {
@@ -212,7 +237,7 @@ try {
   check($expiredRejected, "Expired session token was accepted.");
 
   $db->end(false);
-  echo "Integration tests passed: Phase 2 migration, QR sessions and expiry, correction workflow, audit history, student summaries, attendance authorization, session revocation, reports, login throttling, and session expiry.\n";
+  echo "Integration tests passed: Phase 3 attendance policy migration and warnings, QR sessions, correction workflow, audit history, attendance authorization, session revocation, reports, login throttling, and session expiry.\n";
 } catch (Throwable $ex) {
   if ($db->pdo->inTransaction()) { $db->end(false); }
   fwrite(STDERR, "Integration test failed: " . $ex->getMessage() . "\n");

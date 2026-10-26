@@ -257,7 +257,7 @@ class Attend extends Core {
       return false;
     }
     $uid = $_SESSION["user"]["user_id"];
-    return $this->DB->fetchAll(
+    $summaries = $this->DB->fetchAll(
       "SELECT co.`course_code`, co.`course_name`,
               COUNT(cl.`class_id`) AS `total_classes`,
               COALESCE(SUM(CASE WHEN a.`a_status`=1 THEN 1 ELSE 0 END), 0) AS `present_classes`,
@@ -274,6 +274,28 @@ class Attend extends Core {
       [$uid],
       "course_code"
     );
+    if (!is_array($summaries)) { return null; }
+    $threshold = $this->DB->fetchCol(
+      "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
+    );
+    if (
+      $threshold===null || !ctype_digit((string)$threshold) ||
+      (int)$threshold<1 || (int)$threshold>100
+    ) {
+      $this->error = "Attendance threshold is not configured correctly.";
+      return false;
+    }
+    $threshold = (int)$threshold;
+    foreach ($summaries as &$summary) {
+      $total = (int)$summary["total_classes"];
+      $present = (int)$summary["present_classes"];
+      $summary["attendance_percentage"] = $total===0 ? null : (int)round(100 * $present / $total);
+      $summary["attendance_threshold"] = $threshold;
+      $summary["below_threshold"] = $summary["attendance_percentage"]!==null &&
+        $summary["attendance_percentage"]<$threshold;
+    }
+    unset($summary);
+    return $summaries;
   }
 
   function requestCorrection ($classId, $requestedStatus, $reason) {
