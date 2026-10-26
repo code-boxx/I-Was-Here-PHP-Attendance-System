@@ -58,6 +58,35 @@ var cuser = {
     return false;
   },
 
+  addMany : () => {
+    let users = document.getElementById("course-users-bulk").value;
+    cb.api({
+      mod : "courses", act : "addUsers",
+      data : { code : cuser.code, users : users },
+      passmsg : "Bulk enrollment complete",
+      onpass : () => {
+        document.getElementById("course-users-bulk").value = "";
+        cuser.list();
+      }
+    });
+    return false;
+  },
+
+  delSelected : () => {
+    let ids = Array.from(document.querySelectorAll(".course-user-select:checked"))
+      .map(input => input.value);
+    if (ids.length===0) {
+      cb.modal("No users selected", "Select at least one user to remove.");
+      return;
+    }
+    cb.modal("Please confirm", `Remove ${ids.length} selected users from this course? Past attendance records will be kept.`, () => cb.api({
+      mod : "courses", act : "delUsers",
+      data : { code : cuser.code, uids : JSON.stringify(ids) },
+      passmsg : "Selected users removed",
+      onpass : cuser.list
+    }));
+  },
+
   // (E) REMOVE USER FROM COURSE
   //  id : user id
   del : id => cb.modal("Please confirm", "User will be removed from the course, but past attendance will be kept.", () => cb.api({

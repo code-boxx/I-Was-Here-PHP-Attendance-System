@@ -401,16 +401,20 @@ status refresh while the teacher view is open.
 Configurable school-wide attendance warning threshold is implemented in
 Community Edition v2.3.0. Admins choose a whole-number threshold from 1% to
 100% (default 75%); the student portal warns below that limit after completed
-classes exist. Notification delivery and teacher follow-up reports remain
-planned.
+classes exist.
 
-Date-filtered CSV attendance reports and print-friendly reports are implemented
-in Community Edition v2.4.0. Still planned: attendance trends and teacher
-follow-up exports.
+Date-filtered CSV and print-friendly reports, weekly attendance trends, and
+below-threshold student follow-up exports are implemented in Community Edition
+v2.5.0. Admins can bulk add up to 200 course users or remove selected users.
+Class scheduling detects same-teacher overlaps using a documented 60-minute
+session window; room conflicts remain unavailable because rooms are not
+modeled.
 
-Bulk operations and timetable conflict checks.
+Users can opt in to threshold warnings, correction decisions, and upcoming-class
+reminders. A scheduled queue worker deduplicates events and retries failed
+email sends. Delivery uses the host's configured PHP mail transport.
 
-Notification preferences and delivery.
+Phase 3 analytics and automation is complete in Community Edition v2.5.0.
 
 Phase 4
 

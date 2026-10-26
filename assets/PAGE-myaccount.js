@@ -12,6 +12,21 @@ function save () {
     return false;
   }
 
+  var notificationPreferences = {
+    save : () => {
+      cb.api({
+        mod : "notifications", act : "savePreferences",
+        data : {
+          attendanceWarning : document.getElementById("notify-attendance-warning").checked ? "1" : "0",
+          correctionDecision : document.getElementById("notify-correction-decision").checked ? "1" : "0",
+          classReminder : document.getElementById("notify-class-reminder").checked ? "1" : "0"
+        },
+        passmsg : "Notification preferences saved"
+      });
+      return false;
+    }
+  };
+
   // (C) PASSWORD STRENGTH
   if (!cb.checker(data.pass)) {
     cb.modal("Please Check", "Password must be at least 8 characters, alphanumeric.");

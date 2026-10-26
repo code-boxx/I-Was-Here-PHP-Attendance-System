@@ -1,5 +1,12 @@
 var reports = {
+  type : type => {
+    document.getElementById("report-attend").action =
+      document.getElementById("report-attend").dataset.reportBase + type;
+    document.getElementById("attend-format").value = "csv";
+  },
   format : format => {
+    document.getElementById("report-attend").action =
+      document.getElementById("report-attend").dataset.reportBase + "attend";
     document.getElementById("attend-format").value = format;
   },
   submit : () => {

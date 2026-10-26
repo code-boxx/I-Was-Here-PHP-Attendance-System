@@ -108,12 +108,95 @@ class Courses extends Core {
     return true;
   }
 
+  function addUsers ($code, $users) {
+    if (!is_string($users)) {
+      $this->error = "Provide a newline- or comma-separated list of user emails.";
+      return false;
+    }
+    $course = $this->get($code);
+    if (!is_array($course)) {
+      $this->error = "Invalid course.";
+      return false;
+    }
+    $users = array_values(array_unique(array_filter(
+      array_map("trim", preg_split('/[\r\n,]+/', $users)),
+      fn($user) => $user!==""
+    )));
+    if (count($users)==0 || count($users)>200) {
+      $this->error = "Select between 1 and 200 users.";
+      return false;
+    }
+
+    $this->Core->load("Users");
+    $resolved = [];
+    foreach ($users as $email) {
+      $user = $this->Users->get($email);
+      if (!is_array($user) || $user["user_level"]=="S") {
+        $this->error = "Invalid or suspended user: $email";
+        return false;
+      }
+      $resolved[$user["user_id"]] = $email;
+    }
+
+    $added = 0;
+    $this->DB->start();
+    try {
+      foreach ($resolved as $userId=>$email) {
+        $exists = $this->DB->fetchCol(
+          "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+          [$code, $userId]
+        );
+        if ($exists!==null) { continue; }
+        $this->DB->query(
+          "INSERT IGNORE INTO `courses_users` (`course_code`,`user_id`) VALUES (?,?)",
+          [$code, $userId]
+        );
+        $added += $this->DB->stmt->rowCount();
+      }
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
+    return ["added" => $added, "already_enrolled" => count($resolved)-$added];
+  }
+
   // (G) DELETE USER FROM COURSE
   //  $code : course code
   //  $uid : user id or email
   function delUser ($code, $uid) {
     $this->DB->delete("courses_users", "`course_code`=? AND `user_id`=?", [$code, $uid]);
     return true;
+  }
+
+  function delUsers ($code, $uids) {
+    if (!is_string($uids)) {
+      $this->error = "Selected users are invalid.";
+      return false;
+    }
+    $ids = json_decode($uids, true);
+    if (!is_array($ids) || count($ids)==0 || count($ids)>200) {
+      $this->error = "Select between 1 and 200 users.";
+      return false;
+    }
+    foreach ($ids as $id) {
+      if (!is_int($id) && !(is_string($id) && ctype_digit($id))) {
+        $this->error = "Selected users are invalid.";
+        return false;
+      }
+    }
+    $ids = array_values(array_unique(array_map("intval", $ids)));
+    $course = $this->get($code);
+    if (!is_array($course)) {
+      $this->error = "Invalid course.";
+      return false;
+    }
+    $placeholders = implode(",", array_fill(0, count($ids), "?"));
+    $this->DB->query(
+      "DELETE FROM `courses_users` WHERE `course_code`=? AND `user_id` IN ($placeholders)",
+      array_merge([$code], $ids)
+    );
+    return ["removed" => $this->DB->stmt->rowCount()];
   }
 
   // (H) GET ALL USERS IN COURSE

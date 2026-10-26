@@ -39,6 +39,23 @@ $course = $_CORE->Courses->get($class["course_code"]); ?>
   <p id="dashboard-error" class="text-danger mb-0" role="alert"></p>
 </section>
 
+<form class="d-flex flex-wrap align-items-end gap-2 border bg-white p-3 mb-3"
+      method="post" target="_blank" action="<?=HOST_BASE?>report/followup">
+  <input type="hidden" name="code"
+         value="<?=htmlspecialchars($course["course_code"], ENT_QUOTES, "UTF-8")?>">
+  <div class="form-floating">
+    <input type="date" class="form-control" id="followup-from" name="from">
+    <label for="followup-from">From date (optional)</label>
+  </div>
+  <div class="form-floating">
+    <input type="date" class="form-control" id="followup-to" name="to">
+    <label for="followup-to">To date (optional)</label>
+  </div>
+  <button type="submit" class="btn btn-outline-primary">
+    Export below-threshold students
+  </button>
+</form>
+
 <!-- (D) ATTENDANCE LIST -->
 <div id="attend-list" class="zebra my-4"></div>
 <button type="button" class="btn btn-outline-secondary" onclick="attend.audit()">

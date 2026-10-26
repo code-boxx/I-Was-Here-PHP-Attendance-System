@@ -10,7 +10,8 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <div class="d-flex flex-wrap">
   <!-- (B1) ATTENDANCE -->
   <form class="m-1 p-4 bg-white border" id="report-attend" method="post"
-        target="_blank" action="<?=HOST_BASE?>report/attend" onsubmit="return reports.submit()">
+        target="_blank" action="<?=HOST_BASE?>report/attend"
+        data-report-base="<?=HOST_BASE?>report/" onsubmit="return reports.submit()">
     <div class="fw-bold text-danger mb-2">ATTENDANCE REPORT</div>
     <div class="form-floating">
       <input type="text" class="form-control" id="attend-course">
@@ -32,6 +33,14 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
       </button>
       <button type="submit" class="btn btn-outline-primary" onclick="reports.format('print')">
         Printable report
+      </button>
+    </div>
+    <div class="d-flex gap-2 mt-2">
+      <button type="submit" class="btn btn-outline-secondary" onclick="reports.type('trends')">
+        Weekly trends CSV
+      </button>
+      <button type="submit" class="btn btn-outline-secondary" onclick="reports.type('followup')">
+        Below-threshold follow-up CSV
       </button>
     </div>
     <small id="report-selection" class="d-block mt-2 text-secondary" role="status">

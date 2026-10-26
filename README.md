@@ -1,4 +1,4 @@
-# I Was Here — Community Edition v2.4
+# I Was Here — Community Edition v2.5
 
 I Was Here is an open-source PHP Student Attendance Management System. This
 repository is a community-maintained continuation of the original project,
@@ -7,8 +7,8 @@ It is not an official upstream release.
 
 The system features NFC and passwordless login, teacher-controlled rotating QR
 attendance sessions, live teacher dashboards, configurable attendance
-warnings, date-filtered reports, student attendance summaries, and correction
-requests.
+warnings, date-filtered analytics, bulk course enrollment, notification
+preferences, student attendance summaries, and correction requests.
 <br><br>
 
 ## :white_check_mark: FEATURES
@@ -18,6 +18,7 @@ requests.
 4) Follow live class attendance and view student summaries and correction requests.
 5) Configure the school-wide attendance warning threshold in System Settings.
 6) Filter attendance reports by date and download CSV or open a print-friendly report.
+7) Schedule opt-in notification delivery with `php /path/to/project/bin/send-notifications.php`; preview discovery safely with `--dry-run`.
 <br><br>
 
 ## :camera: SCREENSHOTS
@@ -48,6 +49,7 @@ requests.
 - In the installer, use the database hostname that the PHP process can reach. For containers, this is usually the database service name, not `localhost`.
 - Run the JavaScript tests with `node --test tests/*.test.js`.
 - Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test.
+- Email notifications are opt-in and require PHP's `mail()` transport to be configured. Run `php bin/send-notifications.php --dry-run` to verify the worker without sending mail. In production, schedule `php /absolute/path/to/project/bin/send-notifications.php` with cron (for example every 15 minutes); failures retry up to five times and are logged.
 - Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.
 - Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.
 - Keep database and JWT secrets out of version control. Store backups securely and periodically test restoring them.
@@ -60,6 +62,7 @@ requests.
 - Tag `v2.2.0` preserves the initial live attendance dashboard release.
 - Tag `v2.3.0` preserves configurable attendance-threshold warnings for students.
 - Tag `v2.4.0` preserves date-filtered CSV and printable attendance reports.
+- Tag `v2.5.0` preserves Phase 3 analytics, bulk course actions, schedule conflict checks, and opt-in email notifications.
 - `v2-improvements` is the local development branch for ongoing improvements.
 - The v2.0.0 tag is a preserved rollback point. To inspect it without changing branches, run `git switch --detach v2.0.0`; to continue work from it, create a branch with `git switch -c restore-v2.0.0 v2.0.0`.
 - Keep each reviewed release as an annotated tag (for example, `v2.1.0`) and use `git revert <commit>` to undo a published change without rewriting history.

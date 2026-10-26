@@ -25,10 +25,20 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===5, "Attendance policy database migration was not applied.");
+  )===6, "Phase 3 notification migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE()
+     AND table_name IN ('notification_preferences','notification_outbox')"
+  )===2, "Notification preference and outbox tables are missing.");
+  check((int)$db->fetchCol(
+    "SELECT `character_maximum_length` FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='notification_outbox'
+     AND column_name='event_key'"
+  )===191, "Notification event deduplication key is not migration-safe.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE()
@@ -52,6 +62,18 @@ try {
   $otherTeacherId = $db->lastID;
   check($_CORE->Users->save("Other Student", $otherStudentEmail, $password, "U"), "Could not create second test student.");
   $otherStudentId = $db->lastID;
+  $_CORE->load("Notifications");
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
+  $preferences = $_CORE->Notifications->getPreferences();
+  check(
+    (int)$preferences["attendance_warning"]===0 &&
+    (int)$preferences["correction_decision"]===0 &&
+    (int)$preferences["class_reminder"]===0,
+    "Notifications were not opt-in by default."
+  );
+  check($_CORE->Notifications->savePreferences("1", "1", "1"), "Could not save notification preferences.");
+  check(!$_CORE->Notifications->savePreferences("2", "0", "0"), "Invalid notification preference was accepted.");
+  check($_CORE->Notifications->savePreferences("0", "0", "0"), "Could not disable test notification preferences.");
   $importEmail = "import-$suffix@example.test";
   check($_CORE->Users->import("Imported Teacher", $importEmail, $password, "T"), "Valid teacher CSV row was rejected.");
   check(!$_CORE->Users->import("Duplicate Teacher", $importEmail, $password, "T"), "Duplicate user CSV row was accepted.");
@@ -65,18 +87,78 @@ try {
   check($_CORE->Courses->save($courseCode, "Integration course", $start, $end), "Could not create test course.");
   check($_CORE->Courses->addUser($courseCode, $userId), "Could not enroll test student.");
   check($_CORE->Courses->addUser($courseCode, $teacherId), "Could not enroll test teacher.");
+  $bulkEnrollment = $_CORE->Courses->addUsers($courseCode, "$otherStudentEmail\n$otherStudentEmail");
+  check(
+    is_array($bulkEnrollment) && $bulkEnrollment["added"]===1 &&
+    $bulkEnrollment["already_enrolled"]===0,
+    "Bulk enrollment did not de-duplicate users."
+  );
+  check(
+    !$_CORE->Courses->addUsers($courseCode, "$importEmail\nmissing-$suffix@example.test"),
+    "Bulk enrollment accepted an unknown user."
+  );
+  check(
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$courseCode, $db->fetchCol("SELECT `user_id` FROM `users` WHERE `user_email`=?", [$importEmail])]
+    )===null,
+    "Invalid bulk enrollment partially added users."
+  );
+  $bulkRemoval = $_CORE->Courses->delUsers($courseCode, json_encode([$otherStudentId], JSON_THROW_ON_ERROR));
+  check(is_array($bulkRemoval) && $bulkRemoval["removed"]===1, "Bulk removal did not remove the selected enrollment.");
 
   $_CORE->load("Classes");
   check($_CORE->Classes->save($courseCode, $teacherId, "$start 09:00:00", "Integration session"), "Could not create test class.");
   $classId = $db->lastID;
+  check(
+    !$_CORE->Classes->save($courseCode, $teacherId, "$start 09:30:00", "Overlapping session"),
+    "Teacher timetable conflict was not detected."
+  );
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, "$start 10:00:00", "Adjacent session"),
+    "Adjacent non-overlapping session was rejected."
+  );
+  $_CORE->Classes->del($db->lastID);
 
   $_CORE->load("Report");
+  $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
   ob_start();
   $_CORE->Report->attend($courseCode);
   $csv = ob_get_clean();
   check(strpos($csv, $email) !== false, "Report omitted an enrolled student with no attendance.");
   check(strpos($csv, "'=1+1") !== false, "Report did not neutralize a spreadsheet formula.");
   check(strpos($csv, "0%") !== false, "Report omitted the zero attendance percentage.");
+  ob_start();
+  $_CORE->Report->trends($courseCode, $start, $start);
+  $trendsCsv = ob_get_clean();
+  check(
+    strpos($trendsCsv, "WEEKLY ATTENDANCE TREND")!==false &&
+    strpos($trendsCsv, ",0,1,1,0%")!==false,
+    "Weekly attendance trend did not count present and unrecorded students correctly: $trendsCsv"
+  );
+  ob_start();
+  $_CORE->Report->followup($courseCode, $start, $start);
+  $followupCsv = ob_get_clean();
+  check(
+    strpos($followupCsv, "Below threshold")!==false &&
+    strpos($followupCsv, "'=1+1")!==false &&
+    strpos($followupCsv, "0%")!==false,
+    "Follow-up export omitted a below-threshold student or CSV formula protection."
+  );
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  ob_start();
+  $_CORE->Report->followup($courseCode, $start, $start);
+  $teacherFollowupCsv = ob_get_clean();
+  check(
+    strpos($teacherFollowupCsv, $email)!==false,
+    "Assigned teacher could not export the course follow-up report."
+  );
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  $unauthorizedReport = false;
+  try { $_CORE->Report->trends($courseCode, $start, $start); }
+  catch (RuntimeException $ex) { $unauthorizedReport = $ex->getMessage()==="No access permission"; }
+  check($unauthorizedReport, "Unassigned teacher viewed course trend data.");
+  $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
   ob_start();
   $_CORE->Report->attend($courseCode, $start, $start, "print");
   $printReport = ob_get_clean();
@@ -257,7 +339,7 @@ try {
   check($expiredRejected, "Expired session token was accepted.");
 
   $db->end(false);
-  echo "Integration tests passed: Phase 3 attendance policy and date-filtered/printable reports, QR sessions, correction workflow, audit history, attendance authorization, session revocation, login throttling, and session expiry.\n";
+  echo "Integration tests passed: Phase 3 migrations, attendance trends and follow-up reports, bulk enrollment, schedule conflicts, notification preferences, QR sessions, correction workflow, authorization, login throttling, and session expiry.\n";
 } catch (Throwable $ex) {
   if ($db->pdo->inTransaction()) { $db->end(false); }
   fwrite(STDERR, "Integration test failed: " . $ex->getMessage() . "\n");

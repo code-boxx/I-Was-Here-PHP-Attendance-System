@@ -39,6 +39,9 @@ features.
 - View student attendance for a class and course attendance reports.
 - Export every enrolled student, including students with no check-ins, plus attendance percentages as CSV.
 - Admins can filter course attendance reports by optional start/end dates, download the filtered CSV, or open a print-friendly report.
+- Admins and assigned teachers can export weekly attendance trends and below-threshold student follow-up CSVs for authorized courses.
+- Admins can bulk add up to 200 course users by email or remove selected course users while preserving past attendance.
+- Class scheduling blocks same-teacher sessions that overlap a 60-minute session window; room conflicts are not modeled.
 
 ### Data import
 
@@ -52,6 +55,7 @@ features.
 - Installation wizard for database, site URL, system defaults, JWT, and initial admin setup.
 - Configurable timezone, email sender, API HTTPS enforcement, and CORS policy.
 - Admin-configurable attendance warning threshold from 1% to 100%.
+- Users can opt in to email attendance warnings, correction decisions, and class reminders; a scheduled worker queues, deduplicates, retries, and delivers notifications using PHP's configured mail transport.
 - Log server-side errors while returning generic error messages to visitors.
 - Apply database schema updates when the application starts.
 - Keep PWA scripts in a versioned cache so clients activate updated feature assets.

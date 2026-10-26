@@ -19,5 +19,18 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
   <button type="button" class="btn btn-primary p-3 ico-sm icon-upload3" aria-label="Import course users from CSV" onclick="cuser.import()"></button>
 </form>
 
+<form class="border bg-white p-3 mb-3" onsubmit="return cuser.addMany()">
+  <label for="course-users-bulk" class="form-label">Bulk add users</label>
+  <textarea id="course-users-bulk" class="form-control" rows="3"
+            placeholder="One user email per line (up to 200)"></textarea>
+  <button type="submit" class="btn btn-outline-primary mt-2">Add listed users</button>
+</form>
+
+<div class="d-flex justify-content-end mb-2">
+  <button type="button" class="btn btn-danger" onclick="cuser.delSelected()">
+    Remove selected users
+  </button>
+</div>
+
 <!-- (D) USERS LIST -->
 <div id="course-user-list" class="zebra my-4"></div>

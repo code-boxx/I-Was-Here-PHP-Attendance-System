@@ -7,18 +7,74 @@ class Classes extends Core {
   //  $desc : class description
   //  $id : class id (for edit only)
   function save ($code, $uid, $date, $desc=null, $id=null) {
+    if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) {
+      $date .= ":00";
+    }
+    $parsedDate = is_string($date) ? DateTimeImmutable::createFromFormat("!Y-m-d H:i:s", $date) : false;
+    if (!$parsedDate || $parsedDate->format("Y-m-d H:i:s")!==$date) {
+      $this->error = "Class date and time are invalid.";
+      return false;
+    }
+    $course = $this->DB->fetch(
+      "SELECT `course_start`, `course_end` FROM `courses` WHERE `course_code`=?",
+      [$code]
+    );
+    if (
+      !is_array($course) || $date<($course["course_start"]." 00:00:00") ||
+      $date>($course["course_end"]." 23:59:59")
+    ) {
+      $this->error = "Class date must fall within the course dates.";
+      return false;
+    }
+    $teacher = $this->DB->fetchCol(
+      "SELECT 1 FROM `courses_users` cu
+       JOIN `users` u ON (u.`user_id`=cu.`user_id`)
+       WHERE cu.`course_code`=? AND cu.`user_id`=? AND u.`user_level` IN ('A','T')",
+      [$code, $uid]
+    );
+    if ($teacher===null) {
+      $this->error = "Select a teacher assigned to this course.";
+      return false;
+    }
     // (A1) DATA SETUP
     $fields = ["course_code", "user_id", "class_date", "class_desc"];
     $data = [$code, $uid, $date, $desc];
 
-    // (A2) ADD/UPDATE CLASS
-    if ($id==null) {
-      $fields[] = "class_hash";
-      $data[] = $this->Core->random(12);
-      $this->DB->insert("classes", $fields, $data);
-    } else {
-      $data[] = $id;
-      $this->DB->update("classes", $fields, "`class_id`=?", $data);
+    $this->DB->start();
+    try {
+      $this->DB->fetchCol(
+        "SELECT `user_id` FROM `users` WHERE `user_id`=? FOR UPDATE",
+        [$uid]
+      );
+      $sql = "SELECT `class_id`, DATE_FORMAT(`class_date`, '".DT_LONG."') AS `conflict_date`
+              FROM `classes`
+              WHERE `user_id`=? AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+              AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?";
+      $params = [$uid, $date, $date];
+      if ($id!==null && $id!=="") {
+        $sql .= " AND `class_id`!=?";
+        $params[] = $id;
+      }
+      $conflict = $this->DB->fetch($sql." LIMIT 1", $params);
+      if (is_array($conflict)) {
+        $this->DB->end(false);
+        $this->error = "Teacher already has a scheduled class overlapping this 60-minute session (class ".$conflict["class_id"]." at ".$conflict["conflict_date"].").";
+        return false;
+      }
+
+      // (A2) ADD/UPDATE CLASS
+      if ($id==null) {
+        $fields[] = "class_hash";
+        $data[] = $this->Core->random(12);
+        $this->DB->insert("classes", $fields, $data);
+      } else {
+        $data[] = $id;
+        $this->DB->update("classes", $fields, "`class_id`=?", $data);
+      }
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
     }
     return true;
   }

@@ -12,6 +12,39 @@ class Report extends Core {
     return $value;
   }
 
+  private function validateRange ($from, $to) {
+    $from = $this->reportDate($from, "start");
+    $to = $this->reportDate($to, "end");
+    if ($from!==null && $to!==null && $from>$to) {
+      throw new InvalidArgumentException("The report start date must not be after the end date.");
+    }
+    return [$from, $to];
+  }
+
+  private function canViewCourseReport ($code) {
+    $level = $_SESSION["user"]["user_level"] ?? "";
+    if ($level=="A") { return true; }
+    if ($level!="T") { return false; }
+    return $this->DB->fetchCol(
+      "SELECT 1 FROM `classes`
+       WHERE `course_code`=? AND `user_id`=? LIMIT 1",
+      [$code, $_SESSION["user"]["user_id"]]
+    ) !== null;
+  }
+
+  private function attendanceThreshold () {
+    $threshold = $this->DB->fetchCol(
+      "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
+    );
+    if (
+      $threshold===null || !ctype_digit((string)$threshold) ||
+      (int)$threshold<1 || (int)$threshold>100
+    ) {
+      throw new RuntimeException("Attendance threshold is not configured correctly.");
+    }
+    return (int)$threshold;
+  }
+
   private function html ($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
   }
@@ -31,11 +64,7 @@ class Report extends Core {
     if (!is_string($code) || trim($code)==="") {
       throw new InvalidArgumentException("Select a valid course.");
     }
-    $from = $this->reportDate($from, "start");
-    $to = $this->reportDate($to, "end");
-    if ($from!==null && $to!==null && $from>$to) {
-      throw new InvalidArgumentException("The report start date must not be after the end date.");
-    }
+    [$from, $to] = $this->validateRange($from, $to);
     if (!in_array($format, ["csv", "print"], true)) {
       throw new InvalidArgumentException("Invalid report format.");
     }
@@ -48,6 +77,9 @@ class Report extends Core {
        [$code]
     );
     if (!is_array($course)) { throw new Exception("Course not found."); }
+    if (!$this->canViewCourseReport($code)) {
+      throw new RuntimeException("No access permission");
+    }
 
     // (A2) GET CLASSES IN THE OPTIONAL DATE RANGE
     $sql = "SELECT `class_id`, DATE_FORMAT(`class_date`, '".DT_LONG."') `cd`
@@ -148,6 +180,118 @@ class Report extends Core {
 
     if ($format=="csv") { fclose($f); }
     else { echo '</tbody></table></body></html>'; }
+  }
+
+  function trends ($code, $from=null, $to=null) {
+    if (!is_string($code) || trim($code)==="") {
+      throw new InvalidArgumentException("Select a valid course.");
+    }
+    [$from, $to] = $this->validateRange($from, $to);
+    $course = $this->DB->fetch(
+      "SELECT `course_code`, `course_name` FROM `courses` WHERE `course_code`=?",
+      [$code]
+    );
+    if (!is_array($course)) { throw new Exception("Course not found."); }
+    if (!$this->canViewCourseReport($code)) {
+      throw new RuntimeException("No access permission");
+    }
+
+    $sql = "SELECT DATE_FORMAT(cl.`class_date`, '%x-W%v') AS `week`,
+                   DATE_FORMAT(MIN(cl.`class_date`), '%Y-%m-%d') AS `week_start`,
+                   COUNT(cl.`class_id`) AS `total`,
+                   COALESCE(SUM(a.`a_status`=1), 0) AS `present`,
+                   COALESCE(SUM(cl.`class_id` IS NOT NULL AND (a.`user_id` IS NULL OR a.`a_status`=0)), 0) AS `not_present`
+            FROM `classes` cl
+            JOIN `courses_users` cu ON (cu.`course_code`=cl.`course_code`)
+            JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
+            LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
+            WHERE cl.`course_code`=? AND cl.`class_date`<=NOW()";
+    $params = [$code];
+    if ($from!==null) {
+      $sql .= " AND cl.`class_date`>=?";
+      $params[] = "$from 00:00:00";
+    }
+    if ($to!==null) {
+      $sql .= " AND cl.`class_date`<DATE_ADD(?, INTERVAL 1 DAY)";
+      $params[] = $to;
+    }
+    $sql .= " GROUP BY YEARWEEK(cl.`class_date`, 3) ORDER BY MIN(cl.`class_date`)";
+    $this->DB->query($sql, $params);
+
+    $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', $code);
+    header("Content-Type: text/csv; charset=utf-8");
+    header("Content-Disposition: attachment; filename=\"{$filename}-trends.csv\"");
+    $file = fopen("php://output", "w");
+    $this->csvRow($file, ["WEEKLY ATTENDANCE TREND", "[{$course["course_code"]}] {$course["course_name"]}"]);
+    $this->csvRow($file, ["Week", "Week starting", "Present", "Absent or unrecorded", "Possible check-ins", "Attendance %"]);
+    while ($row = $this->DB->stmt->fetch()) {
+      $total = (int)$row["total"];
+      $present = (int)$row["present"];
+      $this->csvRow($file, [
+        $row["week"], $row["week_start"], $present, (int)$row["not_present"], $total,
+        $total===0 ? "N/A" : round(100 * $present / $total) . "%"
+      ]);
+    }
+    fclose($file);
+  }
+
+  function followup ($code, $from=null, $to=null) {
+    if (!is_string($code) || trim($code)==="") {
+      throw new InvalidArgumentException("Select a valid course.");
+    }
+    [$from, $to] = $this->validateRange($from, $to);
+    $course = $this->DB->fetch(
+      "SELECT `course_code`, `course_name` FROM `courses` WHERE `course_code`=?",
+      [$code]
+    );
+    if (!is_array($course)) { throw new Exception("Course not found."); }
+    if (!$this->canViewCourseReport($code)) {
+      throw new RuntimeException("No access permission");
+    }
+    $threshold = $this->attendanceThreshold();
+
+    $sql = "SELECT u.`user_name`, u.`user_email`,
+                   COUNT(cl.`class_id`) AS `total`,
+                   COALESCE(SUM(a.`a_status`=1), 0) AS `present`,
+                   COALESCE(SUM(cl.`class_id` IS NOT NULL AND (a.`user_id` IS NULL OR a.`a_status`=0)), 0) AS `missed`
+            FROM `courses_users` cu
+            JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
+            LEFT JOIN `classes` cl ON (cl.`course_code`=cu.`course_code`";
+    $joinParams = [];
+    if ($from!==null) {
+      $sql .= " AND cl.`class_date`>=?";
+      $joinParams[] = "$from 00:00:00";
+    }
+    if ($to!==null) {
+      $sql .= " AND cl.`class_date`<DATE_ADD(?, INTERVAL 1 DAY)";
+      $joinParams[] = $to;
+    }
+    $sql .= " AND cl.`class_date`<=NOW())
+            LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
+            WHERE cu.`course_code`=?
+            GROUP BY u.`user_id`, u.`user_name`, u.`user_email`
+            ORDER BY u.`user_name`";
+    $this->DB->query($sql, array_merge($joinParams, [$code]));
+
+    $filename = preg_replace('/[^A-Za-z0-9._-]/', '_', $code);
+    header("Content-Type: text/csv; charset=utf-8");
+    header("Content-Disposition: attachment; filename=\"{$filename}-follow-up.csv\"");
+    $file = fopen("php://output", "w");
+    $this->csvRow($file, ["STUDENT ATTENDANCE FOLLOW-UP", "[{$course["course_code"]}] {$course["course_name"]}"]);
+    $this->csvRow($file, ["Below threshold", "$threshold%", "From", $from ?? "All dates", "To", $to ?? "All dates"]);
+    $this->csvRow($file, ["Student", "Email", "Present", "Absent or unrecorded", "Completed classes", "Attendance %"]);
+    while ($row = $this->DB->stmt->fetch()) {
+      $total = (int)$row["total"];
+      if ($total===0) { continue; }
+      $present = (int)$row["present"];
+      $percentage = (int)round(100 * $present / $total);
+      if ($percentage >= $threshold) { continue; }
+      $this->csvRow($file, [
+        $row["user_name"], $row["user_email"], $present, $total - $present,
+        $total, "$percentage%"
+      ]);
+    }
+    fclose($file);
   }
 
   private function reportRow ($format, $file, $row) {

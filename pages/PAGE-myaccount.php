@@ -1,6 +1,8 @@
 <?php
 // (A) NOT SIGNED IN
 if (!isset($_SESSION["user"])) { $_CORE->redirect(); }
+$_CORE->load("Notifications");
+$notificationPreferences = $_CORE->Notifications->getPreferences();
 
 // (B) PAGE META & SCRIPTS
 $_PMETA = ["load" => [
@@ -49,4 +51,37 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 </div>
 </div>
 </div>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Email notifications</h3>
+    <p class="text-secondary">
+      Optional email notices are sent by the site's scheduled notification worker.
+      You can change these preferences at any time.
+    </p>
+    <form onsubmit="return notificationPreferences.save()">
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="notify-attendance-warning"
+               <?=$notificationPreferences["attendance_warning"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-attendance-warning">
+          Attendance falls below the school threshold
+        </label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="notify-correction-decision"
+               <?=$notificationPreferences["correction_decision"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-correction-decision">
+          My attendance correction request is approved or rejected
+        </label>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="notify-class-reminder"
+               <?=$notificationPreferences["class_reminder"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-class-reminder">
+          Reminder for a class scheduled within 24 hours
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">Save notification preferences</button>
+    </form>
+  </div>
+</section>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php";

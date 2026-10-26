@@ -8,7 +8,9 @@ $_CORE->autoAPI([
   "import" => ["Courses", "import"],
   "del" => ["Courses", "del"],
   "addUser" => ["Courses", "addUser"],
-  "delUser" => ["Courses", "delUser"]
+  "delUser" => ["Courses", "delUser"],
+  "addUsers" => ["Courses", "addUsers"],
+  "delUsers" => ["Courses", "delUsers"]
 ]);
 
 // (C) INVALID REQUEST
