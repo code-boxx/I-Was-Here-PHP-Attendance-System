@@ -11,7 +11,8 @@ $_CORE->autoAPI([
   "requestCorrection" => ["Attend", "requestCorrection", "U"],
   "getCorrections" => ["Attend", "getCorrections"],
   "decideCorrection" => ["Attend", "decideCorrection", ["A", "T"]],
-  "getAudit" => ["Attend", "getAudit", ["A", "T"]]
+  "getAudit" => ["Attend", "getAudit", ["A", "T"]],
+  "getDashboard" => ["Attend", "getDashboard", ["A", "T"]]
 ]);
 
 // (B) INVALID REQUEST

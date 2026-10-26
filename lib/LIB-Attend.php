@@ -462,6 +462,56 @@ class Attend extends Core {
     );
   }
 
+  function getDashboard ($classId) {
+    $this->Core->load("Classes");
+    if (!$this->Classes->canManageClass($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    $summary = $this->DB->fetch(
+      "SELECT COUNT(u.`user_id`) AS `total`,
+              COALESCE(SUM(a.`a_status`=1), 0) AS `present`,
+              COALESCE(SUM(a.`a_status`=0), 0) AS `absent`,
+              COALESCE(SUM(a.`class_id` IS NULL), 0) AS `unrecorded`
+       FROM `classes` cl
+       JOIN `courses_users` cu ON (cu.`course_code`=cl.`course_code`)
+       JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
+       LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
+       WHERE cl.`class_id`=?",
+      [$classId]
+    );
+    if (!is_array($summary)) {
+      $this->error = "Invalid class.";
+      return false;
+    }
+    $summary = array_map("intval", $summary);
+    $summary["not_present"] = $summary["total"] - $summary["present"];
+    $summary["not_present_students"] = $this->DB->fetchAll(
+      "SELECT u.`user_name`, a.`a_status`
+       FROM `classes` cl
+       JOIN `courses_users` cu ON (cu.`course_code`=cl.`course_code`)
+       JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
+       LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
+       WHERE cl.`class_id`=? AND (a.`class_id` IS NULL OR a.`a_status`=0)
+       ORDER BY u.`user_name`",
+      [$classId]
+    ) ?? [];
+    $summary["last_checkin"] = $this->DB->fetch(
+      "SELECT u.`user_name`, DATE_FORMAT(a.`changed_at`, '%Y-%m-%d %H:%i:%s') AS `checked_in_at`
+       FROM `attendance_audit` a
+       JOIN `users` u ON (u.`user_id`=a.`user_id`)
+       WHERE a.`class_id`=? AND a.`change_source`='qr' AND a.`new_status`=1
+       ORDER BY a.`audit_id` DESC LIMIT 1",
+      [$classId]
+    );
+    $summary["session_status"] = $this->DB->fetchCol(
+      "SELECT `session_status` FROM `attendance_sessions`
+       WHERE `class_id`=? ORDER BY `session_id` DESC LIMIT 1",
+      [$classId]
+    ) ?: "closed";
+    return $summary;
+  }
+
   private function logChange ($classId, $userId, $oldStatus, $newStatus, $actorId, $reason, $source) {
     $this->DB->insert(
       "attendance_audit",

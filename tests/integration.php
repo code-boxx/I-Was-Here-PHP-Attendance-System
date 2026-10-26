@@ -117,6 +117,18 @@ try {
   check($otherRequests===null || count($otherRequests)==0, "Student could view another student's correction requests.");
   check(!$_CORE->Attend->attendQR($qr["token"]), "Student outside the course checked in by QR.");
   check(!$_CORE->Attend->requestCorrection($classId, "1", "Unenrolled request."), "Unenrolled student submitted a correction.");
+  check($_CORE->Courses->addUser($courseCode, $otherStudentId), "Could not enroll the dashboard test student.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $dashboard = $_CORE->Attend->getDashboard($classId);
+  check(
+    $dashboard["total"]===2 && $dashboard["present"]===1 &&
+    $dashboard["absent"]===0 && $dashboard["unrecorded"]===1 &&
+    count($dashboard["not_present_students"])===1 &&
+    $dashboard["last_checkin"]["user_name"]==="=1+1",
+    "Live dashboard did not return accurate counts, missing roster, and latest QR check-in."
+  );
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  check($_CORE->Attend->getDashboard($classId)===false, "Unassigned teacher viewed another class dashboard.");
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
   check($_CORE->Attend->requestCorrection($classId, "0", "I was recorded present by mistake."), "Enrolled student correction request failed.");
   check(!$_CORE->Attend->requestCorrection($classId, "1", "Second pending request."), "Duplicate pending correction request was accepted.");
@@ -130,6 +142,13 @@ try {
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
   check($_CORE->Attend->decideCorrection($studentRequests[0]["request_id"], "approved", "Verified against class records."), "Assigned teacher could not approve a correction.");
   check((int)$db->fetchCol("SELECT `a_status` FROM `attendance` WHERE `class_id`=? AND `user_id`=?", [$classId, $userId])===0, "Approved correction did not update attendance.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $dashboard = $_CORE->Attend->getDashboard($classId);
+  check(
+    $dashboard["present"]===0 && $dashboard["absent"]===1 &&
+    $dashboard["unrecorded"]===1,
+    "Live dashboard counts did not update after a correction."
+  );
   $audit = $_CORE->Attend->getAudit($classId);
   check(is_array($audit) && count($audit)>=5, "Attendance audit history omitted changes.");
   $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];

@@ -393,7 +393,10 @@ Phase 3
 Analytics and automation
 Efficiency release
 
-Attendance dashboards and configurable alerts.
+Initial live attendance dashboard is implemented in Community Edition v2.2.0:
+present, absent, unrecorded, not-present roster, last QR check-in, and session
+status refresh while the teacher view is open. Still planned: configurable
+attendance alerts and thresholds.
 
 Advanced reports and printable exports.
 

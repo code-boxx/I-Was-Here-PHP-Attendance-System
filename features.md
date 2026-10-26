@@ -34,6 +34,7 @@ features.
 - Attendance status changes are retained in a class-level audit history with the actor, time, old/new status, source, and reason. Manual status corrections and correction decisions require a reason.
 - Students can view completed-class attendance totals and percentages for their enrolled courses.
 - Students can submit one pending correction request per class, and teachers assigned to the class or admins can approve or reject it with a recorded reason.
+- Teachers and admins can view a live class dashboard with present, absent, and unrecorded counts; students not marked present; the latest QR check-in; and session status. It refreshes every 10 seconds while the tab is visible.
 - View student attendance for a class and course attendance reports.
 - Export every enrolled student, including students with no check-ins, plus attendance percentages as CSV.
 
@@ -62,7 +63,7 @@ features.
 
 ### Useful next steps
 
-- **Extend attendance reporting:** add date-range filters and attendance trends over time.
+- **Extend attendance reporting:** live class counts and QR check-in visibility are implemented; add date-range filters, attendance trends, downloadable summaries, and policy-based alerts.
 - **Export more formats:** offer XLSX or printable PDF reports in addition to CSV.
 - **Add bulk actions:** support bulk enrollment, account status changes, and attendance corrections.
 - **Extend the audit trail:** attendance changes now have an audit history; add audit coverage for user accounts, course settings, exports, and other administrative actions.
