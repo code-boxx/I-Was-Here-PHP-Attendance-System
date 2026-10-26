@@ -85,10 +85,12 @@ class CoreBoxx {
 
       // (F2) RUN FUNCTION
       $result = $this->autoCall($actions[$this->Route->act][0], $actions[$this->Route->act][1], $mode);
+      $http = $result===false && $this->error=="No access permission" ? 403 : null;
       $this->respond(
         is_bool($result) ? $result : true, null,
         is_bool($result) ? null : $result,
-        $this->DB->lastID!==null ? $this->DB->lastID : null
+        $this->DB->lastID!==null ? $this->DB->lastID : null,
+        $http
       );
     }
   }
@@ -102,6 +104,7 @@ class CoreBoxx {
   //  $exit : stop process, default true
   function respond ($status, $msg=null, $data=null, $more=null, $http=null, $exit=true) : void {
     if ($http!==null) { http_response_code($http); }
+    header("Content-Type: application/json; charset=utf-8");
     if ($msg === null) {
       if ($status==1) { $msg = "OK"; }
       else { $msg = $this->error; }
@@ -109,37 +112,29 @@ class CoreBoxx {
     echo json_encode([
       "status" => $status, "message" => $msg,
       "data" => $data, "more" => $more, "page" => $this->page
-    ]);
+    ], JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
     if ($exit) { exit(); }
   }
 
   // (H) STANDARD ERROR HANDLER
   function ouch ($ex) : void {
+    error_log(sprintf(
+      "Application error: %s in %s:%d",
+      $ex->getMessage(), $ex->getFile(), $ex->getLine()
+    ));
+    http_response_code(500);
+
     // (H1) SHOW HTML ERROR MESSAGE IN WEB MODE
     if ($this->mode=="W") { ?>
     <div style="box-sizing:border-box;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:#fff;color:#000;padding:30px;font-family:arial">
       <h1 style="font-size:50px;padding:0;margin:0">(╯°□°)╯︵ ┻━┻</h1>
-      <p style="font-size:30px;color:#ff4545">AN ERROR HAS OCCURED.</p>
-      <?php if (ERR_SHOW) { ?>
-      <table>
-        <tr><td style="font-weight:700">Message</td><td><?=$ex->getMessage()?></td></tr>
-        <tr><td style="font-weight:700">Code</td><td><?=$ex->getCode()?></td></tr>
-        <tr><td style="font-weight:700">File</td><td><?=$ex->getFile()?></td></tr>
-        <tr><td style="font-weight:700">Line</td><td><?=$ex->getLine()?></td></tr>
-        <tr><td style="font-weight:700">Trace</td><td><?=$ex->getTraceAsString()?></td></tr>
-      </table>
-      <?php } ?>
+      <p style="font-size:30px;color:#ff4545">Something went wrong. Please try again later.</p>
     </div>
     <?php }
 
     // (H2) OUTPUT JSON ENCODED MESSAGE OTHERWISE
     else {
-      $this->respond(0,
-      ERR_SHOW ? $ex->getMessage() : "OPPS! An error has occured.",
-      ERR_SHOW ? [
-        "code" => $ex->getCode(), "file" => $ex->getFile(),
-        "line" => $ex->getLine(), "trace" => $ex->getTraceAsString()
-      ] : null, null, 500);
+      $this->respond(0, "Something went wrong. Please try again later.", null, null, 500);
     }
   }
 

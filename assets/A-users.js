@@ -83,7 +83,7 @@ var usr = {
     after : () => usr.list(true),
     cols : [
       ["Name", "name", true],
-      ["Email", "email", true],
+      ["Email", "email", "E"],
       ["Password", "password", true],
       ["Level (A,T,U,S)", "level", true]
     ]

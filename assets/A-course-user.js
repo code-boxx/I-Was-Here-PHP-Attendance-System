@@ -79,7 +79,7 @@ var cuser = {
     after : () => cuser.list(),
     data : { code : cuser.code },
     cols : [
-      ["User's Email", "uid", true]
+      ["User's Email", "uid", "E"]
     ]
   })
 };

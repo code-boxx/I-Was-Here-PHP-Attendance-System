@@ -5,6 +5,7 @@ class DB extends Core {
   public $stmt = null;   // sql statement
   public $lastID = null; // last insert id
   public $lastRows = 0;  // last affected rows
+  private $transactionDepth = 0;
 
   // (B) CONSTRUCTOR - CONNECT TO DATABASE
   function __construct ($core) {
@@ -25,13 +26,34 @@ class DB extends Core {
   }
 
   // (D) AUTO-COMMIT OFF
-  function start () : void { $this->pdo->beginTransaction(); }
+  function start () : void {
+    if ($this->transactionDepth==0) {
+      $this->pdo->beginTransaction();
+    } else {
+      $this->pdo->exec("SAVEPOINT cbx_".$this->transactionDepth);
+    }
+    $this->transactionDepth++;
+  }
 
   // (E) COMMIT OR ROLLBACK?
   //  $pass : commit or rollback?
   function end ($pass=true) : void {
-    if ($pass) { $this->pdo->commit(); }
-    else { $this->pdo->rollBack(); }
+    if ($this->transactionDepth==0) {
+      throw new LogicException("No active database transaction.");
+    }
+    $this->transactionDepth--;
+    if ($this->transactionDepth==0) {
+      if ($pass) { $this->pdo->commit(); }
+      else { $this->pdo->rollBack(); }
+      return;
+    }
+    $savepoint = "cbx_".$this->transactionDepth;
+    if ($pass) {
+      $this->pdo->exec("RELEASE SAVEPOINT $savepoint");
+    } else {
+      $this->pdo->exec("ROLLBACK TO SAVEPOINT $savepoint");
+      $this->pdo->exec("RELEASE SAVEPOINT $savepoint");
+    }
   }
 
   // (F) EXECUTE SQL QUERY

@@ -36,18 +36,10 @@ define("JWT_ISSUER", "");
 define("JWT_SECRET", "");
 
 // (F) ERROR HANDLING
-/* (F1) RECOMMENDED FOR LIVE SERVER
 error_reporting(E_ALL & ~E_NOTICE);
 ini_set("display_errors", 0);
 ini_set("log_errors", 1);
-ini_set("error_log", "PATH/error.log");
-define("ERR_SHOW", false); */
-
-// (F2) RECOMMENDED FOR DEVELOPMENT SERVER
-error_reporting(E_ALL & ~E_NOTICE);
-ini_set("display_errors", 1);
-ini_set("log_errors", 0);
-define("ERR_SHOW", true);
+define("ERR_SHOW", false);
 
 // (G) TIMEZONE
 // https://www.php.net/manual/en/timezones.php

@@ -16,9 +16,9 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 
 <!-- (B2) SEARCH BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return usr.search()">
-  <input type="text" id="user-search" placeholder="Search" class="form-control form-control-sm">
-  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-search"></button>
-  <button class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
+  <input type="text" id="user-search" placeholder="Search" aria-label="Search users" class="form-control form-control-sm">
+  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-search" aria-label="Search users"></button>
+  <button class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" aria-label="User actions" data-bs-toggle="dropdown"></button>
   <ul class="dropdown-menu dropdown-menu-dark">
     <li class="dropdown-item" onclick="usr.addEdit()">
       <i class="text-secondary ico-sm icon-plus"></i> Add Single

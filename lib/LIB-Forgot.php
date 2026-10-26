@@ -97,8 +97,10 @@ class Forgot extends Core {
     // (C7-1) UPDATE USER PASSWORD
     $this->DB->start();
     $password = $this->Core->random($this->plen);
-    $this->DB->update(
-      "users", ["user_password"], "`user_id`=?",
+    $this->DB->query(
+      "UPDATE `users`
+       SET `user_password`=?, `session_version`=`session_version`+1
+       WHERE `user_id`=?",
       [password_hash($password, PASSWORD_DEFAULT), $id]
     );
 

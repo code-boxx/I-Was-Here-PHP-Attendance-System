@@ -10,8 +10,50 @@ class Users extends Core {
   // (A) SETTINGS
   private $hvalid = 900; // validation link good for 15 mins
   private $hlen = 12; // 24 characters validation hash
+  private $loginAttempts = 5;
+  private $loginWindow = 15;
 
-  // (B) PASSWORD CHECKER (HELPER)
+  // (B) LOGIN THROTTLE
+  function loginKey ($email) {
+    $ip = $_SERVER["REMOTE_ADDR"] ?? "unknown";
+    return hash("sha256", strtolower(trim($email)) . "|" . $ip);
+  }
+
+  function loginLocked ($key) {
+    return $this->DB->fetchCol(
+      "SELECT 1 FROM `login_attempts` WHERE `attempt_key`=? AND `locked_until`>NOW()",
+      [$key]
+    ) !== null;
+  }
+
+  function loginFailed ($key) {
+    $this->DB->query(
+      "INSERT INTO `login_attempts` (`attempt_key`, `failed_attempts`, `window_started`)
+       VALUES (?, 1, NOW())
+       ON DUPLICATE KEY UPDATE
+         `locked_until`=CASE
+           WHEN `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE) THEN NULL
+           WHEN `failed_attempts`>= ".($this->loginAttempts - 1)."
+             THEN DATE_ADD(NOW(), INTERVAL ".$this->loginWindow." MINUTE)
+           ELSE `locked_until`
+         END,
+         `failed_attempts`=IF(
+           `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE),
+           1, `failed_attempts`+1
+         ),
+         `window_started`=IF(
+           `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE),
+           NOW(), `window_started`
+         )",
+      [$key]
+    );
+  }
+
+  function loginSucceeded ($key) {
+    $this->DB->delete("login_attempts", "`attempt_key`=?", [$key]);
+  }
+
+  // (C) PASSWORD CHECKER (HELPER)
   //  $password : password to check
   //  $pattern : regex pattern check (at least 8 characters, alphanumeric)
   function checker ($password, $pattern='/^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i') {
@@ -76,8 +118,13 @@ class Users extends Core {
     if ($id===null) {
       $this->DB->insert("users", $fields, $data);
     } else {
-      $data[] = $id;
-      $this->DB->update("users", $fields, "`user_id`=?", $data);
+      $this->DB->query(
+        "UPDATE `users`
+         SET `user_name`=?, `user_email`=?, `user_password`=?, `user_level`=?,
+             `session_version`=`session_version`+1
+         WHERE `user_id`=?",
+        [$name, $email, $data[2], $lvl, $id]
+      );
     }
     return true;
   }
@@ -95,9 +142,9 @@ class Users extends Core {
   // (G) SUSPEND USER
   //  $id : user id
   function suspend ($id) {
-    $this->DB->update("users",
-      ["user_level"], "`user_id`=?",
-      ["S", $id]
+    $this->DB->query(
+      "UPDATE `users` SET `user_level`='S', `session_version`=`session_version`+1 WHERE `user_id`=?",
+      [$id]
     );
   }
 
@@ -121,10 +168,13 @@ class Users extends Core {
     }
 
     // (H4) UPDATE DATABASE
-    $this->DB->update("users",
-      ["user_name", "user_password"], "`user_id`=?",
+    $this->DB->query(
+      "UPDATE `users`
+       SET `user_name`=?, `user_password`=?, `session_version`=`session_version`+1
+       WHERE `user_id`=?",
       [$name, password_hash($pass, PASSWORD_DEFAULT), $_SESSION["user"]["user_id"]]
     );
+    $this->Session->destroy();
     return true;
   }
 
@@ -167,11 +217,22 @@ class Users extends Core {
     // (J1) ALREADY SIGNED IN
     if (isset($_SESSION["user"])) { return true; }
 
-    // (J2) VERIFY EMAIL PASSWORD ACCOUNT
-    $user = $this->verify($email, $password);
-    if ($user===false) { return false; }
+    // (J2) LIMIT REPEATED FAILED SIGN-IN ATTEMPTS
+    $key = $this->loginKey($email);
+    if ($this->loginLocked($key)) {
+      $this->error = "Invalid user or password. Try again later.";
+      return false;
+    }
 
-    // (J3) SESSION START
+    // (J3) VERIFY EMAIL PASSWORD ACCOUNT
+    $user = $this->verify($email, $password);
+    if ($user===false) {
+      $this->loginFailed($key);
+      return false;
+    }
+    $this->loginSucceeded($key);
+
+    // (J4) SESSION START
     $_SESSION["user"] = $user;
     unset($_SESSION["user"]["user_password"]);
     unset($_SESSION["user"]["hash_code"]);
@@ -182,10 +243,15 @@ class Users extends Core {
 
   // (K) LOGOUT
   function logout () {
-    // (K1) ALREADY SIGNED OFF
-    if (!isset($_SESSION["user"])) { return true; }
+    // (K1) REVOKE ALL EXISTING TOKENS FOR THIS ACCOUNT
+    if (isset($_SESSION["user"]["user_id"])) {
+      $this->DB->query(
+        "UPDATE `users` SET `session_version`=`session_version`+1 WHERE `user_id`=?",
+        [$_SESSION["user"]["user_id"]]
+      );
+    }
 
-    // (K2) END SESSION
+    // (K2) END THIS SESSION
     $this->Session->destroy();
     return true;
   }
@@ -340,14 +406,24 @@ class Users extends Core {
   //  $password : user password
   //  $level : user level
   function import ($name, $email, $password, $level) {
+    $name = trim($name);
+    $email = strtolower(trim($email));
+
+    if ($name==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $this->error = "A valid name and email are required.";
+      return false;
+    }
+
     // (R1) CHECK REGISTERED
     if (is_array($this->get($email))) {
       $this->error = "$email is already registered";
+      return false;
     }
 
     // (R2) CHECK LEVEL
-    if (!in_array($level, USR_LVL)) {
+    if (!array_key_exists($level, USR_LVL)) {
       $this->error = "Invalid user level";
+      return false;
     }
 
     // (R3) SAVE

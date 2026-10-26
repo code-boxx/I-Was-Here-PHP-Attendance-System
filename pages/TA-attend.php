@@ -9,7 +9,8 @@ $course = $_CORE->Courses->get($class["course_code"]); ?>
     <h3 class="mb-0">[<?=$course["course_code"]?>] <?=$course["course_name"]?></h3>
     <small class="fw-bold"><?=$class["cd"]?></small>
   </div>
-  <button type="button" class="btn btn-danger p-3 ico-sm icon-undo2" onclick="cb.page(1)"></button>
+  <button type="button" class="btn btn-danger p-3 ico-sm icon-undo2"
+          aria-label="Back to classes" onclick="cb.page(1)"></button>
 </div>
 
 <!-- (C) NOTES -->

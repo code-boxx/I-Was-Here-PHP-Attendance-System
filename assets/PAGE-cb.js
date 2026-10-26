@@ -86,7 +86,12 @@ var cb = {
   }},
 
   // (B5) TOGGLE SIDEBAR
-  toggle : () => cb.hSide.classList.toggle("show"),
+  toggle : () => {
+    cb.hSide.classList.toggle("show");
+    document.getElementById("cb-toggle").setAttribute(
+      "aria-expanded", cb.hSide.classList.contains("show") ? "true" : "false"
+    );
+  },
 
   // (C) AJAX CALL
   //  url : string, target URL

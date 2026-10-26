@@ -1,8 +1,10 @@
+const CACHE_NAME = "IWASHERE-v2";
+
 // (A) CREATE/INSTALL CACHE
 self.addEventListener("install", evt => {
   self.skipWaiting();
   evt.waitUntil(
-    caches.open("IWASHERE")
+    caches.open(CACHE_NAME)
     .then(cache => cache.addAll([
       // (A1) ADMIN
       "assets/A-classes.js",
@@ -55,8 +57,15 @@ self.addEventListener("install", evt => {
   );
 });
 
-// (B) CLAIM CONTROL INSTANTLY
-self.addEventListener("activate", evt => self.clients.claim());
+// (B) REMOVE OLD CACHES AND CLAIM CONTROL
+self.addEventListener("activate", evt => evt.waitUntil(
+  caches.keys()
+    .then(keys => Promise.all(keys
+      .filter(key => key.startsWith("IWASHERE") && key !== CACHE_NAME)
+      .map(key => caches.delete(key))
+    ))
+    .then(() => self.clients.claim())
+));
 
 // (C) LOAD FROM CACHE FIRST, FALLBACK TO NETWORK IF NOT FOUND
 self.addEventListener("fetch", evt => evt.respondWith(

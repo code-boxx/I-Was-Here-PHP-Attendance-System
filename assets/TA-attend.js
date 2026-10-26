@@ -30,11 +30,15 @@ var attend = {
       btn.classList.add("btn-danger");
       btn.classList.remove("icon-checkmark");
       btn.classList.add("icon-cross");
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", "Absent; mark present for " + btn.dataset.student);
     } else {
       btn.classList.remove("btn-danger");
       btn.classList.add("btn-primary");
       btn.classList.remove("icon-cross");
       btn.classList.add("icon-checkmark");
+      btn.setAttribute("aria-pressed", "true");
+      btn.setAttribute("aria-label", "Present; mark absent for " + btn.dataset.student);
     }
   },
 

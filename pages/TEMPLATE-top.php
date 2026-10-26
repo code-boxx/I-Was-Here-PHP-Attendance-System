@@ -94,13 +94,16 @@
         <?php if (isset($_SESSION["user"])) { ?>
         <!-- (C2-1) TOP NAV -->
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container-fluid">
-          <button id="cb-toggle" class="navbar-toggler btn btn-sm text-white ico icon-menu" onclick="cb.toggle()"></button>
+          <button type="button" id="cb-toggle" class="navbar-toggler btn btn-sm text-white ico icon-menu"
+                  aria-label="Toggle navigation" aria-controls="cb-side" aria-expanded="false"
+                  onclick="cb.toggle()"></button>
 
           <div class="navbar-nav me-auto mb-2 mb-lg-0"></div>
 
           <div class="d-flex align-items-center">
             <div class="dropdown">
-              <div class="text-white ico icon-user p-2" role="button" data-bs-toggle="dropdown"></div>
+              <button type="button" class="text-white ico icon-user p-2 btn btn-link"
+                      aria-label="Open account menu" data-bs-toggle="dropdown"></button>
               <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
                 <li class="dropdown-header">
                   <?=$_SESSION["user"]["user_name"]?><br>

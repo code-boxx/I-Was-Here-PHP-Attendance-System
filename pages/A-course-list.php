@@ -11,7 +11,7 @@ if (is_array($courses)) { foreach ($courses as $code=>$c) { ?>
     <small><?=$c["course_desc"]?></small>
   </div>
   <div class="dropdown">
-    <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
+    <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" aria-label="Course actions" data-bs-toggle="dropdown"></button>
     <ul class="dropdown-menu dropdown-menu-dark">
       <li class="dropdown-item" onclick="course.addEdit('<?=$code?>')">
         <i class="text-secondary ico-sm icon-pencil"></i> Edit

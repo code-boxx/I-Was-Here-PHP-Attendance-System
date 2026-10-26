@@ -60,9 +60,20 @@ var im = {
 
   // (C) READ CSV FILE
   read : () => {
+    if (!im.hPick.files || im.hPick.files.length == 0) {
+      cb.modal("No file selected", "Choose a CSV file to preview.");
+      return;
+    }
+    if (im.hPick.files[0].size > 5 * 1024 * 1024) {
+      cb.modal("File too large", "Choose a CSV file smaller than 5 MB.");
+      return;
+    }
+
     // (C1) SWITCH SECTION
     im.hSelect.classList.add("d-none");
     im.hTable.classList.remove("d-none");
+    im.hList.replaceChildren();
+    im.hGo.disabled = true;
 
     // (C2) FLAGS & HOLDERS
     let row, col, // table row & column
@@ -73,37 +84,32 @@ var im = {
     // (C3) READ SELECTED CSV & GENERATE HTML TABLE
     reader.addEventListener("loadend", () => { try {
       // (C3-1) READ ROWS + CHECK VALID
-      CSV.parse(reader.result).forEach(r => {
+      let rows = CSV.parse(reader.result);
+      rows.forEach(r => {
         // CREATE NEW ROW
         row = document.createElement("tr");
 
         // INVALID ROW
         if (r.length != clen) {
           row.className = "table-danger fw-bold";
-          row.innerHTML = `<td colspan="${clen}">?</td><td>Invalid Row</td>`;
+          col = document.createElement("td");
+          col.colSpan = clen + 1;
+          col.textContent = `Invalid row: expected ${clen} columns, found ${r.length}.`;
+          row.appendChild(col);
         }
         
         // CHECK ROW
         else {
-          // DATA COLUMNS
-          err = null;
+          err = im.validate(r);
           for (let i=0; i<clen; i++) {
             col = document.createElement("td");
-            col.innerHTML = r[i];
+            col.textContent = r[i];
             row.appendChild(col);
-            if (err==null) {
-              if (im.cols[i][2]=="N" && isNaN(r[i])) {
-                err = `${im.cols[i][0]} - Invalid number`;
-              }
-              else if (im.cols[i][2]==true && r[i]==null) {
-                err = `${im.cols[i][0]} - Cannot be empty`;
-              }
-            }
           }
 
           // STATUS COLUMN
           col = document.createElement("td");
-          col.innerHTML = err==null ? "" : err ;
+          col.textContent = err==null ? "" : err ;
           row.appendChild(col);
 
           // VALID ROW?
@@ -115,6 +121,9 @@ var im = {
 
       // (C3-2) HAS AT LEAST ONE VALID ROW TO IMPORT
       if (valid) { im.hGo.disabled = false; }
+      else if (rows.length == 0) {
+        cb.modal("Empty CSV file", "The selected file does not contain any rows.");
+      }
     } catch (err) {
       cb.modal("Error opening CSV file", err.message)
       console.error(err);
@@ -139,7 +148,7 @@ var im = {
       // (D2-1) DATA GATHER
       let data = {}, cols = row.querySelectorAll("td");
       for (let i=0; i<im.cols.length; i++) {
-        data[im.cols[i][1]] = cols[i].innerHTML;
+        data[im.cols[i][1]] = cols[i].textContent;
       }
       if (im.data != null) { Object.assign(data, im.data); }
 
@@ -150,13 +159,13 @@ var im = {
         data : data,
         onpass : () => {
           row.classList.remove("valid");
-          cols[cols.length - 1].innerHTML = "OK";
+          cols[cols.length - 1].textContent = "OK";
           im.go();
         },
         onfail : msg => {
           row.classList.remove("valid");
           row.classList.add("table-danger");
-          cols[cols.length - 1].innerHTML = msg;
+          cols[cols.length - 1].textContent = msg;
           im.go();
         }
       });
@@ -171,3 +180,22 @@ var im = {
     }
   }
 };
+
+im.validate = row => {
+  if (row.length != im.cols.length) { return "Invalid column count"; }
+  for (let i=0; i<im.cols.length; i++) {
+    let value = row[i] == null ? "" : String(row[i]).trim();
+    if (im.cols[i][2] === true && value === "") {
+      return `${im.cols[i][0]} - Cannot be empty`;
+    }
+    if (im.cols[i][2] === "E" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return `${im.cols[i][0]} - Invalid email`;
+    }
+    if (im.cols[i][2] === "N" && (value === "" || !Number.isFinite(Number(value)))) {
+      return `${im.cols[i][0]} - Invalid number`;
+    }
+  }
+  return null;
+};
+
+if (typeof module !== "undefined") { module.exports = im; }

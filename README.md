@@ -1,5 +1,12 @@
-## I WAS HERE
-I Was Here is an open-source PHP Student Attendance Management System. Featuring NFC and passwordless login, also allows students to take attendance by scanning a QR code.
+# I Was Here — Community Edition v2
+
+I Was Here is an open-source PHP Student Attendance Management System. This
+repository is a community-maintained continuation of the original project,
+focused on security, reliability, accessibility, and practical improvements.
+It is not an official upstream release.
+
+The system features NFC and passwordless login, and lets students take
+attendance by scanning a QR code.
 <br><br>
 
 ## :white_check_mark: FEATURES
@@ -30,10 +37,22 @@ I Was Here is an open-source PHP Student Attendance Management System. Featuring
 2) Access `http://your-site.com/` in your browser and walk through the installer.
 <br><br>
 
+## LOCAL DEVELOPMENT, TESTS & BACKUPS
+
+- Use PHP 8.0 or newer with Apache `mod_rewrite`, PDO MySQL, OpenSSL, and a MySQL-compatible server such as MariaDB.
+- In the installer, use the database hostname that the PHP process can reach. For containers, this is usually the database service name, not `localhost`.
+- Run the CSV import unit tests with `node --test tests/import-validation.test.js`.
+- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back.
+- Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.
+- Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.
+- Keep database and JWT secrets out of version control. Store backups securely and periodically test restoring them.
+- Before production, use HTTPS, keep detailed PHP errors hidden from visitors, restrict database access and writable files, and review the configured API CORS policy.
+
 ## :bulb: DOCUMENTATION
 1) [How To Use](https://code-boxx.com/i-was-here-php-attendance-system/#sec-use)
 2) [FAQ](https://code-boxx.com/core-boxx-php-framework/#sec-faq)
 3) [For The Developers](https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev)
+4) [Current features and improvement ideas](features.md)
 
 ## :electric_plug: FRAMEWORKS
 1) PHP Packages

@@ -37,8 +37,7 @@ class Courses extends Core {
     $course = $this->get($code);
 
     // (B2) UPDATE OR INSERT
-    $this->save($code, $name, $start, $end, $desc, is_array($course)?$course["course_code"]:null);
-    return true;
+    return $this->save($code, $name, $start, $end, $desc, is_array($course)?$course["course_code"]:null);
   }
 
   // (C) DELETE COURSE

@@ -78,13 +78,25 @@ class Classes extends Core {
   // (D) GET CLASS
   //  $id : class id
   function get ($id) {
-    return $this->DB->fetch(
+    $class = $this->DB->fetch(
       "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name`
        FROM `classes` cl 
        LEFT JOIN `courses` co USING (`course_code`)
        LEFT JOIN `users` u USING (`user_id`)
        WHERE cl.`class_id`=?", [$id]
     );
+    if (is_array($class) && !$this->canManageClass($id)) { return null; }
+    return $class;
+  }
+
+  function canManageClass ($id) {
+    if (!isset($_SESSION["user"])) { return false; }
+    if ($_SESSION["user"]["user_level"]=="A") { return true; }
+    if ($_SESSION["user"]["user_level"]!="T") { return false; }
+    return $this->DB->fetchCol(
+      "SELECT 1 FROM `classes` WHERE `class_id`=? AND `user_id`=?",
+      [$id, $_SESSION["user"]["user_id"]]
+    ) !== null;
   }
 
   // (E) GET CLASSES

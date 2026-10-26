@@ -157,7 +157,7 @@ var classes = {
     cols : [
       ["Course Code", "code", true],
       ["Date (YYYY-MM-DD HH:MM:SS)", "date", true],
-      ["Teacher's Email", "email", true],
+      ["Teacher's Email", "email", "E"],
       ["Description (If any)", "desc"]
     ]
   })
