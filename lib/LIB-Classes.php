@@ -70,6 +70,9 @@ class Classes extends Core {
   function del ($id) {
     $this->DB->start();
     $this->DB->delete("attendance", "`class_id`=?", [$id]);
+    $this->DB->delete("attendance_corrections", "`class_id`=?", [$id]);
+    $this->DB->delete("attendance_sessions", "`class_id`=?", [$id]);
+    $this->DB->delete("attendance_audit", "`class_id`=?", [$id]);
     $this->DB->delete("classes", "`class_id`=?", [$id]);
     $this->DB->end();
     return true;
@@ -91,7 +94,11 @@ class Classes extends Core {
 
   function canManageClass ($id) {
     if (!isset($_SESSION["user"])) { return false; }
-    if ($_SESSION["user"]["user_level"]=="A") { return true; }
+    if ($_SESSION["user"]["user_level"]=="A") {
+      return $this->DB->fetchCol(
+        "SELECT 1 FROM `classes` WHERE `class_id`=?", [$id]
+      ) !== null;
+    }
     if ($_SESSION["user"]["user_level"]!="T") { return false; }
     return $this->DB->fetchCol(
       "SELECT 1 FROM `classes` WHERE `class_id`=? AND `user_id`=?",
@@ -207,13 +214,22 @@ class Classes extends Core {
     }
 
     // (G3) GET CLASSES
-    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, a.`a_status`
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
+                   co.`course_code`, co.`course_name`, a.`a_status`,
+                   cr.`request_status` AS `correction_status`
             FROM `classes` cl
             LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
             LEFT JOIN `courses` co ON (cl.`course_code`=co.`course_code`)
+            LEFT JOIN `attendance_corrections` cr ON (
+              cr.`class_id`=cl.`class_id` AND cr.`user_id`=? AND
+              cr.`request_id`=(
+                SELECT MAX(cr2.`request_id`) FROM `attendance_corrections` cr2
+                WHERE cr2.`class_id`=cl.`class_id` AND cr2.`user_id`=?
+              )
+            )
             $sql  ORDER BY `class_date` ASC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
-    array_unshift($data, $uid);
+    array_unshift($data, $uid, $uid, $uid);
 
     // (G4) RESULTS
     return $this->DB->fetchAll($sql, $data, "class_id");

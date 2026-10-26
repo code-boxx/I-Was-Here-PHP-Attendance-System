@@ -1,5 +1,18 @@
 Here are additional improvement ideas beyond the ones already listed in your features.md.
 
+## Community Edition implementation status
+
+Phase 1 (reliability and security foundation) and the core Phase 2 attendance
+work are implemented in the Community Edition development branch. The completed
+work includes server-side class authorization, revocable sessions, migration
+tracking, expiring QR tokens with teacher-controlled sessions, student
+attendance summaries, correction requests, and an attendance audit history.
+
+Phase 2 is not a claim that every idea below is finished. Live dashboards,
+lateness rules, offline synchronization, notifications, and the other items
+remain proposed work. QR rotation limits screenshot reuse but cannot prevent
+someone from sharing a currently valid live QR code.
+
 1. High-impact features to add
 Attend-class.com - Revolutionary QR Code Attendance System for Modern Education
 
@@ -351,7 +364,7 @@ For an application that uses a custom PHP framework, I would prioritize regressi
 10. My recommended development roadmap
 Here is how I would sequence the work to keep each release useful.
 
-Phase 1
+Phase 1 — Completed in Community Edition v2.0.0
 
 Reliability and security
 Foundation release
@@ -364,18 +377,16 @@ Better API errors and structured logs.
 
 CSV validation and database integrity checks.
 
-Phase 2
+Phase 2 — Core attendance improvements completed in Community Edition v2.1.0
 
 Smarter attendance
 Core product upgrade
 
-Expiring QR tokens and duplicate-check-in prevention.
-
-Late-arrival rules and session controls.
-
-Student attendance portal.
-
-Correction requests and audit history.
+Expiring, server-validated QR tokens and duplicate-check-in prevention.
+Teacher-controlled session open/close controls.
+Student course summaries, class history, and correction-request history.
+Correction requests and attendance audit history.
+Still planned: late-arrival rules, live dashboards, and session summaries.
 
 Phase 3
 
@@ -447,15 +458,14 @@ External integrations: Provide documented APIs and webhooks for approved educati
 Calendar integration: Export recurring class schedules to supported calendar applications.
 Privacy controls: Introduce configurable retention, data export and deletion workflows.
 Institutional customization: Support configurable branding, terminology and attendance policies.
-Final recommendation
-If I were maintaining this project, I would build three features first:
+The first recommended features are now implemented:
 
-Secure, expiring QR attendance — directly improves the integrity of the core feature.
+Secure, expiring QR attendance — improves the integrity of the core feature.
 
-A student attendance portal with correction requests — benefits students and teachers immediately.
+A student attendance portal with correction requests — benefits students and teachers.
 
-An audit trail with automated tests — protects the reliability of attendance data as the system evolves.
+An audit trail with automated tests — protects attendance data as the system evolves.
 
-These deliver meaningful improvements without requiring you to turn the project into a full school-management platform immediately.
+The next steps can build on this foundation without turning the project into a full school-management platform immediately.
 
 One important distinction: these are proposed enhancements based on the feature summary you shared. The actual implementation effort and compatibility still need to be checked against the repository's PHP code, database schema and existing API architecture.

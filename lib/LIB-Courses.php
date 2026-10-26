@@ -45,6 +45,9 @@ class Courses extends Core {
   function del ($code) {
     $this->DB->start();
     $this->DB->query("DELETE `attendance` FROM `attendance` LEFT JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+    $this->DB->query("DELETE `attendance_corrections` FROM `attendance_corrections` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+    $this->DB->query("DELETE `attendance_sessions` FROM `attendance_sessions` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+    $this->DB->query("DELETE `attendance_audit` FROM `attendance_audit` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
     $this->DB->delete("classes", "`course_code`=?", [$code]);
     $this->DB->delete("courses_users", "`course_code`=?", [$code]);
     $this->DB->delete("courses", "`course_code`=?", [$code]);

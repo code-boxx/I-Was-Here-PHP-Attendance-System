@@ -63,5 +63,27 @@ var attend = {
       },
       passmsg : "Attendance Updated"
     });
-  }
+  },
+
+  audit : () => cb.api({
+    mod : "attend", act : "getAudit",
+    data : { classId : attend.id },
+    passmsg : false,
+    onpass : result => {
+      let target = document.getElementById("attendance-audit");
+      target.replaceChildren();
+      let entries = result.data || [];
+      if (!entries.length) {
+        target.textContent = "No attendance changes have been recorded.";
+        return;
+      }
+      let list = document.createElement("ol");
+      for (let entry of entries) {
+        let item = document.createElement("li");
+        item.textContent = `${entry.changed_at}: ${entry.student_name} changed from ${entry.old_status === null ? "not recorded" : (entry.old_status == 1 ? "present" : "absent")} to ${entry.new_status == 1 ? "present" : "absent"} by ${entry.actor_name} (${entry.change_source}). Reason: ${entry.change_reason || "none"}`;
+        list.append(item);
+      }
+      target.append(list);
+    }
+  })
 };

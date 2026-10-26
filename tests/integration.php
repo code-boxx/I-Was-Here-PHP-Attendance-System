@@ -23,6 +23,15 @@ function check ($condition, $message) {
 }
 
 try {
+  check((int)$db->fetchCol(
+    "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
+  )===4, "Phase 2 database migration was not applied.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE()
+     AND table_name IN ('attendance_sessions','attendance_corrections','attendance_audit')"
+  )===3, "Phase 2 attendance tables are missing.");
+
   $suffix = bin2hex(random_bytes(6));
   $email = "integration-$suffix@example.test";
   $teacherEmail = "teacher-$suffix@example.test";
@@ -69,18 +78,76 @@ try {
   $_CORE->load("Attend");
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
   check($_CORE->Attend->save($classId, json_encode([$userId => ["s" => "0", "n" => ""]], JSON_THROW_ON_ERROR)), "Authorized teacher could not save attendance.");
+  check(!$_CORE->Attend->save($classId, json_encode([$userId => ["s" => "1", "n" => ""]], JSON_THROW_ON_ERROR)), "Manual attendance correction without a reason was accepted.");
+  check((int)$db->fetchCol("SELECT `a_status` FROM `attendance` WHERE `class_id`=? AND `user_id`=?", [$classId, $userId])===0, "Rejected manual correction changed attendance.");
+  check($_CORE->Attend->save($classId, json_encode([$userId => ["s" => "1", "n" => "Teacher verified arrival."]], JSON_THROW_ON_ERROR)), "Manual correction with a reason failed.");
+  check($_CORE->Attend->save($classId, json_encode([$userId => ["s" => "0", "n" => "Teacher corrected the record."]], JSON_THROW_ON_ERROR)), "Manual correction could not restore an absent status.");
   check(!$_CORE->Attend->save($classId, json_encode([$otherStudentId => ["s" => "1", "n" => ""]], JSON_THROW_ON_ERROR)), "Teacher marked a student not enrolled in the class.");
 
   $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
   check(!$_CORE->Attend->save($classId, json_encode([$userId => ["s" => "1", "n" => ""]], JSON_THROW_ON_ERROR)), "Teacher changed attendance for another teacher's class.");
   check($_CORE->Classes->get($classId)===null, "Teacher viewed another teacher's class details.");
 
-  $classHash = $db->fetchCol("SELECT `class_hash` FROM `classes` WHERE `class_id`=?", [$classId]);
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $sessionId = $_CORE->Attend->openSession($classId);
+  check(is_int($sessionId), "Authorized teacher could not open an attendance session.");
+  check($_CORE->Attend->sessionState($classId)["session_status"]=="open", "Open session state was not reported.");
+  check(!$_CORE->Attend->openSession($classId), "A second active attendance session was allowed.");
+  $qr = $_CORE->Attend->qrToken($classId);
+  check(is_array($qr) && isset($qr["token"], $qr["expires"]), "Could not issue a rotating QR token.");
+  $expiredPayload = rtrim(strtr(base64_encode(json_encode([
+    "s" => $sessionId, "c" => (int)$classId, "o" => $courseCode, "e" => time()-1
+  ], JSON_THROW_ON_ERROR)), "+/", "-_"), "=");
+  $expiredQr = $expiredPayload . "." . hash_hmac("sha256", $expiredPayload, JWT_SECRET);
+  $wrongClassPayload = rtrim(strtr(base64_encode(json_encode([
+    "s" => $sessionId, "c" => (int)$classId + 1, "o" => $courseCode, "e" => time()+20
+  ], JSON_THROW_ON_ERROR)), "+/", "-_"), "=");
+  $wrongClassQr = $wrongClassPayload . "." . hash_hmac("sha256", $wrongClassPayload, JWT_SECRET);
+  $tamperedQr = $qr["token"] . "x";
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  check(!$_CORE->Attend->qrToken($classId), "Another teacher received a class QR token.");
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
-  check($_CORE->Attend->attendQR($classId, $classHash), "Enrolled student QR check-in failed.");
-  check(!$_CORE->Attend->attendQR($classId, $classHash), "Duplicate QR check-in was accepted.");
+  check(!$_CORE->Attend->attendQR($expiredQr), "Expired QR token was accepted.");
+  check(!$_CORE->Attend->attendQR($wrongClassQr), "QR token was accepted for a different class.");
+  check(!$_CORE->Attend->attendQR($tamperedQr), "Tampered QR token was accepted.");
+  check($_CORE->Attend->attendQR($qr["token"]), "Enrolled student QR check-in failed.");
+  check(!$_CORE->Attend->attendQR($qr["token"]), "Duplicate QR check-in was accepted.");
   $_SESSION["user"] = ["user_id" => $otherStudentId, "user_level" => "U"];
-  check(!$_CORE->Attend->attendQR($classId, $classHash), "Student outside the course checked in by QR.");
+  $otherRequests = $_CORE->Attend->getCorrections();
+  check($otherRequests===null || count($otherRequests)==0, "Student could view another student's correction requests.");
+  check(!$_CORE->Attend->attendQR($qr["token"]), "Student outside the course checked in by QR.");
+  check(!$_CORE->Attend->requestCorrection($classId, "1", "Unenrolled request."), "Unenrolled student submitted a correction.");
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
+  check($_CORE->Attend->requestCorrection($classId, "0", "I was recorded present by mistake."), "Enrolled student correction request failed.");
+  check(!$_CORE->Attend->requestCorrection($classId, "1", "Second pending request."), "Duplicate pending correction request was accepted.");
+  $studentRequests = $_CORE->Attend->getCorrections();
+  check(count($studentRequests)==1 && $studentRequests[0]["request_status"]=="pending", "Student correction history was not private and complete.");
+
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  $otherTeacherRequests = $_CORE->Attend->getCorrections();
+  check($otherTeacherRequests===null || count($otherTeacherRequests)==0, "Teacher could view requests from another teacher's class.");
+  check(!$_CORE->Attend->decideCorrection($studentRequests[0]["request_id"], "approved", "Unauthorized teacher."), "Unassigned teacher decided a correction.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  check($_CORE->Attend->decideCorrection($studentRequests[0]["request_id"], "approved", "Verified against class records."), "Assigned teacher could not approve a correction.");
+  check((int)$db->fetchCol("SELECT `a_status` FROM `attendance` WHERE `class_id`=? AND `user_id`=?", [$classId, $userId])===0, "Approved correction did not update attendance.");
+  $audit = $_CORE->Attend->getAudit($classId);
+  check(is_array($audit) && count($audit)>=5, "Attendance audit history omitted changes.");
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  check($_CORE->Attend->getAudit($classId)===false, "Unassigned teacher viewed class audit history.");
+
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  check($_CORE->Attend->closeSession($classId), "Teacher could not close an attendance session.");
+  check(!$_CORE->Attend->attendQR($qr["token"]), "A QR token remained valid after session closure.");
+  check($_CORE->Attend->sessionState($classId)["session_status"]=="closed", "Closed session state was not reported.");
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
+  $summary = $_CORE->Attend->getStudentSummary();
+  check((int)$summary[$courseCode]["total_classes"]==1 && (int)$summary[$courseCode]["present_classes"]==0, "Student course summary did not reflect corrected attendance.");
+  check(is_array($_CORE->Classes->getByStudent($userId)), "Student class portal query failed.");
+  $_CORE->Classes->del($classId);
+  foreach (["attendance_sessions", "attendance_corrections", "attendance_audit"] as $table) {
+    check((int)$db->fetchCol("SELECT COUNT(*) FROM `$table` WHERE `class_id`=?", [$classId])===0, "Deleting a class left orphaned $table data.");
+  }
+  $_CORE->Courses->del($courseCode);
 
   $_SESSION = [];
   require PATH_LIB . "jwt/autoload.php";
@@ -126,7 +193,7 @@ try {
   check($expiredRejected, "Expired session token was accepted.");
 
   $db->end(false);
-  echo "Integration tests passed: attendance authorization, QR enrollment and duplicate protection, session revocation, reports, login throttling, and expiry.\n";
+  echo "Integration tests passed: Phase 2 migration, QR sessions and expiry, correction workflow, audit history, student summaries, attendance authorization, session revocation, reports, login throttling, and session expiry.\n";
 } catch (Throwable $ex) {
   if ($db->pdo->inTransaction()) { $db->end(false); }
   fwrite(STDERR, "Integration test failed: " . $ex->getMessage() . "\n");

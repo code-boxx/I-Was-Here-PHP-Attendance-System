@@ -21,3 +21,7 @@ $course = $_CORE->Courses->get($class["course_code"]); ?>
 
 <!-- (D) ATTENDANCE LIST -->
 <div id="attend-list" class="zebra my-4"></div>
+<button type="button" class="btn btn-outline-secondary" onclick="attend.audit()">
+  View attendance change history
+</button>
+<div id="attendance-audit" class="my-3" aria-live="polite"></div>

@@ -7,5 +7,8 @@
   <a class="nav-link ms-2" href="<?=HOST_BASE?>U/qr">
     <i class="text-secondary ico-sm icon-qrcode"></i> Scan
   </a>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>U/requests">
+    <i class="text-secondary ico-sm icon-checkmark"></i> My requests
+  </a>
   <hr>
 </li>

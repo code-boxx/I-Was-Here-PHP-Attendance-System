@@ -1,4 +1,4 @@
-const CACHE_NAME = "IWASHERE-v2";
+const CACHE_NAME = "IWASHERE-v4";
 
 // (A) CREATE/INSTALL CACHE
 self.addEventListener("install", evt => {
@@ -49,7 +49,11 @@ self.addEventListener("install", evt => {
       
       // (A6) TEACHER & STUDENT
       "assets/TA-attend.js",
+      "assets/TA-classqr.js",
+      "assets/TA-corrections.js",
       "assets/T-classes.js",
+      "assets/U-attendance.js",
+      "assets/U-corrections.js",
       "assets/U-classes.js",
       "assets/U-qr.js",
     ]))

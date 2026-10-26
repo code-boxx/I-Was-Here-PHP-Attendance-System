@@ -28,8 +28,12 @@ features.
 ### Attendance
 
 - Teachers and admins can record or update attendance manually.
-- Students can mark attendance by scanning a class QR code; check-ins require course enrollment and reject duplicate present records.
+- Teachers can open and close QR attendance sessions. The displayed QR token is signed, bound to its class session, expires after 30 seconds, and refreshes every 20 seconds.
+- QR check-ins require course enrollment, reject duplicate present records, and are rejected after a session closes.
 - Attendance records include status, recorder, timestamp, and optional notes.
+- Attendance status changes are retained in a class-level audit history with the actor, time, old/new status, source, and reason. Manual status corrections and correction decisions require a reason.
+- Students can view completed-class attendance totals and percentages for their enrolled courses.
+- Students can submit one pending correction request per class, and teachers assigned to the class or admins can approve or reject it with a recorded reason.
 - View student attendance for a class and course attendance reports.
 - Export every enrolled student, including students with no check-ins, plus attendance percentages as CSV.
 
@@ -46,6 +50,7 @@ features.
 - Configurable timezone, email sender, API HTTPS enforcement, and CORS policy.
 - Log server-side errors while returning generic error messages to visitors.
 - Apply database schema updates when the application starts.
+- Keep PWA scripts in a versioned cache so clients activate updated feature assets.
 
 ## Improvement Ideas
 
@@ -53,7 +58,6 @@ features.
 
 - **Add configurable session expiry:** session revocation after account changes and password resets is implemented; configurable expiry and administrative session management remain.
 - **Expand automated coverage:** add NFC/WebAuthn and broader migration-upgrade tests.
-- **Add short-lived QR tokens:** QR check-ins currently use a class code and enrollment checks; rotating server-validated tokens and session open/close controls would better resist sharing.
 - **Improve bulk-import feedback:** summarize successful rows and errors, allow correcting rejected rows, and support larger imports safely.
 
 ### Useful next steps
@@ -61,7 +65,7 @@ features.
 - **Extend attendance reporting:** add date-range filters and attendance trends over time.
 - **Export more formats:** offer XLSX or printable PDF reports in addition to CSV.
 - **Add bulk actions:** support bulk enrollment, account status changes, and attendance corrections.
-- **Provide an audit trail:** record who changed attendance, users, and course settings, and when.
+- **Extend the audit trail:** attendance changes now have an audit history; add audit coverage for user accounts, course settings, exports, and other administrative actions.
 - **Continue accessibility and mobile improvements:** review keyboard navigation, screen-reader announcements, contrast, and layouts across all screens.
 - **Add notifications:** notify students about upcoming classes or attendance changes, with user-configurable preferences.
 
@@ -75,5 +79,7 @@ features.
 
 ## Suggested Starting Point
 
-Continue by adding expiring QR tokens and session controls, then build on the
-improved import, report, and authorization workflows before larger integrations.
+Continue by adding configurable attendance and late-arrival policies, notifications,
+and wider administrative audit coverage before larger integrations. QR rotation
+reduces the usefulness of screenshots but cannot prevent sharing a live QR code;
+institutions may need additional in-person verification.

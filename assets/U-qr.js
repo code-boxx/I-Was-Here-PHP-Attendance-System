@@ -12,19 +12,20 @@ var check = {
       // (A3) GET DATA
       try { data = JSON.parse(data); }
       catch (err) {
-        cb.modal("Error", err.message);
-        console.log(err);
+        cb.modal("Invalid QR code", "This QR code is not a valid attendance token.");
+        return;
+      }
+      if (!data || typeof data.t !== "string" || data.t.length===0) {
+        cb.modal("Invalid QR code", "This QR code does not contain an attendance token.");
+        return;
       }
 
       // (A4) API CALL
       cb.api({
         mod : "attend", act : "attendQR",
-        data : {
-          id : data.i,
-          hash : data.h
-        },
+        data : { token : data.t },
         passmsg : false,
-        onpass : () => cb.modal("OK", "Your attendance has been taken.")
+        onpass : () => cb.modal("Attendance recorded", "Your attendance has been taken.")
       });
     });
   }
