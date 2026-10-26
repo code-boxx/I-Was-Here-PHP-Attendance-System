@@ -38,6 +38,7 @@ features.
 - Teachers and admins can view a live class dashboard with present, absent, and unrecorded counts; students not marked present; the latest QR check-in; and session status. It refreshes every 10 seconds while the tab is visible.
 - View student attendance for a class and course attendance reports.
 - Export every enrolled student, including students with no check-ins, plus attendance percentages as CSV.
+- Admins can filter course attendance reports by optional start/end dates, download the filtered CSV, or open a print-friendly report.
 
 ### Data import
 

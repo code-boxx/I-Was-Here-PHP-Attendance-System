@@ -404,11 +404,13 @@ Community Edition v2.3.0. Admins choose a whole-number threshold from 1% to
 classes exist. Notification delivery and teacher follow-up reports remain
 planned.
 
-Advanced reports and printable exports.
+Date-filtered CSV attendance reports and print-friendly reports are implemented
+in Community Edition v2.4.0. Still planned: attendance trends and teacher
+follow-up exports.
 
 Bulk operations and timetable conflict checks.
 
-Notification preferences.
+Notification preferences and delivery.
 
 Phase 4
 

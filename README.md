@@ -1,4 +1,4 @@
-# I Was Here — Community Edition v2.3
+# I Was Here — Community Edition v2.4
 
 I Was Here is an open-source PHP Student Attendance Management System. This
 repository is a community-maintained continuation of the original project,
@@ -7,7 +7,8 @@ It is not an official upstream release.
 
 The system features NFC and passwordless login, teacher-controlled rotating QR
 attendance sessions, live teacher dashboards, configurable attendance
-warnings, student attendance summaries, and correction requests.
+warnings, date-filtered reports, student attendance summaries, and correction
+requests.
 <br><br>
 
 ## :white_check_mark: FEATURES
@@ -16,6 +17,7 @@ warnings, student attendance summaries, and correction requests.
 3) Take attendance manually or with a teacher-controlled rotating QR session.
 4) Follow live class attendance and view student summaries and correction requests.
 5) Configure the school-wide attendance warning threshold in System Settings.
+6) Filter attendance reports by date and download CSV or open a print-friendly report.
 <br><br>
 
 ## :camera: SCREENSHOTS
@@ -57,6 +59,7 @@ warnings, student attendance summaries, and correction requests.
 - Tag `v2.1.0` preserves the secure QR and student correction release.
 - Tag `v2.2.0` preserves the initial live attendance dashboard release.
 - Tag `v2.3.0` preserves configurable attendance-threshold warnings for students.
+- Tag `v2.4.0` preserves date-filtered CSV and printable attendance reports.
 - `v2-improvements` is the local development branch for ongoing improvements.
 - The v2.0.0 tag is a preserved rollback point. To inspect it without changing branches, run `git switch --detach v2.0.0`; to continue work from it, create a branch with `git switch -c restore-v2.0.0 v2.0.0`.
 - Keep each reviewed release as an annotated tag (for example, `v2.1.0`) and use `git revert <commit>` to undo a published change without rewriting history.

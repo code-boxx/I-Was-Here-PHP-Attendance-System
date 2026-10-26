@@ -77,6 +77,26 @@ try {
   check(strpos($csv, $email) !== false, "Report omitted an enrolled student with no attendance.");
   check(strpos($csv, "'=1+1") !== false, "Report did not neutralize a spreadsheet formula.");
   check(strpos($csv, "0%") !== false, "Report omitted the zero attendance percentage.");
+  ob_start();
+  $_CORE->Report->attend($courseCode, $start, $start, "print");
+  $printReport = ob_get_clean();
+  check(
+    strpos($printReport, "Attendance report")!==false &&
+    strpos($printReport, "<td>Not recorded</td>")!==false &&
+    strpos($printReport, $email)!==false,
+    "Printable report omitted the date-filtered class or unrecorded student status."
+  );
+  ob_start();
+  $_CORE->Report->attend($courseCode, date("Y-m-d", strtotime("+1 day")), date("Y-m-d", strtotime("+2 days")));
+  $filteredCsv = ob_get_clean();
+  check(
+    strpos($filteredCsv, $email)!==false && strpos($filteredCsv, "N/A")!==false,
+    "Date filtering omitted enrolled students with no classes in the selected range."
+  );
+  $invalidReportDate = false;
+  try { $_CORE->Report->attend($courseCode, "2026-02-30", null); }
+  catch (InvalidArgumentException $ex) { $invalidReportDate = true; }
+  check($invalidReportDate, "Invalid report date was accepted.");
 
   $_CORE->load("Attend");
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
@@ -237,7 +257,7 @@ try {
   check($expiredRejected, "Expired session token was accepted.");
 
   $db->end(false);
-  echo "Integration tests passed: Phase 3 attendance policy migration and warnings, QR sessions, correction workflow, audit history, attendance authorization, session revocation, reports, login throttling, and session expiry.\n";
+  echo "Integration tests passed: Phase 3 attendance policy and date-filtered/printable reports, QR sessions, correction workflow, audit history, attendance authorization, session revocation, login throttling, and session expiry.\n";
 } catch (Throwable $ex) {
   if ($db->pdo->inTransaction()) { $db->end(false); }
   fwrite(STDERR, "Integration test failed: " . $ex->getMessage() . "\n");
