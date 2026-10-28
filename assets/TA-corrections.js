@@ -17,7 +17,9 @@ var corrections = {
       let heading = document.createElement("h4");
       heading.textContent = `[${item.course_code}] ${item.course_name} — ${item.user_name}`;
       let detail = document.createElement("p");
-      detail.textContent = `${item.class_date}: requested ${item.requested_status == 1 ? "Present" : "Absent"}; current status: ${item.request_status}.`;
+      let requested = item.requested_status == 1 ? "Present" :
+        (item.requested_status == 2 ? "Excused" : "Absent");
+      detail.textContent = `${item.class_date}: requested ${requested}; current status: ${item.request_status}.`;
       let reason = document.createElement("p");
       reason.textContent = `Student reason: ${item.request_reason}`;
       card.append(heading, detail, reason);

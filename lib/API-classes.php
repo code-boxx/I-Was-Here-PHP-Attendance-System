@@ -1,12 +1,15 @@
 <?php
-// (A) ADMIN ONLY
-$_CORE->ucheck("A");
-
 // (B) API ENDPOINTS
 $_CORE->autoAPI([
-  "save" => ["Classes", "save"],
-  "del" => ["Classes", "del"],
-  "import" => ["Classes", "import"]
+  "save" => ["Classes", "save", "A"],
+  "del" => ["Classes", "del", "A"],
+  "import" => ["Classes", "import", "A"],
+  "getSubstitutes" => ["Classes", "getSubstitutes", ["A", "T"]],
+  "addSubstitute" => ["Classes", "addSubstitute", ["A", "T"]],
+  "delSubstitute" => ["Classes", "delSubstitute", ["A", "T"]],
+  "cancelClass" => ["Classes", "cancelClass", ["A", "T"]],
+  "rescheduleClass" => ["Classes", "rescheduleClass", ["A", "T"]],
+  "getScheduleAudit" => ["Classes", "getScheduleAudit", ["A", "T"]]
 ]);
 
 // (C) INVALID REQUEST

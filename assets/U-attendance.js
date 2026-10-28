@@ -6,6 +6,7 @@ var studentAttendance = {
        <select id="correction-status" class="form-select mb-3">
          <option value="1">Present</option>
          <option value="0">Absent</option>
+         <option value="2">Excused</option>
        </select>
        <label class="form-label" for="correction-reason">Reason (required)</label>
        <textarea id="correction-reason" class="form-control" maxlength="500" required></textarea>`,

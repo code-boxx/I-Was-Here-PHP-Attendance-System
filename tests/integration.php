@@ -25,15 +25,33 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===6, "Phase 3 notification migration was not applied.");
+  )===8, "Attendance policy and schedule migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");
+  check((int)$db->fetchCol(
+    "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_LATE_GRACE_MINUTES'"
+  )===10, "Late-arrival grace period did not default to 10 minutes.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE()
      AND table_name IN ('notification_preferences','notification_outbox')"
   )===2, "Notification preference and outbox tables are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE()
+     AND table_name IN ('attendance_offline_queue','class_substitutes')"
+  )===2, "Offline queue and substitute tables are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='attendance_offline_queue'
+     AND column_name IN ('reviewed_by','review_note')"
+  )===2, "Offline attendance review fields are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='class_substitutes'
+     AND column_name='expires_at'"
+  )===1, "Substitute access expiration is missing.");
   check((int)$db->fetchCol(
     "SELECT `character_maximum_length` FROM information_schema.columns
      WHERE table_schema=DATABASE() AND table_name='notification_outbox'
@@ -44,6 +62,16 @@ try {
      WHERE table_schema=DATABASE()
      AND table_name IN ('attendance_sessions','attendance_corrections','attendance_audit')"
   )===3, "Phase 2 attendance tables are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE()
+     AND table_name IN ('attendance_holidays','attendance_schedule_audit')"
+  )===2, "School calendar or schedule audit tables are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='classes'
+     AND column_name IN ('class_status','class_status_reason','class_status_by','class_status_at')"
+  )===4, "Class cancellation tracking fields are missing.");
 
   $suffix = bin2hex(random_bytes(6));
   $email = "integration-$suffix@example.test";
@@ -81,7 +109,7 @@ try {
   check(!$_CORE->Users->import("Invalid Email", "invalid-email-$suffix", $password, "U"), "Invalid email was accepted.");
 
   $_CORE->load("Courses");
-  $start = date("Y-m-d");
+  $start = date("Y-m-d", strtotime("-1 day"));
   $end = date("Y-m-d", strtotime("+7 days"));
   check(!$_CORE->Courses->import("BAD-$suffix", "Invalid dates", $end, $start), "Invalid course dates were accepted.");
   check($_CORE->Courses->save($courseCode, "Integration course", $start, $end), "Could not create test course.");
@@ -119,6 +147,35 @@ try {
     "Adjacent non-overlapping session was rejected."
   );
   $_CORE->Classes->del($db->lastID);
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, "$start 00:01:00", "Integration session", $classId, "Use a stable class time for the test."),
+    "Could not set a stable attendance test class time."
+  );
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $substituteClassDate = "$end 12:00:00";
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, $substituteClassDate, "Substitute access test"),
+    "Could not create substitute test class."
+  );
+  $substituteClassId = (int)$db->lastID;
+  $substituteExpiry = date("Y-m-d H:i:s", strtotime($substituteClassDate." +12 hours"));
+  check(
+    $_CORE->Classes->addSubstitute($substituteClassId, $otherTeacherId, $substituteExpiry),
+    "Class owner could not assign a time-limited substitute."
+  );
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  check($_CORE->Classes->canManageClass($substituteClassId), "Active substitute could not manage the assigned class.");
+  check(
+    !$_CORE->Classes->addSubstitute($substituteClassId, $teacherId, $substituteExpiry),
+    "Substitute could assign further substitute access."
+  );
+  $db->update(
+    "class_substitutes", ["expires_at"], "`class_id`=? AND `user_id`=?",
+    [date("Y-m-d H:i:s", time()-60), $substituteClassId, $otherTeacherId]
+  );
+  check(!$_CORE->Classes->canManageClass($substituteClassId), "Expired substitute access remained active.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $_CORE->Classes->del($substituteClassId);
 
   $_CORE->load("Report");
   $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
@@ -232,6 +289,25 @@ try {
     $dashboard["last_checkin"]["user_name"]==="=1+1",
     "Live dashboard did not return accurate counts, missing roster, and latest QR check-in."
   );
+  $db->update(
+    "attendance", ["a_date"],
+    "`class_id`=? AND `user_id`=?",
+    [date("Y-m-d H:i:s", strtotime($start." 00:12:00")), $classId, $userId]
+  );
+  $lateDashboard = $_CORE->Attend->getDashboard($classId);
+  $sessionSummary = $_CORE->Attend->getSessionSummary($classId);
+  $projectorStats = $_CORE->Attend->getProjectorStats($classId);
+  check(
+    $lateDashboard["late"]===1 && $lateDashboard["late_grace_minutes"]===10 &&
+    $sessionSummary["late"]===1 && $sessionSummary["present"]===1,
+    "Dashboard or session summary did not apply the configurable late-arrival grace period."
+  );
+  check(
+    $projectorStats["present"]===1 && $projectorStats["late"]===1 &&
+    $projectorStats["total"]===2 && !array_key_exists("not_present_students", $projectorStats) &&
+    !array_key_exists("last_checkin", $projectorStats),
+    "Projector endpoint did not restrict its response to aggregate attendance."
+  );
   $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
   check($_CORE->Attend->getDashboard($classId)===false, "Unassigned teacher viewed another class dashboard.");
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
@@ -263,17 +339,177 @@ try {
   check($_CORE->Attend->closeSession($classId), "Teacher could not close an attendance session.");
   check(!$_CORE->Attend->attendQR($qr["token"]), "A QR token remained valid after session closure.");
   check($_CORE->Attend->sessionState($classId)["session_status"]=="closed", "Closed session state was not reported.");
+
+  $offlineEventId = "integration-offline-$suffix";
+  $offlineTimestamp = date("Y-m-d H:i:s");
+  $_SESSION["user"] = ["user_id" => $otherStudentId, "user_level" => "U"];
+  $queuedOffline = $_CORE->Attend->queueOfflineAttendance(
+    $classId, $offlineEventId, "1", $offlineTimestamp
+  );
+  check(is_array($queuedOffline) && $queuedOffline["status"]==="pending", "Student offline check-in was not queued.");
+  check(
+    $_CORE->Attend->queueOfflineAttendance($classId, $offlineEventId, "1", $offlineTimestamp)["status"]==="pending",
+    "Retrying the same offline event was not idempotent."
+  );
+  check(
+    !$_CORE->Attend->queueOfflineAttendance($classId, "bad-event", "0", $offlineTimestamp),
+    "Offline queue accepted an absent status."
+  );
+  $_SESSION["user"] = ["user_id" => $otherTeacherId, "user_level" => "T"];
+  check($_CORE->Attend->getOfflineQueue($classId)===false, "Unassigned teacher viewed offline check-ins.");
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  $offlineRows = $_CORE->Attend->getOfflineQueue($classId);
+  check(is_array($offlineRows) && count($offlineRows)===1, "Assigned teacher could not review queued offline check-ins.");
+  check(
+    !$_CORE->Attend->reviewOfflineQueue($classId, $offlineEventId, "approved", "Unassigned review."),
+    "Unassigned teacher approved an offline check-in."
+  );
+  check(
+    $_CORE->Attend->reviewOfflineQueue($classId, $offlineEventId, "approved", "Confirmed against class evidence."),
+    "Assigned teacher could not approve an offline check-in."
+  );
+  check(
+    (int)$db->fetchCol(
+      "SELECT `a_status` FROM `attendance` WHERE `class_id`=? AND `user_id`=?",
+      [$classId, $otherStudentId]
+    )===1 &&
+    $db->fetchCol(
+      "SELECT `status` FROM `attendance_offline_queue` WHERE `event_id`=?",
+      [$offlineEventId]
+    )==="synced",
+    "Approved offline check-in was not recorded and marked reviewed."
+  );
+  $_SESSION["user"] = ["user_id" => $otherStudentId, "user_level" => "U"];
+  $studentOfflineQueue = $_CORE->Attend->getStudentOfflineQueue();
+  check(
+    is_array($studentOfflineQueue) && count($studentOfflineQueue)===1 &&
+    $studentOfflineQueue[0]["status"]==="synced" &&
+    $studentOfflineQueue[0]["review_note"]==="Confirmed against class evidence.",
+    "Student could not view the review outcome for their own offline event."
+  );
+  $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
+  check(
+    !$_CORE->Attend->reviewOfflineQueue($classId, $offlineEventId, "approved", "Duplicate review."),
+    "An already reviewed offline event was processed again."
+  );
+
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "A"];
   check($_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "80"]), "Admin could not update attendance threshold.");
   check(!$_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "101"]), "Out-of-range attendance threshold was accepted.");
+  check($_CORE->Settings->save(["ATTENDANCE_LATE_GRACE_MINUTES" => "0"]), "Admin could not disable late-arrival grace.");
+  check(!$_CORE->Settings->save(["ATTENDANCE_LATE_GRACE_MINUTES" => "1441"]), "Out-of-range late-arrival grace was accepted.");
   check(!$_CORE->Settings->save(["APP_VER" => "1"]), "Admin settings API accepted a non-editable setting.");
   check($_CORE->Settings->save(["ATTENDANCE_THRESHOLD" => "75"]), "Could not restore test attendance threshold.");
+  check($_CORE->Settings->save(["ATTENDANCE_LATE_GRACE_MINUTES" => "10"]), "Could not restore test late-arrival grace.");
+
+  $_CORE->load("Calendar");
+  $_CORE->load("Classes");
+  $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, "$start 10:00:00", "Excused attendance test"),
+    "Could not create excused-status test class."
+  );
+  $excusedClassId = (int)$db->lastID;
+  check(
+    $_CORE->Attend->save($excusedClassId, json_encode([
+      $userId => ["s" => "2", "n" => "Approved excused absence."],
+      $otherStudentId => ["s" => "0", "n" => "Test absence."]
+    ], JSON_THROW_ON_ERROR)),
+    "Could not save an excused attendance record."
+  );
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, "$start 12:00:00", "Reschedule audit test"),
+    "Could not create class for cancellation and rescheduling tests."
+  );
+  $rescheduledClassId = (int)$db->lastID;
+  check(
+    $_CORE->Attend->save($rescheduledClassId, json_encode([
+      $userId => ["s" => "1", "n" => "Teacher verified attendance."]
+    ], JSON_THROW_ON_ERROR)),
+    "Could not save attendance before cancellation."
+  );
+  check($_CORE->Classes->cancelClass($rescheduledClassId, "Instructor unavailable."), "Class cancellation failed.");
+  check(
+    $db->fetchCol("SELECT `class_status` FROM `classes` WHERE `class_id`=?", [$rescheduledClassId])==="cancelled",
+    "Cancelled class state was not saved."
+  );
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
+  $cancelledSummary = $_CORE->Attend->getStudentSummary();
+  check(
+    (int)$cancelledSummary[$courseCode]["total_classes"]===2,
+    "Cancelled class was included in student attendance totals."
+  );
+  $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
+  check(
+    !$_CORE->Attend->openSession($rescheduledClassId),
+    "Attendance session opened for a cancelled class."
+  );
+  check(
+    $_CORE->Classes->rescheduleClass($rescheduledClassId, "{$start}T16:00", "Room became available."),
+    "Cancelled class could not be rescheduled."
+  );
+  check(
+    $db->fetchCol("SELECT `class_status` FROM `classes` WHERE `class_id`=?", [$rescheduledClassId])==="scheduled" &&
+    (int)$db->fetchCol(
+      "SELECT `a_status` FROM `attendance` WHERE `class_id`=? AND `user_id`=?",
+      [$rescheduledClassId, $userId]
+    )===1,
+    "Rescheduling did not reactivate the class while preserving its attendance record."
+  );
+  check(
+    count($_CORE->Classes->getScheduleAudit($rescheduledClassId))===2,
+    "Cancellation and rescheduling were not both recorded in the schedule audit."
+  );
+  check(
+    $_CORE->Classes->save($courseCode, $teacherId, "$start 14:00:00", "Holiday test class"),
+    "Could not create holiday test class."
+  );
+  $holidayClassId = (int)$db->lastID;
+  check(
+    $_CORE->Attend->save($holidayClassId, json_encode([
+      $userId => ["s" => "1", "n" => "Verified before holiday."]
+    ], JSON_THROW_ON_ERROR)),
+    "Could not record attendance before setting holiday."
+  );
+  check(
+    $_CORE->Calendar->saveHoliday($start, "Integration non-instruction day", "Test school closure."),
+    "Could not add a school non-instruction day."
+  );
+  check(
+    !$_CORE->Classes->save($courseCode, $teacherId, "$start 18:00:00", "Must reject holiday"),
+    "Class creation on a school holiday was accepted."
+  );
+  check(
+    !$_CORE->Attend->save($classId, json_encode([
+      $userId => ["s" => "1", "n" => "Should be blocked."]
+    ], JSON_THROW_ON_ERROR)),
+    "Attendance was editable on a school non-instruction day."
+  );
+  $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
+  $holidaySummary = $_CORE->Attend->getStudentSummary();
+  check(
+    (int)$holidaySummary[$courseCode]["total_classes"]===0 &&
+    $holidaySummary[$courseCode]["attendance_percentage"]===null,
+    "Holiday classes were counted in the attendance denominator."
+  );
+  $_SESSION["user"] = ["user_id" => 1, "user_level" => "A"];
+  check(
+    $_CORE->Calendar->deleteHoliday($start, "Restore integration attendance test."),
+    "Could not remove the integration non-instruction day."
+  );
+  check(
+    count($_CORE->Calendar->getAudit($start))===2,
+    "School calendar add/remove actions were not recorded in the audit history."
+  );
+
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
   $summary = $_CORE->Attend->getStudentSummary();
   check(
-    (int)$summary[$courseCode]["total_classes"]===1 &&
-    (int)$summary[$courseCode]["present_classes"]===0 &&
-    $summary[$courseCode]["attendance_percentage"]===0 &&
+    (int)$summary[$courseCode]["total_classes"]===4 &&
+    (int)$summary[$courseCode]["counted_classes"]===3 &&
+    (int)$summary[$courseCode]["excused_classes"]===1 &&
+    (int)$summary[$courseCode]["present_classes"]===2 &&
+    $summary[$courseCode]["attendance_percentage"]===67 &&
     $summary[$courseCode]["attendance_threshold"]===75 &&
     $summary[$courseCode]["below_threshold"]===true,
     "Student course summary or low-attendance warning did not reflect policy."
@@ -281,16 +517,16 @@ try {
   $_SESSION["user"] = ["user_id" => $otherStudentId, "user_level" => "U"];
   $otherSummary = $_CORE->Attend->getStudentSummary();
   check(
-    (int)$otherSummary[$courseCode]["total_classes"]===1 &&
-    (int)$otherSummary[$courseCode]["present_classes"]===0 &&
-    (int)$otherSummary[$courseCode]["absent_classes"]===0 &&
+    (int)$otherSummary[$courseCode]["total_classes"]===4 &&
+    (int)$otherSummary[$courseCode]["present_classes"]===1 &&
+    (int)$otherSummary[$courseCode]["absent_classes"]===1 &&
     $otherSummary[$courseCode]["below_threshold"]===true,
     "Unrecorded attendance was not considered in the policy warning."
   );
   $_SESSION["user"] = ["user_id" => $userId, "user_level" => "U"];
   check(is_array($_CORE->Classes->getByStudent($userId)), "Student class portal query failed.");
   $_CORE->Classes->del($classId);
-  foreach (["attendance_sessions", "attendance_corrections", "attendance_audit"] as $table) {
+  foreach (["attendance_sessions", "attendance_corrections", "attendance_audit", "attendance_schedule_audit"] as $table) {
     check((int)$db->fetchCol("SELECT COUNT(*) FROM `$table` WHERE `class_id`=?", [$classId])===0, "Deleting a class left orphaned $table data.");
   }
   $_CORE->Courses->del($courseCode);

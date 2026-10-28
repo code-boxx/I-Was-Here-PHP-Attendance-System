@@ -21,7 +21,9 @@ define("I_SQL", [
   "SQL-I-WAS-HERE-3.sql",
   "SQL-I-WAS-HERE-4.sql",
   "SQL-I-WAS-HERE-5.sql",
-  "SQL-I-WAS-HERE-6.sql"
+  "SQL-I-WAS-HERE-6.sql",
+  "SQL-I-WAS-HERE-7.sql",
+  "SQL-I-WAS-HERE-8.sql"
 ]);
 
 // (A4) MINIMUM APACHE VERSION + PHP VERSION + EXTENSIONS

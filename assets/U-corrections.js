@@ -17,7 +17,9 @@ var myCorrections = {
       let title = document.createElement("h4");
       title.textContent = `[${request.course_code}] ${request.course_name} — ${request.class_date}`;
       let status = document.createElement("p");
-      status.textContent = `Requested: ${request.requested_status == 1 ? "Present" : "Absent"}; status: ${request.request_status}.`;
+      let requested = request.requested_status == 1 ? "Present" :
+        (request.requested_status == 2 ? "Excused" : "Absent");
+      status.textContent = `Requested: ${requested}; status: ${request.request_status}.`;
       let reason = document.createElement("p");
       reason.textContent = `Your reason: ${request.request_reason}`;
       card.append(title, status, reason);

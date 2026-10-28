@@ -82,24 +82,30 @@ class Report extends Core {
     }
 
     // (A2) GET CLASSES IN THE OPTIONAL DATE RANGE
-    $sql = "SELECT `class_id`, DATE_FORMAT(`class_date`, '".DT_LONG."') `cd`
-            FROM `classes` WHERE `course_code`=?";
+    $sql = "SELECT cl.`class_id`, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
+                   cl.`class_status`, h.`holiday_name`
+            FROM `classes` cl
+            LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
+            WHERE cl.`course_code`=?";
     $params = [$code];
     if ($from!==null) {
-      $sql .= " AND `class_date`>=?";
+      $sql .= " AND cl.`class_date`>=?";
       $params[] = "$from 00:00:00";
     }
     if ($to!==null) {
-      $sql .= " AND `class_date`<DATE_ADD(?, INTERVAL 1 DAY)";
+      $sql .= " AND cl.`class_date`<DATE_ADD(?, INTERVAL 1 DAY)";
       $params[] = $to;
     }
-    $sql .= " ORDER BY `class_date` ASC";
+    $sql .= " ORDER BY cl.`class_date` ASC";
     $this->DB->query($sql, $params);
-    $class = []; $i = 1;
+    $class = []; $classState = []; $i = 1;
     $classdate = ["STUDENT/CLASS"];
     while ($r = $this->DB->stmt->fetch()) {
       $class[$r["class_id"]] = $i;
-      $classdate[] = $r["cd"];
+      $classState[$r["class_id"]] = $r["class_status"]==="cancelled"
+        ? "Cancelled" : ($r["holiday_name"]!==null ? "Non-instruction day" : null);
+      $classdate[] = $r["cd"].($classState[$r["class_id"]]===null
+        ? "" : " (".$classState[$r["class_id"]].")");
       $i++;
     }
     $classdate[] = "ATTENDANCE %";
@@ -133,7 +139,8 @@ class Report extends Core {
     unset($course, $classdate, $i);
 
     // (A4) STUDENTS & ATTENDANCE, INCLUDING STUDENTS WITH NO CHECK-INS
-    $sql = "SELECT u.`user_id`, u.`user_name`, u.`user_email`, cl.`class_id`, a.`a_status`
+    $sql = "SELECT u.`user_id`, u.`user_name`, u.`user_email`, cl.`class_id`,
+                   cl.`class_status`, h.`holiday_name`, a.`a_status`
             FROM `courses_users` cu
             JOIN `users` u ON (cu.`user_id`=u.`user_id` AND u.`user_level`='U')
             LEFT JOIN `classes` cl ON (cu.`course_code`=cl.`course_code`";
@@ -147,6 +154,7 @@ class Report extends Core {
       $joinParams[] = $to;
     }
     $sql .= ")
+            LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
             LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
             WHERE cu.`course_code`=?
             ORDER BY u.`user_id`, cl.`class_date`";
@@ -154,27 +162,44 @@ class Report extends Core {
     $uid = null;
     $row = [];
     $present = 0;
+    $counted = 0;
     while ($r = $this->DB->stmt->fetch()) {
       if ($r["user_id"]!=$uid) {
         if ($uid!==null) {
-          $row[] = count($class)==0 ? "N/A" : round($present / count($class) * 100) . "%";
+          $row[] = $counted===0 ? "N/A" : round($present / $counted * 100) . "%";
           $this->reportRow($format, $f ?? null, $row);
         }
         $row = ["{$r["user_name"]} ({$r["user_email"]})"];
-        for ($i=0; $i<count($class); $i++) { $row[] = null; }
+        for ($i=0; $i<count($class); $i++) { $row[] = "Not recorded"; }
         $uid = $r["user_id"];
         $present = 0;
+        $counted = 0;
       }
 
       if ($r["class_id"]!==null && isset($class[$r["class_id"]])) {
-        $attended = (int)$r["a_status"] === 1;
-        $row[$class[$r["class_id"]]] = $r["a_status"]===null ? null : ($attended ? 1 : 0);
-        if ($attended) { $present++; }
+        $isHoliday = $r["holiday_name"]!==null;
+        if ($r["class_status"]==="cancelled") {
+          $row[$class[$r["class_id"]]] = "Cancelled";
+        } elseif ($isHoliday) {
+          $row[$class[$r["class_id"]]] = "Non-instruction day";
+        } elseif ((int)$r["a_status"]===2) {
+          $row[$class[$r["class_id"]]] = "Excused";
+        } elseif ($r["a_status"]===null) {
+          $row[$class[$r["class_id"]]] = "Not recorded";
+          $counted++;
+        } elseif ((int)$r["a_status"]===1) {
+          $row[$class[$r["class_id"]]] = "Present";
+          $present++;
+          $counted++;
+        } else {
+          $row[$class[$r["class_id"]]] = "Absent";
+          $counted++;
+        }
       }
     }
 
     if ($uid!==null) {
-      $row[] = count($class)==0 ? "N/A" : round($present / count($class) * 100) . "%";
+      $row[] = $counted===0 ? "N/A" : round($present / $counted * 100) . "%";
       $this->reportRow($format, $f ?? null, $row);
     }
 
@@ -198,14 +223,16 @@ class Report extends Core {
 
     $sql = "SELECT DATE_FORMAT(cl.`class_date`, '%x-W%v') AS `week`,
                    DATE_FORMAT(MIN(cl.`class_date`), '%Y-%m-%d') AS `week_start`,
-                   COUNT(cl.`class_id`) AS `total`,
+                   COUNT(CASE WHEN a.`a_status`=2 THEN NULL ELSE cl.`class_id` END) AS `total`,
                    COALESCE(SUM(a.`a_status`=1), 0) AS `present`,
                    COALESCE(SUM(cl.`class_id` IS NOT NULL AND (a.`user_id` IS NULL OR a.`a_status`=0)), 0) AS `not_present`
             FROM `classes` cl
             JOIN `courses_users` cu ON (cu.`course_code`=cl.`course_code`)
             JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
             LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
-            WHERE cl.`course_code`=? AND cl.`class_date`<=NOW()";
+            LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
+            WHERE cl.`course_code`=? AND cl.`class_date`<=NOW()
+            AND cl.`class_status`='scheduled' AND h.`holiday_date` IS NULL";
     $params = [$code];
     if ($from!==null) {
       $sql .= " AND cl.`class_date`>=?";
@@ -251,9 +278,10 @@ class Report extends Core {
     $threshold = $this->attendanceThreshold();
 
     $sql = "SELECT u.`user_name`, u.`user_email`,
-                   COUNT(cl.`class_id`) AS `total`,
+                   COUNT(CASE WHEN a.`a_status`=2 THEN NULL ELSE cl.`class_id` END) AS `total`,
                    COALESCE(SUM(a.`a_status`=1), 0) AS `present`,
-                   COALESCE(SUM(cl.`class_id` IS NOT NULL AND (a.`user_id` IS NULL OR a.`a_status`=0)), 0) AS `missed`
+                   COALESCE(SUM(cl.`class_id` IS NOT NULL AND (a.`user_id` IS NULL OR a.`a_status`=0)), 0) AS `missed`,
+                   COALESCE(SUM(a.`a_status`=2), 0) AS `excused`
             FROM `courses_users` cu
             JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
             LEFT JOIN `classes` cl ON (cl.`course_code`=cu.`course_code`";
@@ -266,7 +294,11 @@ class Report extends Core {
       $sql .= " AND cl.`class_date`<DATE_ADD(?, INTERVAL 1 DAY)";
       $joinParams[] = $to;
     }
-    $sql .= " AND cl.`class_date`<=NOW())
+    $sql .= " AND cl.`class_date`<=NOW() AND cl.`class_status`='scheduled'
+              AND NOT EXISTS (
+                SELECT 1 FROM `attendance_holidays` h
+                WHERE h.`holiday_date`=DATE(cl.`class_date`)
+              ))
             LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
             WHERE cu.`course_code`=?
             GROUP BY u.`user_id`, u.`user_name`, u.`user_email`
@@ -279,7 +311,7 @@ class Report extends Core {
     $file = fopen("php://output", "w");
     $this->csvRow($file, ["STUDENT ATTENDANCE FOLLOW-UP", "[{$course["course_code"]}] {$course["course_name"]}"]);
     $this->csvRow($file, ["Below threshold", "$threshold%", "From", $from ?? "All dates", "To", $to ?? "All dates"]);
-    $this->csvRow($file, ["Student", "Email", "Present", "Absent or unrecorded", "Completed classes", "Attendance %"]);
+    $this->csvRow($file, ["Student", "Email", "Present", "Absent or unrecorded", "Excused", "Counted classes", "Attendance %"]);
     while ($row = $this->DB->stmt->fetch()) {
       $total = (int)$row["total"];
       if ($total===0) { continue; }
@@ -287,8 +319,8 @@ class Report extends Core {
       $percentage = (int)round(100 * $present / $total);
       if ($percentage >= $threshold) { continue; }
       $this->csvRow($file, [
-        $row["user_name"], $row["user_email"], $present, $total - $present,
-        $total, "$percentage%"
+        $row["user_name"], $row["user_email"], $present, (int)$row["missed"],
+        (int)$row["excused"], $total, "$percentage%"
       ]);
     }
     fclose($file);
@@ -296,18 +328,11 @@ class Report extends Core {
 
   private function reportRow ($format, $file, $row) {
     if ($format=="csv") {
-      foreach ($row as &$value) {
-        if ($value===null) { $value = 0; }
-      }
-      unset($value);
       $this->csvRow($file, $row);
       return;
     }
     echo '<tr>';
-    foreach ($row as $index=>$value) {
-      if ($index>0 && $index<count($row)-1) {
-        $value = $value===null ? "Not recorded" : ((int)$value===1 ? "Present" : "Absent");
-      }
+    foreach ($row as $value) {
       echo '<td>'.$this->html($value).'</td>';
     }
     echo '</tr>';

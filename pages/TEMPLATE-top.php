@@ -98,7 +98,11 @@
                   aria-label="Toggle navigation" aria-controls="cb-side" aria-expanded="false"
                   onclick="cb.toggle()"></button>
 
-          <div class="navbar-nav me-auto mb-2 mb-lg-0"></div>
+          <div class="navbar-nav me-auto mb-2 mb-lg-0">
+            <span id="network-status" class="small text-white" role="status" aria-live="polite">
+              Checking connection...
+            </span>
+          </div>
 
           <div class="d-flex align-items-center">
             <div class="dropdown">

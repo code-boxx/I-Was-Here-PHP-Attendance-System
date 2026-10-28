@@ -56,14 +56,17 @@ try {
 
   $db->query(
     "SELECT cu.`user_id`, cu.`course_code`, co.`course_name`, u.`user_name`,
-            COUNT(cl.`class_id`) AS `total`,
+            COUNT(CASE WHEN a.`a_status`=2 THEN NULL ELSE cl.`class_id` END) AS `total`,
             COALESCE(SUM(a.`a_status`=1),0) AS `present`
      FROM `courses_users` cu
      JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
      JOIN `courses` co ON (co.`course_code`=cu.`course_code`)
-     JOIN `classes` cl ON (cl.`course_code`=co.`course_code` AND cl.`class_date`<=NOW())
+     JOIN `classes` cl ON (cl.`course_code`=co.`course_code` AND cl.`class_date`<=NOW()
+                           AND cl.`class_status`='scheduled')
      LEFT JOIN `attendance` a ON (a.`class_id`=cl.`class_id` AND a.`user_id`=u.`user_id`)
+     LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
      JOIN `notification_preferences` p ON (p.`user_id`=u.`user_id` AND p.`attendance_warning`=1)
+     WHERE h.`holiday_date` IS NULL
      GROUP BY cu.`user_id`,cu.`course_code`,co.`course_name`,u.`user_name`"
   );
   $warningCandidates = $db->stmt->fetchAll();
@@ -94,11 +97,14 @@ try {
        )) OR (u.`user_level`='T' AND u.`user_id`=cl.`user_id`)
      )
      JOIN `notification_preferences` p ON (p.`user_id`=u.`user_id` AND p.`class_reminder`=1)
-     WHERE cl.`class_date`>NOW() AND cl.`class_date`<=DATE_ADD(NOW(), INTERVAL 24 HOUR)"
+     LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
+     WHERE cl.`class_status`='scheduled' AND h.`holiday_date` IS NULL
+     AND cl.`class_date`>NOW() AND cl.`class_date`<=DATE_ADD(NOW(), INTERVAL 24 HOUR)"
   );
   $reminderCandidates = $db->stmt->fetchAll();
   foreach ($reminderCandidates as $row) {
-    $key = "class-reminder:".$row["class_id"].":".$row["user_id"];
+    $key = "class-reminder:".$row["class_id"].":".$row["user_id"].":".
+      date("YmdHi", strtotime($row["class_date"]));
     $when = date("Y-m-d H:i", strtotime($row["class_date"]));
     $subject = "Upcoming class: ".$row["course_code"];
     $body = "<p>Hello ".htmlText($row["user_name"]).",</p><p><strong>".

@@ -17,6 +17,9 @@
   <a class="nav-link ms-1" href="<?=HOST_BASE?>A/classes">
     <i class="text-secondary ico-sm icon-file-text2"></i> Classes
   </a>
+  <a class="nav-link ms-1" href="<?=HOST_BASE?>A/holidays">
+    <i class="text-secondary ico-sm icon-calendar"></i> Holidays
+  </a>
   <a class="nav-link ms-1" href="<?=HOST_BASE?>A/corrections">
     <i class="text-secondary ico-sm icon-checkmark"></i> Corrections
   </a>

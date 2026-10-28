@@ -9,7 +9,12 @@ if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
     <strong>[<?=$c["course_code"]?>] <?=$c["course_name"]?></strong><br>
     <small class="fw-bold"><?=$c["cd"]?></small><br>
     <small><?=$c["user_name"]?></small><br>
-    <small><?=$c["class_desc"]?></small>
+    <small><?=htmlspecialchars($c["class_desc"] ?? "", ENT_QUOTES, "UTF-8")?></small><br>
+    <?php if ($c["class_status"]==="cancelled") { ?>
+    <span class="badge bg-danger">Cancelled</span>
+    <?php } elseif (!empty($c["is_holiday"])) { ?>
+    <span class="badge bg-warning text-dark">Non-instruction day: <?=htmlspecialchars($c["holiday_name"], ENT_QUOTES, "UTF-8")?></span>
+    <?php } ?>
   </div>
   <div class="dropdown">
     <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" aria-label="Class actions" data-bs-toggle="dropdown"></button>

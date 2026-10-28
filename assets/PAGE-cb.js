@@ -32,9 +32,27 @@ var cb = {
 
     // (A5) SIDEBAR
     cb.hSide = document.getElementById("cb-side");
+
+    // (A6) CONNECTION STATUS
+    cb.networkStatus();
+    window.addEventListener("online", cb.networkStatus);
+    window.addEventListener("offline", cb.networkStatus);
   },
 
   // (B) HTML INTERFACE
+  // (B0) CONNECTION STATUS
+  networkStatus : () => {
+    let status = document.getElementById("network-status");
+    if (!status) { return; }
+    if (navigator.onLine) {
+      status.textContent = "Online (network detected)";
+      status.className = "small text-success";
+    } else {
+      status.textContent = "Offline - changes may not sync";
+      status.className = "small text-warning";
+    }
+  },
+
   // (B1) LOADING SPINNER
   //  show : boolean, show or hide loading spinner
   loading : show => {

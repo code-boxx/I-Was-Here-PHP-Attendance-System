@@ -6,7 +6,7 @@ class Classes extends Core {
   //  $date : class date
   //  $desc : class description
   //  $id : class id (for edit only)
-  function save ($code, $uid, $date, $desc=null, $id=null) {
+  function save ($code, $uid, $date, $desc=null, $id=null, $reason=null) {
     if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) {
       $date .= ":00";
     }
@@ -24,6 +24,10 @@ class Classes extends Core {
       $date>($course["course_end"]." 23:59:59")
     ) {
       $this->error = "Class date must fall within the course dates.";
+      return false;
+    }
+    if ($this->isHolidayDate(substr($date, 0, 10))) {
+      $this->error = "Classes cannot be scheduled on a school holiday or non-instruction day.";
       return false;
     }
     $teacher = $this->DB->fetchCol(
@@ -49,7 +53,8 @@ class Classes extends Core {
       $sql = "SELECT `class_id`, DATE_FORMAT(`class_date`, '".DT_LONG."') AS `conflict_date`
               FROM `classes`
               WHERE `user_id`=? AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
-              AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?";
+              AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
+              AND `class_status`='scheduled'";
       $params = [$uid, $date, $date];
       if ($id!==null && $id!=="") {
         $sql .= " AND `class_id`!=?";
@@ -68,6 +73,44 @@ class Classes extends Core {
         $data[] = $this->Core->random(12);
         $this->DB->insert("classes", $fields, $data);
       } else {
+        $previous = $this->DB->fetch(
+          "SELECT `class_date`, `class_status` FROM `classes` WHERE `class_id`=? FOR UPDATE",
+          [$id]
+        );
+        if (!is_array($previous)) {
+          $this->DB->end(false);
+          $this->error = "Class was not found.";
+          return false;
+        }
+        if ($previous["class_date"]!==$date) {
+          $reason = $this->validScheduleReason($reason);
+          if ($reason===false) {
+            $this->DB->end(false);
+            $this->error = "Provide a reason when changing a class date.";
+            return false;
+          }
+          $this->DB->insert(
+            "attendance_schedule_audit",
+            ["class_id", "event_type", "old_value", "new_value", "reason", "changed_by", "changed_at"],
+            [$id, "class_rescheduled", $previous["class_date"], $date, $reason,
+             $_SESSION["user"]["user_id"], date("Y-m-d H:i:s")]
+          );
+          $changedAt = date("Y-m-d H:i:s");
+          $this->DB->update(
+            "attendance_sessions",
+            ["session_status", "closed_at"],
+            "`class_id`=? AND `session_status`='open'",
+            ["closed", $changedAt, $id]
+          );
+          $this->DB->query(
+            "UPDATE `notification_outbox` SET `delivery_status`='cancelled'
+             WHERE `event_key` LIKE ? AND `delivery_status`='pending'",
+            ["class-reminder:".$id.":%"]
+          );
+          if ($previous["class_status"]==="scheduled") {
+            $this->queueClassChangeNotification($id, "class_rescheduled", $date, $changedAt);
+          }
+        }
         $data[] = $id;
         $this->DB->update("classes", $fields, "`class_id`=?", $data);
       }
@@ -77,6 +120,224 @@ class Classes extends Core {
       throw $ex;
     }
     return true;
+  }
+
+  private function validScheduleReason ($reason) {
+    $reason = trim((string)$reason);
+    $length = preg_match_all('/./us', $reason, $characters);
+    return $length!==false && $length>0 && $length<=500 ? $reason : false;
+  }
+
+  private function isHolidayDate ($date) {
+    return $this->DB->fetchCol(
+      "SELECT 1 FROM `attendance_holidays` WHERE `holiday_date`=?",
+      [$date]
+    ) !== null;
+  }
+
+  private function canManageSchedule ($classId) {
+    if (!isset($_SESSION["user"])) { return false; }
+    if (($_SESSION["user"]["user_level"] ?? "")==="A") {
+      return $this->canManageClass($classId);
+    }
+    return ($_SESSION["user"]["user_level"] ?? "")==="T" &&
+      $this->DB->fetchCol(
+        "SELECT 1 FROM `classes` WHERE `class_id`=? AND `user_id`=?",
+        [$classId, $_SESSION["user"]["user_id"]]
+      ) !== null;
+  }
+
+  private function queueClassChangeNotification ($classId, $event, $date, $changedAt) {
+    $class = $this->DB->fetch(
+      "SELECT cl.`class_id`, co.`course_code`, co.`course_name`
+       FROM `classes` cl JOIN `courses` co USING (`course_code`)
+       WHERE cl.`class_id`=?",
+      [$classId]
+    );
+    if (!is_array($class)) { return; }
+    $subject = $event==="class_cancelled"
+      ? "Class cancelled: ".$class["course_code"]
+      : "Class rescheduled: ".$class["course_code"];
+    $body = $event==="class_cancelled"
+      ? "<p>The class <strong>".htmlspecialchars($class["course_name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8")."</strong> scheduled for ".htmlspecialchars($date, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8")." has been cancelled.</p>"
+      : "<p>The class <strong>".htmlspecialchars($class["course_name"], ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8")."</strong> has been rescheduled to ".htmlspecialchars($date, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8").".</p>";
+    $this->DB->query(
+      "INSERT IGNORE INTO `notification_outbox`
+         (`user_id`,`category`,`event_key`,`recipient_email`,`subject`,`body`,`available_at`)
+       SELECT u.`user_id`, 'class_reminder',
+              CONCAT('class-change:', ?, ':', ?, ':', ?, ':', u.`user_id`),
+              u.`user_email`, ?, ?, ?
+       FROM `courses_users` cu
+       JOIN `users` u ON (u.`user_id`=cu.`user_id` AND u.`user_level`='U')
+       JOIN `notification_preferences` p ON (p.`user_id`=u.`user_id` AND p.`class_reminder`=1)
+       WHERE cu.`course_code`=?",
+      [$event, $classId, str_replace([" ", ":"], ["-", ""], $changedAt),
+       $subject, $body, $changedAt, $class["course_code"]]
+    );
+  }
+
+  function cancelClass ($classId, $reason) {
+    if (!$this->canManageSchedule($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    $reason = $this->validScheduleReason($reason);
+    if ($reason===false) {
+      $this->error = "A cancellation reason of 1 to 500 characters is required.";
+      return false;
+    }
+    $actor = (int)$_SESSION["user"]["user_id"];
+    $now = date("Y-m-d H:i:s");
+    $this->DB->start();
+    try {
+      $class = $this->DB->fetch(
+        "SELECT `class_date`, `class_status` FROM `classes`
+         WHERE `class_id`=? FOR UPDATE",
+        [$classId]
+      );
+      if (!is_array($class)) {
+        $this->DB->end(false);
+        $this->error = "Class was not found.";
+        return false;
+      }
+      if ($class["class_status"]==="cancelled") {
+        $this->DB->end(false);
+        $this->error = "Class is already cancelled.";
+        return false;
+      }
+      $this->DB->update(
+        "classes",
+        ["class_status", "class_status_reason", "class_status_by", "class_status_at"],
+        "`class_id`=?",
+        ["cancelled", $reason, $actor, $now, $classId]
+      );
+      $this->DB->update(
+        "attendance_sessions",
+        ["session_status", "closed_at"],
+        "`class_id`=? AND `session_status`='open'",
+        ["closed", $now, $classId]
+      );
+      $this->DB->insert(
+        "attendance_schedule_audit",
+        ["class_id", "event_type", "old_value", "new_value", "reason", "changed_by", "changed_at"],
+        [$classId, "class_cancelled", $class["class_date"], null, $reason, $actor, $now]
+      );
+      $this->DB->query(
+        "UPDATE `notification_outbox` SET `delivery_status`='cancelled'
+         WHERE `event_key` LIKE ? AND `delivery_status`='pending'",
+        ["class-reminder:".$classId.":%"]
+      );
+      $this->queueClassChangeNotification($classId, "class_cancelled", $class["class_date"], $now);
+      $this->DB->end();
+      return true;
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
+  }
+
+  function rescheduleClass ($classId, $date, $reason) {
+    if (!$this->canManageSchedule($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $date)) {
+      $date = str_replace("T", " ", $date).":00";
+    }
+    $parsedDate = is_string($date) ? DateTimeImmutable::createFromFormat("!Y-m-d H:i:s", $date) : false;
+    $reason = $this->validScheduleReason($reason);
+    if (!$parsedDate || $parsedDate->format("Y-m-d H:i:s")!==$date || $reason===false) {
+      $this->error = "A valid new date and a rescheduling reason are required.";
+      return false;
+    }
+    if ($this->isHolidayDate(substr($date, 0, 10))) {
+      $this->error = "Classes cannot be rescheduled to a school holiday or non-instruction day.";
+      return false;
+    }
+    $actor = (int)$_SESSION["user"]["user_id"];
+    $now = date("Y-m-d H:i:s");
+    $this->DB->start();
+    try {
+      $class = $this->DB->fetch(
+        "SELECT cl.`class_date`, cl.`class_status`, cl.`user_id`, co.`course_start`,
+                co.`course_end`
+         FROM `classes` cl JOIN `courses` co USING (`course_code`)
+         WHERE cl.`class_id`=? FOR UPDATE",
+        [$classId]
+      );
+      if (!is_array($class)) {
+        $this->DB->end(false);
+        $this->error = "Class was not found.";
+        return false;
+      }
+      if (
+        $date<($class["course_start"]." 00:00:00") ||
+        $date>($class["course_end"]." 23:59:59")
+      ) {
+        $this->DB->end(false);
+        $this->error = "Rescheduled class must fall within the course dates.";
+        return false;
+      }
+      if ($class["class_date"]===$date && $class["class_status"]==="scheduled") {
+        $this->DB->end(false);
+        $this->error = "Choose a different date or time.";
+        return false;
+      }
+      $conflict = $this->DB->fetch(
+        "SELECT `class_id` FROM `classes`
+         WHERE `user_id`=? AND `class_id`!=? AND `class_status`='scheduled'
+         AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+         AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>? LIMIT 1",
+        [$class["user_id"], $classId, $date, $date]
+      );
+      if (is_array($conflict)) {
+        $this->DB->end(false);
+        $this->error = "The teacher already has a class overlapping this 60-minute session.";
+        return false;
+      }
+      $this->DB->update(
+        "classes",
+        ["class_date", "class_status", "class_status_reason", "class_status_by", "class_status_at"],
+        "`class_id`=?",
+        [$date, "scheduled", null, $actor, $now, $classId]
+      );
+      $this->DB->update(
+        "attendance_sessions",
+        ["session_status", "closed_at"],
+        "`class_id`=? AND `session_status`='open'",
+        ["closed", $now, $classId]
+      );
+      $this->DB->insert(
+        "attendance_schedule_audit",
+        ["class_id", "event_type", "old_value", "new_value", "reason", "changed_by", "changed_at"],
+        [$classId, "class_rescheduled", $class["class_date"], $date, $reason, $actor, $now]
+      );
+      $this->DB->query(
+        "UPDATE `notification_outbox` SET `delivery_status`='cancelled'
+         WHERE `event_key` LIKE ? AND `delivery_status`='pending'",
+        ["class-reminder:".$classId.":%"]
+      );
+      $this->queueClassChangeNotification($classId, "class_rescheduled", $date, $now);
+      $this->DB->end();
+      return true;
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
+  }
+
+  function getScheduleAudit ($classId) {
+    if (!$this->canManageClass($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    return $this->DB->fetchAll(
+      "SELECT a.*, COALESCE(u.`user_name`, CONCAT('Deleted account #', a.`changed_by`)) AS `actor_name`
+       FROM `attendance_schedule_audit` a
+       LEFT JOIN `users` u ON (u.`user_id`=a.`changed_by`)
+       WHERE a.`class_id`=? ORDER BY a.`changed_at` DESC",
+      [$classId]
+    ) ?? [];
   }
 
   // (B) IMPORT CLASS
@@ -129,6 +390,9 @@ class Classes extends Core {
     $this->DB->delete("attendance_corrections", "`class_id`=?", [$id]);
     $this->DB->delete("attendance_sessions", "`class_id`=?", [$id]);
     $this->DB->delete("attendance_audit", "`class_id`=?", [$id]);
+    $this->DB->delete("attendance_schedule_audit", "`class_id`=?", [$id]);
+    $this->DB->delete("attendance_offline_queue", "`class_id`=?", [$id]);
+    $this->DB->delete("class_substitutes", "`class_id`=?", [$id]);
     $this->DB->delete("classes", "`class_id`=?", [$id]);
     $this->DB->end();
     return true;
@@ -138,10 +402,13 @@ class Classes extends Core {
   //  $id : class id
   function get ($id) {
     $class = $this->DB->fetch(
-      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name`
+      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
+              co.`course_code`, co.`course_name`, u.`user_name`, h.`holiday_name`,
+              (h.`holiday_date` IS NOT NULL) AS `is_holiday`
        FROM `classes` cl 
        LEFT JOIN `courses` co USING (`course_code`)
        LEFT JOIN `users` u USING (`user_id`)
+       LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
        WHERE cl.`class_id`=?", [$id]
     );
     if (is_array($class) && !$this->canManageClass($id)) { return null; }
@@ -150,16 +417,110 @@ class Classes extends Core {
 
   function canManageClass ($id) {
     if (!isset($_SESSION["user"])) { return false; }
+    $uid = (int)($_SESSION["user"]["user_id"] ?? 0);
     if ($_SESSION["user"]["user_level"]=="A") {
       return $this->DB->fetchCol(
         "SELECT 1 FROM `classes` WHERE `class_id`=?", [$id]
       ) !== null;
     }
-    if ($_SESSION["user"]["user_level"]!="T") { return false; }
+    if ($_SESSION["user"]["user_level"]=="T") {
+      $owned = $this->DB->fetchCol(
+        "SELECT 1 FROM `classes` WHERE `class_id`=? AND `user_id`=?",
+        [$id, $uid]
+      );
+      if ($owned !== null) { return true; }
+      return $this->DB->fetchCol(
+        "SELECT 1 FROM `class_substitutes`
+         WHERE `class_id`=? AND `user_id`=? AND `expires_at`>NOW()",
+        [$id, $uid]
+      ) !== null;
+    }
+    return false;
+  }
+
+  private function canManageSubstitutes ($classId) {
+    if (!isset($_SESSION["user"])) { return false; }
+    if (($_SESSION["user"]["user_level"] ?? "")==="A") { return $this->canManageClass($classId); }
     return $this->DB->fetchCol(
       "SELECT 1 FROM `classes` WHERE `class_id`=? AND `user_id`=?",
-      [$id, $_SESSION["user"]["user_id"]]
+      [$classId, $_SESSION["user"]["user_id"]]
     ) !== null;
+  }
+
+  function addSubstitute ($classId, $userId, $expiresAt) {
+    if (!isset($_SESSION["user"])) {
+      $this->error = "No access permission";
+      return false;
+    }
+    if (!$this->canManageSubstitutes($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    if (is_string($expiresAt) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/D', $expiresAt)) {
+      $expiresAt = str_replace("T", " ", $expiresAt).":00";
+    }
+    $parsedExpiry = is_string($expiresAt)
+      ? DateTimeImmutable::createFromFormat("!Y-m-d H:i:s", $expiresAt)
+      : false;
+    $class = $this->DB->fetch(
+      "SELECT `class_date` FROM `classes` WHERE `class_id`=?",
+      [$classId]
+    );
+    if (
+      !$parsedExpiry || $parsedExpiry->format("Y-m-d H:i:s")!==$expiresAt ||
+      !is_array($class) || $expiresAt<=date("Y-m-d H:i:s") ||
+      $expiresAt>date("Y-m-d H:i:s", strtotime($class["class_date"]." +12 hours"))
+    ) {
+      $this->error = "Substitute access must expire in the future and no later than 12 hours after class start.";
+      return false;
+    }
+    $user = $this->DB->fetch(
+      "SELECT `user_id`, `user_level` FROM `users` WHERE `user_id`=?",
+      [$userId]
+    );
+    if (!is_array($user) || !in_array($user["user_level"], ["A", "T"], true)) {
+      $this->error = "Only teachers and admins can be assigned as substitutes.";
+      return false;
+    }
+    $this->DB->replace(
+      "class_substitutes",
+      ["class_id", "user_id", "created_by", "created_at", "expires_at"],
+      [$classId, $userId, $_SESSION["user"]["user_id"], date("Y-m-d H:i:s"), $expiresAt]
+    );
+    return true;
+  }
+
+  function delSubstitute ($classId, $userId) {
+    if (!isset($_SESSION["user"])) {
+      $this->error = "No access permission";
+      return false;
+    }
+    if (!$this->canManageSubstitutes($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    $this->DB->delete(
+      "class_substitutes",
+      "`class_id`=? AND `user_id`=?",
+      [$classId, $userId]
+    );
+    return $this->DB->lastRows > 0;
+  }
+
+  function getSubstitutes ($classId) {
+    if (!isset($_SESSION["user"])) { return null; }
+    if (!$this->canManageSubstitutes($classId)) {
+      $this->error = "No access permission";
+      return false;
+    }
+    return $this->DB->fetchAll(
+      "SELECT s.`user_id`, u.`user_name`, u.`user_email`, s.`expires_at`
+       FROM `class_substitutes` s
+       JOIN `users` u USING (`user_id`)
+       WHERE s.`class_id`=?
+       ORDER BY u.`user_name`",
+      [$classId]
+    ) ?? [];
   }
 
   // (E) GET CLASSES
@@ -167,9 +528,10 @@ class Classes extends Core {
   //  $page : optional, current page number
   function getAll ($search=null, $page=null) {
     // (E1) PARTIAL SQL
-    $sql = " FROM `classes` cl 
+    $sql = " FROM `classes` cl
             LEFT JOIN `courses` co USING (`course_code`)
-            LEFT JOIN `users` u USING (`user_id`)";
+            LEFT JOIN `users` u USING (`user_id`)
+            LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))";
     $data = null;
     if ($search != null) {
       $sql .= " WHERE co.`course_code` LIKE ?";
@@ -187,7 +549,9 @@ class Classes extends Core {
     $sql .= " ORDER BY `class_date` DESC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
     return $this->DB->fetchAll(
-      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name`, u.`user_name` $sql",
+      "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
+              co.`course_code`, co.`course_name`, u.`user_name`, h.`holiday_name`,
+              (h.`holiday_date` IS NOT NULL) AS `is_holiday` $sql",
       $data, "class_id"
     );
   }
@@ -204,6 +568,7 @@ class Classes extends Core {
     // (F1) PARTIAL SQL
     $sql = "FROM `classes` cl
             JOIN `courses` co USING (`course_code`)
+            LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
             WHERE `user_id`=?";
     $data = [$uid];
     if ($range=="-1") {
@@ -228,7 +593,11 @@ class Classes extends Core {
     }
 
     // (F3) GET CLASSES
-    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`, co.`course_code`, co.`course_name` $sql ORDER BY `class_date` ASC";
+    $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
+                   co.`course_code`, co.`course_name`, h.`holiday_name`,
+                   (h.`holiday_date` IS NOT NULL) AS `is_holiday`
+            $sql
+            ORDER BY `class_date` ASC";
     if ($page != null) { $sql .= $this->Core->page["lim"]; }
 
     // (F4) RESULTS
@@ -272,10 +641,12 @@ class Classes extends Core {
     // (G3) GET CLASSES
     $sql = "SELECT cl.*, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,
                    co.`course_code`, co.`course_name`, a.`a_status`,
-                   cr.`request_status` AS `correction_status`
-            FROM `classes` cl
-            LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
-            LEFT JOIN `courses` co ON (cl.`course_code`=co.`course_code`)
+                 h.`holiday_name`, (h.`holiday_date` IS NOT NULL) AS `is_holiday`,
+                 cr.`request_status` AS `correction_status`
+          FROM `classes` cl
+          LEFT JOIN `attendance` a ON (cl.`class_id`=a.`class_id` AND a.`user_id`=?)
+          LEFT JOIN `courses` co ON (cl.`course_code`=co.`course_code`)
+          LEFT JOIN `attendance_holidays` h ON (h.`holiday_date`=DATE(cl.`class_date`))
             LEFT JOIN `attendance_corrections` cr ON (
               cr.`class_id`=cl.`class_id` AND cr.`user_id`=? AND
               cr.`request_id`=(

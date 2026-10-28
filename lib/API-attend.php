@@ -5,14 +5,21 @@ $_CORE->autoAPI([
   "attendQR" => ["Attend", "attendQR", "U"],
   "openSession" => ["Attend", "openSession", ["A", "T"]],
   "closeSession" => ["Attend", "closeSession", ["A", "T"]],
+  "getSessionSummary" => ["Attend", "getSessionSummary", ["A", "T"]],
   "sessionState" => ["Attend", "sessionState", ["A", "T"]],
+  "lateArrivalGraceMinutes" => ["Attend", "lateArrivalGraceMinutes", ["A", "T"]],
+  "queueOfflineAttendance" => ["Attend", "queueOfflineAttendance", "U"],
+  "getStudentOfflineQueue" => ["Attend", "getStudentOfflineQueue", "U"],
+  "getOfflineQueue" => ["Attend", "getOfflineQueue", ["A", "T"]],
+  "reviewOfflineQueue" => ["Attend", "reviewOfflineQueue", ["A", "T"]],
   "qrToken" => ["Attend", "qrToken", ["A", "T"]],
   "studentSummary" => ["Attend", "getStudentSummary", "U"],
   "requestCorrection" => ["Attend", "requestCorrection", "U"],
   "getCorrections" => ["Attend", "getCorrections"],
   "decideCorrection" => ["Attend", "decideCorrection", ["A", "T"]],
   "getAudit" => ["Attend", "getAudit", ["A", "T"]],
-  "getDashboard" => ["Attend", "getDashboard", ["A", "T"]]
+  "getDashboard" => ["Attend", "getDashboard", ["A", "T"]],
+  "getProjectorStats" => ["Attend", "getProjectorStats", ["A", "T"]]
 ]);
 
 // (B) INVALID REQUEST

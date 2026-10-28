@@ -8,7 +8,13 @@ It is not an official upstream release.
 The system features NFC and passwordless login, teacher-controlled rotating QR
 attendance sessions, live teacher dashboards, configurable attendance
 warnings, date-filtered analytics, bulk course enrollment, notification
-preferences, student attendance summaries, and correction requests.
+preferences, student attendance summaries, correction requests, expiring
+substitute-teacher access, configurable late-arrival summaries, and
+teacher-reviewed offline check-in requests. Admins can define school holidays,
+and class owners can cancel or reschedule sessions with an audit reason.
+Excused absences are reported separately and excluded from attendance
+percentages. Offline timestamps are unverified; offline requests do not count
+as attendance until a teacher approves them.
 <br><br>
 
 ## :white_check_mark: FEATURES

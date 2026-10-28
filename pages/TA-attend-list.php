@@ -16,13 +16,14 @@ if (is_array($students)) { foreach ($students as $id=>$s) {
            aria-label="Attendance notes for <?=$studentName?>" placeholder="Notes, if any."
            value="<?=$attendanceNotes?>">
   </div>
-  <button id="att-s<?=$id?>" value="<?=$id?>" data-student="<?=$studentName?>"
-          aria-pressed="<?=$s["a_status"]==1?"true":"false"?>"
-          aria-label="<?=$s["a_status"]==1?"Present; mark absent":"Absent; mark present"?> for <?=$studentName?>"
-          onclick="attend.toggle(<?=$id?>)"
-          class="mx-2 btn btn-<?=$s["a_status"]==1?"primary":"danger"?> 
-                 icon icon-<?=$s["a_status"]==1?"checkmark":"cross"?>">
-  </button>
+  <div class="ms-2 align-self-center">
+    <label class="form-label small mb-1" for="att-s<?=$id?>">Attendance status</label>
+    <select id="att-s<?=$id?>" class="form-select" aria-label="Attendance status for <?=$studentName?>">
+      <option value="1" <?=$s["a_status"]==1?"selected":""?>>Present</option>
+      <option value="0" <?=$s["a_status"]===null || $s["a_status"]==0?"selected":""?>>Absent</option>
+      <option value="2" <?=$s["a_status"]==2?"selected":""?>>Excused</option>
+    </select>
+  </div>
 </div>
 <?php } ?>
 <div class="d-flex align-items-center mt-4">
