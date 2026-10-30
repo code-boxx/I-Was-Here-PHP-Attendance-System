@@ -9,7 +9,7 @@ if (is_array($users)) { foreach ($users as $id=>$u) { ?>
          value="<?=$id?>" aria-label="Select <?=htmlspecialchars($u["user_name"], ENT_QUOTES, "UTF-8")?>">
   <div class="flex-grow-1">
     <strong><?=htmlspecialchars($u["user_name"], ENT_QUOTES, "UTF-8")?></strong><br>
-    <small><?=USR_LVL[$u["user_level"]]?></small> |
+    <small><?=htmlspecialchars(USR_LVL[$u["user_level"]], ENT_QUOTES, "UTF-8")?></small> |
     <small><?=htmlspecialchars($u["user_email"], ENT_QUOTES, "UTF-8")?></small>
   </div>
   <button type="button" class="btn btn-danger p-3 ico-sm icon-bin2" onclick="cuser.del(<?=$id?>)"></button>

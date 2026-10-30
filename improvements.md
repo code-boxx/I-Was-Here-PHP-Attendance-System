@@ -6,12 +6,21 @@ branch; a roadmap item is not complete just because it is listed here.
 
 ## Status at a glance
 
-- **Steps 1-4: Implemented.** Core attendance, analytics, notifications,
-  attendance policies, school calendar, and class lifecycle workflows are
-  available.
-- **Step 5: Next.** Improve administration and data operations.
-- **Steps 5-10: Planned.** Administration, PWA, security, integrations,
-  developer tooling, and larger institutional capabilities.
+- **Steps 1-4: Implemented.** Core attendance, reporting, notifications,
+  attendance policies, school calendar, class lifecycle workflows, and
+  attendance correction history are available.
+- **Step 5: In progress.** Roster search/filter/sort, course transfers, CSV
+  reconciliation for courses/users/classes/enrollments, row-error downloads,
+  and reasoned roster audit/undo are implemented. Room/group conflict checks
+  and undo for other administrative changes remain.
+- **Steps 6-9: Planned.** PWA reliability, broader security/privacy work,
+  integrations, and contributor/operator tooling.
+- **Step 10: Long term.** Larger institutional capabilities.
+
+**Validation checkpoint (2026-10-30):** JavaScript syntax checks and
+`git diff --check` passed for the recent changes. PHP lint and the database
+integration suite have not been run because PHP is unavailable in the current
+environment; run them before treating these changes as fully verified.
 
 ## Step 1 — Secure attendance foundations — Implemented
 
@@ -96,18 +105,21 @@ The late rule is "late after the configured grace period" (strictly greater
 than the grace value). Offline device timestamps remain unverified; approval
 uses the teacher review time.
 
-## Step 5 — Improve administration and data operations — Next
+## Step 5 — Improve administration and data operations — In progress
 
-1. Improve roster search, filtering, sorting, teacher assignment, and student
-   movement between courses.
-2. Add CSV import reconciliation: preview new, changed, unchanged, duplicate,
-   and conflicting rows before saving.
-3. Provide a downloadable row-level error report and a clear, reviewable
-   import result.
-4. Extend timetable conflict checks to rooms and student groups once those
-   entities and schedules exist.
-5. Add safe undo or correction workflows for important administrative
-   changes, retaining who changed what and why.
+1. **Implemented:** Improve roster search, role filtering, sorting, teacher
+   assignment, and student movement between courses.
+2. **Implemented:** Course, user, class, and course-enrollment CSV imports
+   classify rows before saving. Course imports identify new, changed, and
+   unchanged records; all import types flag duplicate and conflicting rows.
+3. **Implemented:** Downloadable row-level error report and a clear,
+   reviewable import result.
+4. **Not implemented:** Extend timetable conflict checks to rooms and student
+   groups. This is blocked until those entities and their schedules exist.
+5. **Partially implemented:** Course roster changes record who changed
+   enrollment, when, and why, and support guarded undo with an undo reason.
+   Undo/correction workflows for course edits, class schedule changes, and
+   other administrative operations remain.
 
 ## Step 6 — Make the PWA dependable on mobile and unreliable networks — Planned
 

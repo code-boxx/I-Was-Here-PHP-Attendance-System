@@ -346,6 +346,9 @@ class Classes extends Core {
   //  $email : teacher's email
   //  $desc : description, optional
   function import ($code, $date, $email, $desc) {
+    if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) {
+      $date .= ":00";
+    }
     // (B1) CHECK - COURSE CODE
     $this->Core->load("Courses");
     $course = $this->Courses->get($code);
@@ -378,8 +381,104 @@ class Classes extends Core {
     }
 
     // (B4) IMPORT CLASS
-    $this->save($course["course_code"], $teacher["user_id"], $date, $desc);
-    return true;
+    return $this->save($course["course_code"], $teacher["user_id"], $date, $desc);
+  }
+
+  function previewImport ($rows) {
+    if (!is_string($rows)) {
+      $this->error = "Import preview rows are invalid.";
+      return false;
+    }
+    try { $rows = json_decode($rows, true, 512, JSON_THROW_ON_ERROR); }
+    catch (JsonException $ex) {
+      $this->error = "Import preview rows are invalid JSON.";
+      return false;
+    }
+    if (!is_array($rows) || count($rows)==0 || count($rows)>500) {
+      $this->error = "Preview between 1 and 500 class rows.";
+      return false;
+    }
+
+    $this->Core->load("Courses");
+    $result = [];
+    $seen = [];
+    foreach ($rows as $row) {
+      if (!is_array($row)) {
+        $result[] = ["status" => "conflicting", "message" => "Invalid row data."];
+        continue;
+      }
+      $code = trim((string)($row["code"] ?? ""));
+      $date = trim((string)($row["date"] ?? ""));
+      $email = strtolower(trim((string)($row["email"] ?? "")));
+      $desc = trim((string)($row["desc"] ?? ""));
+      if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) { $date .= ":00"; }
+      $parsed = DateTimeImmutable::createFromFormat("!Y-m-d H:i:s", $date);
+      if ($code==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)
+          || !$parsed || $parsed->format("Y-m-d H:i:s")!==$date) {
+        $result[] = ["status" => "conflicting", "message" => "Course code, teacher email, and valid class date/time are required."];
+        continue;
+      }
+
+      $course = $this->Courses->get($code);
+      if (!is_array($course) || $date<($course["course_start"]." 00:00:00")
+          || $date>($course["course_end"]." 23:59:59")) {
+        $result[] = ["status" => "conflicting", "message" => "Course is missing or class date falls outside the course period."];
+        continue;
+      }
+      if ($this->isHolidayDate(substr($date, 0, 10))) {
+        $result[] = ["status" => "conflicting", "message" => "Classes cannot be scheduled on a school holiday or non-instruction day."];
+        continue;
+      }
+      $teacher = $this->DB->fetch(
+        "SELECT u.`user_id`
+         FROM `courses_users` cu JOIN `users` u USING (`user_id`)
+         WHERE cu.`course_code`=? AND u.`user_email`=? AND u.`user_level` IN ('A','T')",
+        [$course["course_code"], $email]
+      );
+      if (!is_array($teacher)) {
+        $result[] = ["status" => "conflicting", "message" => "Teacher is not assigned to this course."];
+        continue;
+      }
+
+      $key = strtolower($course["course_code"]).":".$teacher["user_id"].":".$date;
+      if (isset($seen[$key])) {
+        $same = $seen[$key]===$desc;
+        $result[] = [
+          "status" => $same ? "duplicate" : "conflicting",
+          "message" => $same
+            ? "Duplicate class row; it will not be imported."
+            : "This class schedule has conflicting descriptions in another row."
+        ];
+        continue;
+      }
+      $seen[$key] = $desc;
+
+      $existing = $this->DB->fetch(
+        "SELECT `class_desc` FROM `classes`
+         WHERE `course_code`=? AND `user_id`=? AND `class_date`=?
+         AND `class_status`='scheduled' LIMIT 1",
+        [$course["course_code"], $teacher["user_id"], $date]
+      );
+      if (is_array($existing)) {
+        $same = (string)($existing["class_desc"] ?? "")===$desc;
+        $result[] = $same
+          ? ["status" => "unchanged", "message" => "This scheduled class already exists."]
+          : ["status" => "conflicting", "message" => "A class at this time already exists with a different description."];
+        continue;
+      }
+
+      $conflict = $this->DB->fetchCol(
+        "SELECT 1 FROM `classes`
+         WHERE `user_id`=? AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+         AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
+         AND `class_status`='scheduled' LIMIT 1",
+        [$teacher["user_id"], $date, $date]
+      );
+      $result[] = $conflict!==null
+        ? ["status" => "conflicting", "message" => "Teacher has another scheduled class within the 60-minute conflict window."]
+        : ["status" => "new", "message" => "New class will be scheduled."];
+    }
+    return $result;
   }
 
   // (C) DELETE CLASS

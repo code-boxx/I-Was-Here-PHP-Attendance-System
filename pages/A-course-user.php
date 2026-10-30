@@ -14,8 +14,8 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
 
 <!-- (C) ADD USER TO COURSE -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return cuser.add()">
-  <input type="email" required id="course-user-add" placeholder="User Name/Email" class="form-control form-control-sm">
-  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-plus" aria-label="Add user to course"></button>
+  <input type="text" required id="course-user-add" placeholder="Student or teacher name/email" class="form-control form-control-sm" aria-label="Student or teacher name/email">
+  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-plus" aria-label="Enroll student or assign course teacher"></button>
   <button type="button" class="btn btn-primary p-3 ico-sm icon-upload3" aria-label="Import course users from CSV" onclick="cuser.import()"></button>
 </form>
 
@@ -31,6 +31,48 @@ $course = $_CORE->autoCall("Courses", "get"); ?>
     Remove selected users
   </button>
 </div>
+
+<form class="d-flex flex-wrap gap-2 border bg-white p-2 mb-3" onsubmit="return cuser.search()">
+  <input type="search" id="course-user-search" class="form-control flex-grow-1"
+         placeholder="Search roster by name or email" aria-label="Search roster by name or email">
+  <select id="course-user-role" class="form-select w-auto" aria-label="Filter roster by role" onchange="cuser.filter()">
+    <option value="all">All roles</option>
+    <option value="teachers">Teachers</option>
+    <option value="students">Students</option>
+    <option value="admins">Admins</option>
+  </select>
+  <select id="course-user-sort" class="form-select w-auto" aria-label="Sort roster" onchange="cuser.filter()">
+    <option value="name">Name A-Z</option>
+    <option value="name_desc">Name Z-A</option>
+    <option value="email">Email A-Z</option>
+    <option value="email_desc">Email Z-A</option>
+    <option value="role">Role</option>
+  </select>
+  <button type="submit" class="btn btn-primary ico-sm icon-search" aria-label="Search roster"></button>
+</form>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <label for="course-user-move-to" class="form-label mb-0">Move selected students to</label>
+  <select id="course-user-move-to" class="form-select w-auto" aria-label="Destination course">
+    <option value="">Choose destination course</option>
+    <?php
+    $courses = $_CORE->autoCall("Courses", "getAll");
+    if (is_array($courses)) { foreach ($courses as $code=>$item) {
+      if ($code===$course["course_code"]) { continue; } ?>
+      <option value="<?=htmlspecialchars($code, ENT_QUOTES, "UTF-8")?>">
+        <?=htmlspecialchars("[".$code."] ".$item["course_name"], ENT_QUOTES, "UTF-8")?>
+      </option>
+    <?php }} ?>
+  </select>
+  <button type="button" class="btn btn-outline-primary" onclick="cuser.moveSelected()">
+    Move students
+  </button>
+</div>
+
+<details class="border bg-white p-3 mb-3" id="course-roster-history">
+  <summary class="fw-bold">Roster change history and undo</summary>
+  <div id="course-user-audit" class="mt-3"></div>
+</details>
 
 <!-- (D) USERS LIST -->
 <div id="course-user-list" class="zebra my-4"></div>

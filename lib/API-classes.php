@@ -4,6 +4,7 @@ $_CORE->autoAPI([
   "save" => ["Classes", "save", "A"],
   "del" => ["Classes", "del", "A"],
   "import" => ["Classes", "import", "A"],
+  "previewImport" => ["Classes", "previewImport", "A"],
   "getSubstitutes" => ["Classes", "getSubstitutes", ["A", "T"]],
   "addSubstitute" => ["Classes", "addSubstitute", ["A", "T"]],
   "delSubstitute" => ["Classes", "delSubstitute", ["A", "T"]],

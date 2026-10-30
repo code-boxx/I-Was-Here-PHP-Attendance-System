@@ -211,6 +211,7 @@ var classes = {
     at : 2, back : 1,
     eg : "dummy-classes.csv",
     api : { mod : "classes", act : "import" },
+    preview : { mod : "classes", act : "previewImport" },
     after : () => classes.list(true),
     cols : [
       ["Course Code", "code", true],

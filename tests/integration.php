@@ -25,7 +25,7 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===8, "Attendance policy and schedule migration was not applied.");
+  )===9, "Roster audit migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");
@@ -68,6 +68,15 @@ try {
      AND table_name IN ('attendance_holidays','attendance_schedule_audit')"
   )===2, "School calendar or schedule audit tables are missing.");
   check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE() AND table_name='course_roster_audit'"
+  )===1, "Course roster audit table is missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='course_roster_audit'
+     AND column_name IN ('operation_id','reason','changed_by','changed_at','undone_by','undone_at','undo_reason')"
+  )===7, "Course roster audit metadata is incomplete.");
+  check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema=DATABASE() AND table_name='classes'
      AND column_name IN ('class_status','class_status_reason','class_status_by','class_status_at')"
@@ -82,6 +91,8 @@ try {
   $password = "Integration123";
 
   $_CORE->load("Users");
+  check($_CORE->Users->save("Integration Admin", "admin-$suffix@example.test", $password, "A"), "Could not create test admin.");
+  $adminId = $db->lastID;
   check($_CORE->Users->save("=1+1", $email, $password, "U"), "Could not create test student.");
   $userId = $db->lastID;
   check($_CORE->Users->save("Integration Teacher", $teacherEmail, $password, "T"), "Could not create test teacher.");
@@ -107,22 +118,58 @@ try {
   check(!$_CORE->Users->import("Duplicate Teacher", $importEmail, $password, "T"), "Duplicate user CSV row was accepted.");
   check(!$_CORE->Users->import("Invalid Role", "invalid-role-$suffix@example.test", $password, "Teacher"), "Invalid user level was accepted.");
   check(!$_CORE->Users->import("Invalid Email", "invalid-email-$suffix", $password, "U"), "Invalid email was accepted.");
+  $userPreview = $_CORE->Users->previewImport(json_encode([
+    ["name" => "Preview User", "email" => "preview-$suffix@example.test", "password" => $password, "level" => "U"],
+    ["name" => "Existing User", "email" => $email, "password" => $password, "level" => "U"],
+    ["name" => "Preview User", "email" => "preview-$suffix@example.test", "password" => $password, "level" => "U"]
+  ], JSON_THROW_ON_ERROR));
+  check(
+    is_array($userPreview) &&
+    array_column($userPreview, "status")===["new", "conflicting", "duplicate"],
+    "User CSV preview did not detect new, existing, and duplicate rows."
+  );
 
   $_CORE->load("Courses");
+  $_SESSION["user"] = ["user_id" => $adminId, "user_level" => "A"];
   $start = date("Y-m-d", strtotime("-1 day"));
   $end = date("Y-m-d", strtotime("+7 days"));
   check(!$_CORE->Courses->import("BAD-$suffix", "Invalid dates", $end, $start), "Invalid course dates were accepted.");
   check($_CORE->Courses->save($courseCode, "Integration course", $start, $end), "Could not create test course.");
-  check($_CORE->Courses->addUser($courseCode, $userId), "Could not enroll test student.");
-  check($_CORE->Courses->addUser($courseCode, $teacherId), "Could not enroll test teacher.");
-  $bulkEnrollment = $_CORE->Courses->addUsers($courseCode, "$otherStudentEmail\n$otherStudentEmail");
+  $destinationCode = "MOVE-$suffix";
+  check($_CORE->Courses->save($destinationCode, "Destination course", $start, $end), "Could not create destination course.");
+  $previewRows = [
+    ["code" => $courseCode, "name" => "Integration course", "desc" => "", "start" => $start, "end" => $end],
+    ["code" => $destinationCode, "name" => "Changed name", "desc" => "", "start" => $start, "end" => $end],
+    ["code" => "NEW-$suffix", "name" => "New course", "desc" => "", "start" => $start, "end" => $end],
+    ["code" => "NEW-$suffix", "name" => "New course", "desc" => "", "start" => $start, "end" => $end],
+    ["code" => "BAD-DATE-$suffix", "name" => "Invalid date", "desc" => "", "start" => "2026-02-30", "end" => $end]
+  ];
+  $coursePreview = $_CORE->Courses->previewImport(json_encode($previewRows, JSON_THROW_ON_ERROR));
+  check(
+    is_array($coursePreview) &&
+    array_column($coursePreview, "status")===["unchanged", "changed", "new", "duplicate", "conflicting"],
+    "Course CSV preview did not reconcile unchanged, changed, new, duplicate, and invalid rows."
+  );
+  check($_CORE->Courses->addUser($courseCode, $userId, "Initial test enrollment"), "Could not enroll test student.");
+  check($_CORE->Courses->addUser($courseCode, $teacherId, "Initial test teacher assignment"), "Could not enroll test teacher.");
+  $bulkEnrollment = $_CORE->Courses->addUsers($courseCode, "$otherStudentEmail\n$otherStudentEmail", "Bulk test enrollment");
   check(
     is_array($bulkEnrollment) && $bulkEnrollment["added"]===1 &&
     $bulkEnrollment["already_enrolled"]===0,
     "Bulk enrollment did not de-duplicate users."
   );
+  $enrollmentPreview = $_CORE->Courses->previewUserImport(json_encode([
+    ["code" => $courseCode, "uid" => $email],
+    ["code" => $courseCode, "uid" => $otherTeacherEmail],
+    ["code" => $courseCode, "uid" => $otherTeacherEmail]
+  ], JSON_THROW_ON_ERROR));
   check(
-    !$_CORE->Courses->addUsers($courseCode, "$importEmail\nmissing-$suffix@example.test"),
+    is_array($enrollmentPreview) &&
+    array_column($enrollmentPreview, "status")===["unchanged", "new", "duplicate"],
+    "Course enrollment CSV preview did not detect unchanged, new, and duplicate rows."
+  );
+  check(
+    !$_CORE->Courses->addUsers($courseCode, "$importEmail\nmissing-$suffix@example.test", "Invalid bulk enrollment test"),
     "Bulk enrollment accepted an unknown user."
   );
   check(
@@ -132,12 +179,132 @@ try {
     )===null,
     "Invalid bulk enrollment partially added users."
   );
-  $bulkRemoval = $_CORE->Courses->delUsers($courseCode, json_encode([$otherStudentId], JSON_THROW_ON_ERROR));
+  $studentRoster = $_CORE->Courses->getUsers($courseCode, null, $email, "students", "email_desc");
+  check(
+    is_array($studentRoster) && count($studentRoster)===1 &&
+    (int)array_key_first($studentRoster)===$userId,
+    "Course roster search or role filtering returned the wrong students."
+  );
+  $teacherRoster = $_CORE->Courses->getUsers($courseCode, null, null, "teachers", "name");
+  check(
+    is_array($teacherRoster) && count($teacherRoster)===1 &&
+    (int)array_key_first($teacherRoster)===$teacherId,
+    "Course roster teacher filtering returned the wrong users."
+  );
+  $sortedRoster = $_CORE->Courses->getUsers($courseCode, null, null, "all", "email");
+  check(
+    is_array($sortedRoster) &&
+    array_map("intval", array_keys($sortedRoster))===[$userId, $otherStudentId, $teacherId],
+    "Course roster email sorting returned the wrong order."
+  );
+  $bulkRemoval = $_CORE->Courses->delUsers($courseCode, json_encode([$otherStudentId], JSON_THROW_ON_ERROR), "Test bulk removal");
   check(is_array($bulkRemoval) && $bulkRemoval["removed"]===1, "Bulk removal did not remove the selected enrollment.");
+  check($_CORE->Courses->addUser($courseCode, $otherStudentId, "Restore test enrollment"), "Could not restore test student enrollment.");
+  check($_CORE->Courses->addUser($destinationCode, $otherStudentId, "Prepare destination enrollment"), "Could not pre-enroll destination student.");
+  check(
+    !$_CORE->Courses->moveStudents($courseCode, $destinationCode, json_encode([$teacherId], JSON_THROW_ON_ERROR), "Invalid teacher transfer test"),
+    "Student transfer accepted a teacher."
+  );
+  check(
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$courseCode, $teacherId]
+    )!==null,
+    "Invalid transfer removed a source-course enrollment."
+  );
+  $studentMove = $_CORE->Courses->moveStudents(
+    $courseCode, $destinationCode, json_encode([$otherStudentId], JSON_THROW_ON_ERROR), "Test student transfer"
+  );
+  check(
+    is_array($studentMove) && $studentMove["moved"]===1 &&
+    $studentMove["already_enrolled"]===1 &&
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$courseCode, $otherStudentId]
+    )===null &&
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$destinationCode, $otherStudentId]
+    )!==null,
+    "Student transfer did not move the enrollment safely."
+  );
+  $sourceAudit = $_CORE->Courses->getRosterAudit($courseCode);
+  check(is_array($sourceAudit) && count($sourceAudit)>0, "Roster changes were not audited.");
+  $transferAudit = null;
+  foreach ($sourceAudit as $event) {
+    if ($event["event_type"]==="moved_out" && $event["user_id"]==$otherStudentId) {
+      $transferAudit = $event;
+      break;
+    }
+  }
+  check(is_array($transferAudit), "Transfer audit event was not recorded.");
+  check(
+    $transferAudit["reason"]==="Test student transfer" &&
+    (int)$transferAudit["changed_by"]===$adminId,
+    "Roster audit did not retain the reason and actor."
+  );
+  check(
+    !$_CORE->Courses->undoRosterChange($transferAudit["event_id"], ""),
+    "Roster undo accepted a missing reason."
+  );
+  check(
+    $_CORE->Courses->undoRosterChange($transferAudit["event_id"], "Reverse test transfer"),
+    "Roster transfer undo failed."
+  );
+  check(
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$courseCode, $otherStudentId]
+    )!==null &&
+    $db->fetchCol(
+      "SELECT 1 FROM `courses_users` WHERE `course_code`=? AND `user_id`=?",
+      [$destinationCode, $otherStudentId]
+    )!==null,
+    "Undo did not restore the source course while retaining the pre-existing destination enrollment."
+  );
+  check(
+    !$_CORE->Courses->undoRosterChange($transferAudit["event_id"], "Repeated undo"),
+    "Roster operation was undone more than once."
+  );
+  $importedTeacherId = $db->fetchCol(
+    "SELECT `user_id` FROM `users` WHERE `user_email`=?", [$importEmail]
+  );
+  check(
+    $_CORE->Courses->addUser($courseCode, $importedTeacherId, "Test undo ordering: add"),
+    "Could not create roster history for undo ordering test."
+  );
+  check(
+    is_array($_CORE->Courses->delUser($courseCode, $importedTeacherId, "Test undo ordering: remove")),
+    "Could not create later roster removal for undo ordering test."
+  );
+  $courseAudit = $_CORE->Courses->getRosterAudit($courseCode);
+  $addEventId = null;
+  $removeEventId = null;
+  foreach ($courseAudit as $event) {
+    if ($event["user_id"]!=$importedTeacherId) { continue; }
+    if ($event["event_type"]==="enrolled" && $addEventId===null) { $addEventId = $event["event_id"]; }
+    if ($event["event_type"]==="removed" && $removeEventId===null) { $removeEventId = $event["event_id"]; }
+  }
+  check(
+    $addEventId!==null && $removeEventId!==null &&
+    !$_CORE->Courses->undoRosterChange($addEventId, "Try older undo") &&
+    $_CORE->Courses->undoRosterChange($removeEventId, "Restore later removal") &&
+    $_CORE->Courses->undoRosterChange($addEventId, "Undo original enrollment"),
+    "Roster undo did not enforce reverse chronological ordering."
+  );
 
   $_CORE->load("Classes");
   check($_CORE->Classes->save($courseCode, $teacherId, "$start 09:00:00", "Integration session"), "Could not create test class.");
   $classId = $db->lastID;
+  $classPreview = $_CORE->Classes->previewImport(json_encode([
+    ["code" => $courseCode, "date" => "$start 09:00:00", "email" => $teacherEmail, "desc" => "Integration session"],
+    ["code" => $courseCode, "date" => "$start 09:30:00", "email" => $teacherEmail, "desc" => "Overlapping session"]
+  ], JSON_THROW_ON_ERROR));
+  check(
+    is_array($classPreview) &&
+    array_column($classPreview, "status")===["unchanged", "conflicting"],
+    "Class CSV preview did not detect existing classes and teacher schedule conflicts."
+  );
   check(
     !$_CORE->Classes->save($courseCode, $teacherId, "$start 09:30:00", "Overlapping session"),
     "Teacher timetable conflict was not detected."
@@ -238,6 +405,8 @@ try {
   check($invalidReportDate, "Invalid report date was accepted.");
 
   $_CORE->load("Attend");
+  $_SESSION["user"] = ["user_id" => $adminId, "user_level" => "A"];
+  check($_CORE->Courses->addUser($courseCode, $otherStudentId, "Dashboard test enrollment"), "Could not enroll the dashboard test student.");
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
   check($_CORE->Attend->save($classId, json_encode([$userId => ["s" => "0", "n" => ""]], JSON_THROW_ON_ERROR)), "Authorized teacher could not save attendance.");
   check(!$_CORE->Attend->save($classId, json_encode([$userId => ["s" => "1", "n" => ""]], JSON_THROW_ON_ERROR)), "Manual attendance correction without a reason was accepted.");
@@ -279,7 +448,6 @@ try {
   check($otherRequests===null || count($otherRequests)==0, "Student could view another student's correction requests.");
   check(!$_CORE->Attend->attendQR($qr["token"]), "Student outside the course checked in by QR.");
   check(!$_CORE->Attend->requestCorrection($classId, "1", "Unenrolled request."), "Unenrolled student submitted a correction.");
-  check($_CORE->Courses->addUser($courseCode, $otherStudentId), "Could not enroll the dashboard test student.");
   $_SESSION["user"] = ["user_id" => $teacherId, "user_level" => "T"];
   $dashboard = $_CORE->Attend->getDashboard($classId);
   check(

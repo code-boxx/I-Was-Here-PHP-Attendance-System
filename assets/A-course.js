@@ -84,6 +84,7 @@ var course = {
     at : 2, back : 1,
     eg : "dummy-courses.csv",
     api : { mod : "courses", act : "import" },
+    preview : { mod : "courses", act : "previewImport" },
     after : () => course.list(true),
     cols : [
       ["Course Code", "code", true],

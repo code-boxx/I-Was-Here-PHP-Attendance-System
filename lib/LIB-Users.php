@@ -429,4 +429,56 @@ class Users extends Core {
     // (R3) SAVE
     return $this->save($name, $email, $password, $level);
   }
+
+  function previewImport ($rows) {
+    if (!is_string($rows)) {
+      $this->error = "Import preview rows are invalid.";
+      return false;
+    }
+    try { $rows = json_decode($rows, true, 512, JSON_THROW_ON_ERROR); }
+    catch (JsonException $ex) {
+      $this->error = "Import preview rows are invalid JSON.";
+      return false;
+    }
+    if (!is_array($rows) || count($rows)==0 || count($rows)>500) {
+      $this->error = "Preview between 1 and 500 user rows.";
+      return false;
+    }
+
+    $result = [];
+    $seen = [];
+    foreach ($rows as $row) {
+      if (!is_array($row)) {
+        $result[] = ["status" => "conflicting", "message" => "Invalid row data."];
+        continue;
+      }
+      $name = trim((string)($row["name"] ?? ""));
+      $email = strtolower(trim((string)($row["email"] ?? "")));
+      $password = (string)($row["password"] ?? "");
+      $level = (string)($row["level"] ?? "");
+      if ($name==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)
+          || !array_key_exists($level, USR_LVL) || !$this->checker($password)) {
+        $result[] = ["status" => "conflicting", "message" => "Name, valid email, password, and user level are required."];
+        continue;
+      }
+      $normalized = [$name, $email, $password, $level];
+      if (isset($seen[$email])) {
+        $same = $seen[$email]===$normalized;
+        $result[] = [
+          "status" => $same ? "duplicate" : "conflicting",
+          "message" => $same
+            ? "Duplicate of an earlier row; it will not be imported."
+            : "This email has conflicting values in another row."
+        ];
+        continue;
+      }
+      $seen[$email] = $normalized;
+
+      $existing = $this->get($email);
+      $result[] = is_array($existing)
+        ? ["status" => "conflicting", "message" => "Email is already registered; existing accounts are not changed by CSV import."]
+        : ["status" => "new", "message" => "New account will be created."];
+    }
+    return $result;
+  }
 }
