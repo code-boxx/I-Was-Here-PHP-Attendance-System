@@ -1,4 +1,4 @@
-const CACHE_NAME = "IWASHERE-v11";
+const CACHE_NAME = "IWASHERE-v12";
 
 // (A) CREATE/INSTALL CACHE
 self.addEventListener("install", evt => {

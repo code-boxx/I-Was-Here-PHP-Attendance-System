@@ -15,4 +15,11 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 
 <!-- (B2) QR READER -->
 <div id="reader"></div>
+<p id="offline-checkin-status" class="small text-secondary mt-3" role="status" aria-live="polite">
+  No offline check-ins waiting to sync.
+</p>
+<p class="small text-secondary">
+  If the connection drops, a check-in can be queued locally. Device time is unverified;
+  queued requests do not count until a teacher reviews them.
+</p>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

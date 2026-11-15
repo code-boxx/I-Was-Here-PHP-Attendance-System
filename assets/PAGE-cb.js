@@ -128,6 +128,9 @@ var cb = {
     // (C2) DATA TO SEND
     var data = new FormData();
     if (opt.data) { for (let [k,v] of Object.entries(opt.data)) { data.append(k, v); }}
+    if (cbhost.csrf && !data.has("csrf_token")) {
+      data.append("csrf_token", cbhost.csrf);
+    }
 
     // (C3) AJAX REQUEST
     if (opt.loading) { cb.loading(true); }

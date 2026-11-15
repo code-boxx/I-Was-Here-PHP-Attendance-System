@@ -28,7 +28,13 @@
     <!-- (A4) SERVICE WORKER + HOST -->
     <script>
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("<?=HOST_BASE?>CB-worker.js", {scope: "<?=HOST_BASE_PATH?>"}); }
-    var cbhost={base:"<?=HOST_BASE?>",basepath:"<?=HOST_BASE_PATH?>",api:"<?=HOST_API_BASE?>",assets:"<?=HOST_ASSETS?>"};
+    var cbhost={
+      base:<?=json_encode(HOST_BASE)?>,
+      basepath:<?=json_encode(HOST_BASE_PATH)?>,
+      api:<?=json_encode(HOST_API_BASE)?>,
+      assets:<?=json_encode(HOST_ASSETS)?>,
+      csrf:<?=json_encode($_SESSION["csrf_token"] ?? "")?>
+    };
     </script>
 
     <!-- (A5) LIBRARIES & SCRIPTS -->

@@ -78,6 +78,18 @@ class CoreBoxx {
   //  $mode : POST or GET
   function autoAPI ($actions, $mode="POST") : void {
     if (isset($actions[$this->Route->act])) {
+      if (
+        $mode==="POST" && isset($_SESSION["user"]) &&
+        (
+          !isset($_SESSION["csrf_token"]) ||
+          !isset($_POST["csrf_token"]) ||
+          !is_string($_POST["csrf_token"]) ||
+          !hash_equals($_SESSION["csrf_token"], $_POST["csrf_token"])
+        )
+      ) {
+        $this->respond(0, "Invalid CSRF token.", null, null, 403);
+      }
+
       // (F1) ACCESS CHECK
       if (isset($actions[$this->Route->act][2])) {
         $this->ucheck($actions[$this->Route->act][2]);

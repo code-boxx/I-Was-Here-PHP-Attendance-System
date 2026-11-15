@@ -60,6 +60,9 @@ class Session extends Core {
     // (B6) OK - VALID SESSION HOOK
     unset($_COOKIE["cbsess"]);
     require PATH_LIB . "HOOK-SESS-Load.php";
+    if (!isset($_SESSION["csrf_token"]) || !is_string($_SESSION["csrf_token"])) {
+      $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+    }
   }
 
   // (C) CREATE CBSESS COOKIE

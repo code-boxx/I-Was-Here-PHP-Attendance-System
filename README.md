@@ -14,7 +14,9 @@ teacher-reviewed offline check-in requests. Admins can define school holidays,
 and class owners can cancel or reschedule sessions with an audit reason.
 Excused absences are reported separately and excluded from attendance
 percentages. Offline timestamps are unverified; offline requests do not count
-as attendance until a teacher approves them.
+as attendance until a teacher approves them. Student QR check-ins that lose
+connectivity are stored locally with pending, syncing, synchronized, failed,
+or expired states and retried idempotently when connectivity returns.
 <br><br>
 
 ## :white_check_mark: FEATURES
@@ -60,6 +62,9 @@ as attendance until a teacher approves them.
 - Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.
 - Keep database and JWT secrets out of version control. Store backups securely and periodically test restoring them.
 - Before production, use HTTPS, keep detailed PHP errors hidden from visitors, restrict database access and writable files, and review the configured API CORS policy.
+- Authenticated API POST requests include a session-bound CSRF token generated
+  by the application shell. Keep the standard browser client enabled so it can
+  submit this token automatically.
 
 ## BRANCHES, VERSIONS & ROLLBACKS
 
