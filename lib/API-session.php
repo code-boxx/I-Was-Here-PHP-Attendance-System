@@ -2,6 +2,10 @@
 // (A) API ENDPOINTS
 $_CORE->autoAPI([
   "login" => ["Users", "login"],
+  "mfaVerify" => ["Users", "mfaVerify"],
+  "mfaStart" => ["Users", "mfaStart"],
+  "mfaEnable" => ["Users", "mfaEnable"],
+  "mfaDisable" => ["Users", "mfaDisable"],
   "logout" => ["Users", "logout"],
   "getActiveSessions" => ["Session", "getActiveSessions"],
   "revokeSession" => ["Session", "revokeSession"],

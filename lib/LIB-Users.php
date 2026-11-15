@@ -13,6 +13,49 @@ class Users extends Core {
   private $loginAttempts = 5;
   private $loginWindow = 15;
 
+  private function mfaBase32 ($value) {
+    $alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    $bits = "";
+    foreach (str_split($value) as $char) {
+      $bits .= str_pad(decbin(ord($char)), 8, "0", STR_PAD_LEFT);
+    }
+    $result = "";
+    foreach (str_split($bits, 5) as $part) {
+      if (strlen($part)<5) { $part = str_pad($part, 5, "0"); }
+      $result .= $alphabet[bindec($part)];
+    }
+    return $result;
+  }
+
+  private function mfaCode ($secret, $time=null) {
+    $alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    $bits = "";
+    foreach (str_split($secret) as $char) {
+      $value = strpos($alphabet, strtoupper($char));
+      if ($value===false) { throw new InvalidArgumentException("Invalid MFA secret."); }
+      $bits .= str_pad(decbin($value), 5, "0", STR_PAD_LEFT);
+    }
+    $binary = "";
+    foreach (str_split($bits, 8) as $part) {
+      if (strlen($part)==8) { $binary .= chr(bindec($part)); }
+    }
+    $counter = pack("N2", 0, intdiv($time ?? time(), 30));
+    $hash = hash_hmac("sha1", $counter, $binary, true);
+    $offset = ord($hash[19]) & 15;
+    return str_pad((string)((((ord($hash[$offset]) & 127) << 24) |
+      ((ord($hash[$offset+1]) & 255) << 16) |
+      ((ord($hash[$offset+2]) & 255) << 8) |
+      (ord($hash[$offset+3]) & 255)) % 1000000), 6, "0", STR_PAD_LEFT);
+  }
+
+  private function mfaValid ($secret, $code) {
+    if (!is_string($code) || !preg_match('/^\d{6}$/D', $code)) { return false; }
+    for ($offset=-1; $offset<=1; $offset++) {
+      if (hash_equals($this->mfaCode($secret, time()+($offset*30)), $code)) { return true; }
+    }
+    return false;
+  }
+
   // (B) LOGIN THROTTLE
   function loginKey ($email) {
     $ip = $_SERVER["REMOTE_ADDR"] ?? "unknown";
@@ -236,6 +279,12 @@ class Users extends Core {
     }
     $this->loginSucceeded($key);
 
+    if ($user["user_level"]==="A" && !empty($user["mfa_secret"])) {
+      $_SESSION["mfa_pending"] = ["user_id" => (int)$user["user_id"], "expires" => time()+300];
+      $this->Session->save();
+      return ["mfa_required" => true];
+    }
+
     // (J4) SESSION START
     $_SESSION["user"] = $user;
     unset($_SESSION["user"]["user_password"]);
@@ -244,6 +293,93 @@ class Users extends Core {
     $this->Session->save();
     $this->Core->load("Security");
     $this->Security->log("login_succeeded", $user["user_id"]);
+    return true;
+  }
+
+  function mfaStart () {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+      $this->error = "Administrator access required.";
+      return false;
+    }
+    $secret = $this->mfaBase32(random_bytes(20));
+    $_SESSION["mfa_setup"] = ["secret" => $secret, "expires" => time()+600];
+    $this->Session->save();
+    return ["secret" => $secret, "issuer" => HOST_NAME,
+      "account" => $_SESSION["user"]["user_email"],
+      "uri" => "otpauth://totp/".rawurlencode(HOST_NAME.":".$_SESSION["user"]["user_email"]).
+        "?secret=".$secret."&issuer=".rawurlencode(HOST_NAME)];
+  }
+
+  function mfaEnable ($code) {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A" || !isset($_SESSION["mfa_setup"])) {
+      $this->error = "Start MFA setup first.";
+      return false;
+    }
+    $setup = $_SESSION["mfa_setup"];
+    if ($setup["expires"]<time() || !$this->mfaValid($setup["secret"], $code)) {
+      $this->error = "Invalid or expired MFA code.";
+      return false;
+    }
+    $recovery = [];
+    $hashes = [];
+    for ($i=0; $i<8; $i++) {
+      $plain = strtoupper(bin2hex(random_bytes(5)));
+      $recovery[] = $plain;
+      $hashes[] = password_hash($plain, PASSWORD_DEFAULT);
+    }
+    $this->DB->query("UPDATE `users` SET `mfa_secret`=?, `mfa_recovery`=? WHERE `user_id`=?",
+      [$setup["secret"], json_encode($hashes), $_SESSION["user"]["user_id"]]);
+    unset($_SESSION["mfa_setup"]);
+    return ["recovery_codes" => $recovery];
+  }
+
+  function mfaDisable ($code) {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+      $this->error = "Administrator access required.";
+      return false;
+    }
+    $user = $this->get($_SESSION["user"]["user_id"]);
+    if (!is_array($user) || !$this->mfaValid($user["mfa_secret"], $code)) {
+      $this->error = "Invalid MFA code.";
+      return false;
+    }
+    $this->DB->query("UPDATE `users` SET `mfa_secret`=NULL, `mfa_recovery`=NULL WHERE `user_id`=?",
+      [$_SESSION["user"]["user_id"]]);
+    return true;
+  }
+
+  function mfaVerify ($code) {
+    $pending = $_SESSION["mfa_pending"] ?? null;
+    if (!is_array($pending) || $pending["expires"]<time()) {
+      $this->error = "MFA verification expired.";
+      return false;
+    }
+    $user = $this->get($pending["user_id"]);
+    if (!is_array($user) || $user["user_level"]!=="A") {
+      $this->error = "MFA verification failed.";
+      return false;
+    }
+    $valid = $this->mfaValid($user["mfa_secret"], $code);
+    if (!$valid && is_string($user["mfa_recovery"])) {
+      $hashes = json_decode($user["mfa_recovery"], true) ?: [];
+      foreach ($hashes as $index=>$hash) {
+        if (password_verify($code, $hash)) {
+          unset($hashes[$index]);
+          $this->DB->query("UPDATE `users` SET `mfa_recovery`=? WHERE `user_id`=?",
+            [json_encode(array_values($hashes)), $user["user_id"]]);
+          $valid = true;
+          break;
+        }
+      }
+    }
+    if (!$valid) {
+      $this->error = "Invalid MFA code.";
+      return false;
+    }
+    unset($_SESSION["mfa_pending"]);
+    $_SESSION["user"] = $user;
+    unset($_SESSION["user"]["user_password"], $_SESSION["user"]["mfa_secret"], $_SESSION["user"]["mfa_recovery"]);
+    $this->Session->save();
     return true;
   }
 

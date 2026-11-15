@@ -172,8 +172,8 @@ sessions must have an explicit review policy.
 6. **Implemented:** Authentication failures, throttling, CSRF failures,
    authorization denials, and settings changes are recorded in a protected
    security-event log accessible to admins.
-7. Add account protections such as login throttling, secure recovery, and
-   optional administrator MFA.
+7. **Implemented:** Login throttling, secure recovery, and optional
+   administrator TOTP MFA with one-time recovery codes are available.
 8. **Implemented:** JWT sessions accept a configured previous signing secret
    during rotation and transparently reissue sessions with the new secret.
 9. **Implemented:** Report exports and session revocation are recorded in the

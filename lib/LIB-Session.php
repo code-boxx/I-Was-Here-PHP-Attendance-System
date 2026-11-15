@@ -132,15 +132,17 @@ class Session extends Core {
     if (defined("SESSION_ABSOLUTE_HOURS") && (int)SESSION_ABSOLUTE_HOURS>0) {
       $expiresAt = date("Y-m-d H:i:s", $now + ((int)SESSION_ABSOLUTE_HOURS * 3600));
     }
-    $this->DB->query(
-      "INSERT INTO `user_sessions`
-         (`session_id`,`user_id`,`created_at`,`last_seen_at`,`expires_at`,`ip_address`,`user_agent`)
-       VALUES (?,?,?,?,?,?,?)
-       ON DUPLICATE KEY UPDATE `last_seen_at`=VALUES(`last_seen_at`), `expires_at`=VALUES(`expires_at`)",
-      [$jti, $_SESSION["user"]["user_id"], date("Y-m-d H:i:s", $_SESSION["session_started"] ?? $now),
-       date("Y-m-d H:i:s", $now), $expiresAt, $_SERVER["REMOTE_ADDR"] ?? null,
-       substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255)]
-    );
+    if (isset($_SESSION["user"]["user_id"])) {
+      $this->DB->query(
+        "INSERT INTO `user_sessions`
+           (`session_id`,`user_id`,`created_at`,`last_seen_at`,`expires_at`,`ip_address`,`user_agent`)
+         VALUES (?,?,?,?,?,?,?)
+         ON DUPLICATE KEY UPDATE `last_seen_at`=VALUES(`last_seen_at`), `expires_at`=VALUES(`expires_at`)",
+        [$jti, $_SESSION["user"]["user_id"], date("Y-m-d H:i:s", $_SESSION["session_started"] ?? $now),
+         date("Y-m-d H:i:s", $now), $expiresAt, $_SERVER["REMOTE_ADDR"] ?? null,
+         substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255)]
+      );
+    }
     $token = [
       "iat" => $now, // issued at
       "nbf" => $now, // not before

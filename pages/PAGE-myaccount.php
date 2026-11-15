@@ -93,4 +93,15 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     </div>
   </div>
 </section>
+<?php if (($_SESSION["user"]["user_level"] ?? "")==="A") { ?>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Administrator MFA</h3>
+    <p class="text-secondary">Use an authenticator app for administrator sign-in.</p>
+    <button type="button" class="btn btn-primary" onclick="mfa.start()">Set up MFA</button>
+    <button type="button" class="btn btn-outline-danger" onclick="mfa.disable()">Disable MFA</button>
+    <pre id="mfa-result" class="mt-3 d-none"></pre>
+  </div>
+</section>
+<?php } ?>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php";

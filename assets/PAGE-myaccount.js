@@ -64,6 +64,30 @@ function save () {
     }
   };
 
+  window.mfa = {
+    start : () => cb.api({
+      mod : "session", act : "mfaStart", passmsg : false,
+      onpass : result => {
+        let code = window.prompt("Scan this URI in your authenticator app, then enter the 6-digit code:\n" + result.data.uri);
+        if (code) {
+          cb.api({
+            mod : "session", act : "mfaEnable", data : { code : code },
+            passmsg : false,
+            onpass : response => {
+              let output = document.getElementById("mfa-result");
+              output.classList.remove("d-none");
+              output.textContent = "Save these recovery codes securely:\n" + response.data.recovery_codes.join("\n");
+            }
+          });
+        }
+      }
+    }),
+    disable : () => {
+      let code = window.prompt("Enter your current MFA code");
+      if (code) { cb.api({ mod : "session", act : "mfaDisable", data : { code : code }, passmsg : "MFA disabled" }); }
+    }
+  };
+
   // (C) PASSWORD STRENGTH
   if (!cb.checker(data.pass)) {
     cb.modal("Please Check", "Password must be at least 8 characters, alphanumeric.");

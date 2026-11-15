@@ -75,6 +75,8 @@ or expired states and retried idempotently when connectivity returns.
 - To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
   the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
   has elapsed; then clear the previous value.
+- Administrators can enable TOTP MFA from My Account. Store the generated
+  recovery codes securely; they are shown only during enrollment.
 
 ## BRANCHES, VERSIONS & ROLLBACKS
 
