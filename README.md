@@ -81,6 +81,8 @@ or expired states and retried idempotently when connectivity returns.
   recovery codes securely; they are shown only during enrollment.
 - Signed-in users can download a JSON export of their own account and
   attendance data from My Account.
+- Administrators can configure security-event retention from System Settings
+  (30 to 3650 days); expired events are automatically removed.
 - Signed-in users can download their scheduled classes as an iCalendar feed
   from `/calendar.php`.
 

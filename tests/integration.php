@@ -25,7 +25,7 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===17, "MFA migration was not applied.");
+  )===18, "Security-event retention migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");

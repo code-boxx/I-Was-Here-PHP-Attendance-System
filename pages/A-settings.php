@@ -9,7 +9,7 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <form id="set-list" onsubmit="return save()">
   <?php foreach ($settings as $o) { ?>
   <div class="form-floating mb-3">
-    <input type="<?=in_array($o["setting_name"], ["ATTENDANCE_THRESHOLD", "ATTENDANCE_LATE_GRACE_MINUTES"], true) ? "number" : "text"?>"
+    <input type="<?=in_array($o["setting_name"], ["ATTENDANCE_THRESHOLD", "ATTENDANCE_LATE_GRACE_MINUTES", "SECURITY_EVENT_RETENTION_DAYS"], true) ? "number" : "text"?>"
            class="form-control" required
            name="<?=htmlspecialchars($o["setting_name"], ENT_QUOTES, "UTF-8")?>"
            value="<?=htmlspecialchars($o["setting_value"], ENT_QUOTES, "UTF-8")?>"

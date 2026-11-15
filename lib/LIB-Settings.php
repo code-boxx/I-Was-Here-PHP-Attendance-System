@@ -96,6 +96,16 @@ class Settings extends Core {
           return false;
         }
       }
+      if ($name=="SECURITY_EVENT_RETENTION_DAYS") {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value<30 || (int)$value>3650
+        ) {
+          $this->error = "Security event retention must be between 30 and 3650 days.";
+          return false;
+        }
+      }
     }
     foreach ($settings as $k=>$v) {
       $this->DB->update("settings", ["setting_value"], "`setting_name`=?", [$v, $k]);

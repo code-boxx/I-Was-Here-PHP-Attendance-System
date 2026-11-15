@@ -13,6 +13,14 @@ class Security extends Core {
          substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255),
          json_encode($details, JSON_INVALID_UTF8_SUBSTITUTE), date("Y-m-d H:i:s")]
       );
+      $retention = $this->DB->fetchCol(
+        "SELECT `setting_value` FROM `settings`
+         WHERE `setting_name`='SECURITY_EVENT_RETENTION_DAYS'"
+      );
+      $days = is_numeric($retention) ? max(30, min(3650, (int)$retention)) : 365;
+      $this->DB->query(
+        "DELETE FROM `security_events` WHERE `created_at`<DATE_SUB(NOW(), INTERVAL ".$days." DAY)"
+      );
     } catch (PDOException $e) {
       error_log("Security event logging failed: ".$e->getMessage());
     }
