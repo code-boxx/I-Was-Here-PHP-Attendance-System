@@ -87,6 +87,10 @@ class CoreBoxx {
           !hash_equals($_SESSION["csrf_token"], $_POST["csrf_token"])
         )
       ) {
+        $this->load("Security");
+        $this->Security->log("csrf_rejected", $_SESSION["user"]["user_id"] ?? null, [
+          "action" => $this->Route->act
+        ]);
         $this->respond(0, "Invalid CSRF token.", null, null, 403);
       }
 
@@ -199,6 +203,10 @@ class CoreBoxx {
 
     // (L2) STOP IF NO GO
     if ($access==false) {
+      $this->load("Security");
+      $this->Security->log("authorization_denied", $_SESSION["user"]["user_id"] ?? null, [
+        "path" => $this->Route->path ?? null, "action" => $this->Route->act ?? null
+      ]);
       if ($this->mode=="A") { $this->respond(0, "No access permission", null, null, 403); }
       else {
         if (isset($_POST["ajax"])) { exit("E"); }

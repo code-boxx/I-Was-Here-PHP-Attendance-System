@@ -100,6 +100,10 @@ class Settings extends Core {
     foreach ($settings as $k=>$v) {
       $this->DB->update("settings", ["setting_value"], "`setting_name`=?", [$v, $k]);
     }
+    $this->Core->load("Security");
+    $this->Security->log("settings_changed", $_SESSION["user"]["user_id"], [
+      "setting_names" => array_keys($settings)
+    ]);
     return true;
   }
 }

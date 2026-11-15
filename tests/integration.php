@@ -25,7 +25,7 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===15, "Active session migration was not applied.");
+  )===16, "Security event migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");
@@ -41,6 +41,10 @@ try {
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE() AND table_name='user_sessions'"
   )===1, "Active session table is missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE() AND table_name='security_events'"
+  )===1, "Security event table is missing.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE()

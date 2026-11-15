@@ -22,4 +22,9 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <i class="ico-sm icon-floppy-disk"></i> Save Settings
   </button>
 </form>
+<section class="bg-white border p-4 mt-4" aria-labelledby="security-events-title">
+  <h3 id="security-events-title">SECURITY EVENTS</h3>
+  <p class="text-secondary">Recent authentication and authorization events. Sensitive credentials are never recorded.</p>
+  <div id="security-events" class="d-grid gap-2" role="status" aria-live="polite">Loading...</div>
+</section>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

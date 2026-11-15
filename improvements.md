@@ -169,14 +169,16 @@ sessions must have an explicit review policy.
    absolute lifetime.
 5. **Implemented:** Active sessions are registered server-side, checked on
    each authenticated request, and can be listed or individually revoked.
-6. Add account protections such as login throttling, secure recovery, and
+6. **Implemented:** Authentication failures, throttling, CSRF failures,
+   authorization denials, and settings changes are recorded in a protected
+   security-event log accessible to admins.
+7. Add account protections such as login throttling, secure recovery, and
    optional administrator MFA.
-7. Add signing-key rotation.
-8. Record security-relevant events such as authentication failures,
-   permission denials, exports, configuration changes, and session revocation.
-9. Establish dependency monitoring, patching guidance, and a vulnerability
+8. Add signing-key rotation.
+9. Record exports and session revocation in the security-event log.
+10. Establish dependency monitoring, patching guidance, and a vulnerability
    reporting process.
-10. Define retention, export, and deletion controls for personal data.
+11. Define retention, export, and deletion controls for personal data.
 
 Offline caches and service-worker behavior must not expose sensitive records
 after logout or after permissions change.

@@ -1,0 +1,30 @@
+<?php
+class Security extends Core {
+  function log ($eventType, $userId=null, $details=[]) {
+    if (!is_string($eventType) || $eventType==="" || strlen($eventType)>64) {
+      throw new InvalidArgumentException("Invalid security event type.");
+    }
+    if (!is_array($details)) { $details = []; }
+    $this->DB->insert(
+      "security_events",
+      ["event_type", "user_id", "ip_address", "user_agent", "details", "created_at"],
+      [$eventType, $userId, $_SERVER["REMOTE_ADDR"] ?? null,
+       substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255),
+       json_encode($details, JSON_INVALID_UTF8_SUBSTITUTE), date("Y-m-d H:i:s")]
+    );
+  }
+
+  function getEvents ($limit=100) {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+      $this->error = "No access permission";
+      return false;
+    }
+    $limit = is_numeric($limit) ? max(1, min(500, (int)$limit)) : 100;
+    return $this->DB->fetchAll(
+      "SELECT e.*, u.`user_name`, u.`user_email`
+       FROM `security_events` e
+       LEFT JOIN `users` u ON (u.`user_id`=e.`user_id`)
+       ORDER BY e.`event_id` DESC LIMIT ".$limit
+    ) ?? [];
+  }
+}

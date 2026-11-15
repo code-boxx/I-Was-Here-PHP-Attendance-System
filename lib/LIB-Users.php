@@ -220,6 +220,8 @@ class Users extends Core {
     // (J2) LIMIT REPEATED FAILED SIGN-IN ATTEMPTS
     $key = $this->loginKey($email);
     if ($this->loginLocked($key)) {
+      $this->Core->load("Security");
+      $this->Security->log("login_throttled", null, ["login_key" => $key]);
       $this->error = "Invalid user or password. Try again later.";
       return false;
     }
@@ -228,6 +230,8 @@ class Users extends Core {
     $user = $this->verify($email, $password);
     if ($user===false) {
       $this->loginFailed($key);
+      $this->Core->load("Security");
+      $this->Security->log("login_failed", null, ["login_key" => $key]);
       return false;
     }
     $this->loginSucceeded($key);
@@ -238,6 +242,8 @@ class Users extends Core {
     unset($_SESSION["user"]["hash_code"]);
     unset($_SESSION["user"]["hash_time"]);
     $this->Session->save();
+    $this->Core->load("Security");
+    $this->Security->log("login_succeeded", $user["user_id"]);
     return true;
   }
 
