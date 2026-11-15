@@ -74,6 +74,10 @@ or expired states and retried idempotently when connectivity returns.
   production security requirements.
 - Dependabot checks the bundled Composer dependencies and GitHub Actions
   weekly; review update pull requests before deploying them.
+- For local development, copy `.env.example` to `.env`, replace the
+  development secrets, and run `docker compose up --build`. Open
+  `http://localhost:8080/` and complete the installer. The Compose database
+  uses a named volume and is not intended for production.
 - To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
   the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
   has elapsed; then clear the previous value.

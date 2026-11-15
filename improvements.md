@@ -209,8 +209,8 @@ after logout or after permissions change.
 2. Add PHP static analysis and consistent formatting checks.
 3. Document the database schema, API behavior, installation, upgrades, and
    migration recovery.
-4. Provide a reproducible local environment, such as Docker Compose, and
-   development seed data.
+4. **Implemented:** Docker Compose provides a reproducible PHP/Apache and
+   MariaDB development environment. Development seed data remains future work.
 5. **Implemented:** `health.php` reports application and database readiness
    without exposing secrets or sensitive diagnostics.
 6. Document supported versions, deployment hardening, backups, restore

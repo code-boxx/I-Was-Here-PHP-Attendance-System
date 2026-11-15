@@ -1,7 +1,7 @@
 <?php
 // (A) HOST
 define("SITE_NAME", "I Was Here");
-define("HOST_BASE", "http://localhost/");
+define("HOST_BASE", getenv("IWH_HOST_BASE") ?: "http://localhost/");
 define("HOST_NAME", parse_url(HOST_BASE, PHP_URL_HOST));
 define("HOST_BASE_PATH", parse_url(HOST_BASE, PHP_URL_PATH));
 define("HOST_ASSETS", HOST_BASE . "assets/");
@@ -17,11 +17,11 @@ define("API_CORS", false);
 // define("API_CORS", ["site-a.com", "site-b.com"]); // multiple domains
 
 // (C) DATABASE
-define("DB_HOST", "localhost");
-define("DB_NAME", "iwashere");
+define("DB_HOST", getenv("IWH_DB_HOST") ?: "localhost");
+define("DB_NAME", getenv("IWH_DB_NAME") ?: "iwashere");
 define("DB_CHARSET", "utf8mb4");
-define("DB_USER", "root");
-define("DB_PASSWORD", "");
+define("DB_USER", getenv("IWH_DB_USER") ?: "root");
+define("DB_PASSWORD", getenv("IWH_DB_PASSWORD") ?: "");
 
 // (D) AUTOMATIC SYSTEM PATH
 define("PATH_LIB", __DIR__ . DIRECTORY_SEPARATOR);
@@ -33,7 +33,7 @@ define("PATH_PAGES", PATH_BASE . "pages" . DIRECTORY_SEPARATOR);
 define("JWT_ALGO", "HS256");
 define("JWT_EXPIRE", 0);
 define("JWT_ISSUER", "");
-define("JWT_SECRET", "");
+define("JWT_SECRET", getenv("IWH_JWT_SECRET") ?: "");
 // During rotation, keep the old secret here until existing sessions expire.
 define("JWT_SECRET_PREVIOUS", "");
 
