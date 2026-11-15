@@ -42,4 +42,8 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
   </div>
   <div id="security-events" class="d-grid gap-2" role="status" aria-live="polite">Loading...</div>
 </section>
+<section class="bg-white border p-4 mt-4" aria-labelledby="privacy-requests-title">
+  <h3 id="privacy-requests-title">PRIVACY REQUESTS</h3>
+  <div id="privacy-requests" class="d-grid gap-2" role="status" aria-live="polite">Loading...</div>
+</section>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

@@ -54,4 +54,47 @@ function loadSecurityEvents () {
 window.addEventListener("load", () => {
   document.getElementById("security-event-filter").addEventListener("change", loadSecurityEvents);
   loadSecurityEvents();
+  loadPrivacyRequests();
 });
+
+function loadPrivacyRequests () {
+  cb.api({
+    mod : "users", act : "getDeletionRequests", passmsg : false,
+    onpass : result => {
+      let target = document.getElementById("privacy-requests");
+      if (!target) { return; }
+      target.replaceChildren();
+      (result.data || []).forEach(request => {
+        let row = document.createElement("div");
+        row.className = "border p-2";
+        let summary = document.createElement("div");
+        summary.textContent = `${request.requested_at} — ${request.user_name} `
+          + `(${request.user_email}) — ${request.request_status}`;
+        row.append(summary);
+        if (request.request_status==="pending") {
+          ["approved", "rejected"].forEach(decision => {
+            let button = document.createElement("button");
+            button.type = "button";
+            button.className = decision==="approved"
+              ? "btn btn-sm btn-success me-2" : "btn btn-sm btn-outline-danger me-2";
+            button.textContent = decision[0].toUpperCase()+decision.slice(1);
+            button.addEventListener("click", () => resolvePrivacyRequest(request.request_id, decision));
+            row.append(button);
+          });
+        }
+        target.append(row);
+      });
+      if (!target.children.length) { target.textContent = "No privacy requests."; }
+    }
+  });
+}
+
+function resolvePrivacyRequest (requestId, decision) {
+  let note = window.prompt("Optional decision note", "") ?? "";
+  cb.api({
+    mod : "users", act : "resolveDeletionRequest",
+    data : { requestId : requestId, decision : decision, note : note },
+    passmsg : "Privacy request updated",
+    onpass : loadPrivacyRequests
+  });
+}
