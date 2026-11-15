@@ -83,6 +83,8 @@ or expired states and retried idempotently when connectivity returns.
   attendance data from My Account.
 - Administrators can configure security-event retention from System Settings
   (30 to 3650 days); expired events are automatically removed.
+- Administrators can filter security events and expand structured event
+  details from System Settings.
 - Signed-in users can download their scheduled classes as an iCalendar feed
   from `/calendar.php`.
 

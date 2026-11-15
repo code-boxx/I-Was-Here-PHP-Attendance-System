@@ -25,6 +25,21 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <section class="bg-white border p-4 mt-4" aria-labelledby="security-events-title">
   <h3 id="security-events-title">SECURITY EVENTS</h3>
   <p class="text-secondary">Recent authentication and authorization events. Sensitive credentials are never recorded.</p>
+  <div class="input-group mb-3">
+    <label class="input-group-text" for="security-event-filter">Filter</label>
+    <select id="security-event-filter" class="form-select">
+      <option value="">All events</option>
+      <option value="login_failed">Failed logins</option>
+      <option value="login_throttled">Throttled logins</option>
+      <option value="login_succeeded">Successful logins</option>
+      <option value="csrf_rejected">CSRF failures</option>
+      <option value="authorization_denied">Authorization denials</option>
+      <option value="report_exported">Report exports</option>
+      <option value="personal_data_exported">Personal data exports</option>
+      <option value="session_revoked">Session revocations</option>
+      <option value="settings_changed">Settings changes</option>
+    </select>
+  </div>
   <div id="security-events" class="d-grid gap-2" role="status" aria-live="polite">Loading...</div>
 </section>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php"; ?>

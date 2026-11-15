@@ -26,17 +26,29 @@ class Security extends Core {
     }
   }
 
-  function getEvents ($limit=100) {
+  function getEvents ($limit=100, $eventType="") {
     if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
       $this->error = "No access permission";
       return false;
     }
     $limit = is_numeric($limit) ? max(1, min(500, (int)$limit)) : 100;
+    $eventType = is_string($eventType) ? trim($eventType) : "";
+    if ($eventType!=="" && !preg_match('/^[a-z0-9_]{1,64}$/D', $eventType)) {
+      $this->error = "Invalid security event filter.";
+      return false;
+    }
+    $where = "";
+    $params = [];
+    if ($eventType!=="") {
+      $where = " WHERE e.`event_type`=?";
+      $params[] = $eventType;
+    }
     return $this->DB->fetchAll(
       "SELECT e.*, u.`user_name`, u.`user_email`
        FROM `security_events` e
        LEFT JOIN `users` u ON (u.`user_id`=e.`user_id`)
-       ORDER BY e.`event_id` DESC LIMIT ".$limit
+       ".$where." ORDER BY e.`event_id` DESC LIMIT ".$limit,
+      $params
     ) ?? [];
   }
 }
