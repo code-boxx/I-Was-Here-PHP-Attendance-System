@@ -14,6 +14,8 @@ $_CORE->autoAPI([
   "addUsers" => ["Courses", "addUsers"],
   "delUsers" => ["Courses", "delUsers"],
   "moveStudents" => ["Courses", "moveStudents"],
+  "getCourseAudit" => ["Courses", "getCourseAudit"],
+  "undoCourseChange" => ["Courses", "undoCourseChange"],
   "getRosterAudit" => ["Courses", "getRosterAudit"],
   "undoRosterChange" => ["Courses", "undoRosterChange"]
 ]);

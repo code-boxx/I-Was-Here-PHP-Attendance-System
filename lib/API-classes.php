@@ -10,7 +10,8 @@ $_CORE->autoAPI([
   "delSubstitute" => ["Classes", "delSubstitute", ["A", "T"]],
   "cancelClass" => ["Classes", "cancelClass", ["A", "T"]],
   "rescheduleClass" => ["Classes", "rescheduleClass", ["A", "T"]],
-  "getScheduleAudit" => ["Classes", "getScheduleAudit", ["A", "T"]]
+  "getScheduleAudit" => ["Classes", "getScheduleAudit", ["A", "T"]],
+  "undoScheduleChange" => ["Classes", "undoScheduleChange", ["A", "T"]]
 ]);
 
 // (C) INVALID REQUEST

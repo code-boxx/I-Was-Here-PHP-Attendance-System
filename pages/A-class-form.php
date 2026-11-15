@@ -55,6 +55,16 @@ if ($edit) {
              value="<?=isset($class)?$class["class_desc"]:""?>">
       <label>Description, if any.</label>
     </div>
+    <div class="form-floating mt-4">
+      <input type="text" class="form-control" id="class_room" maxlength="100"<?=isset($class)?"":" disabled"?>
+             value="<?=htmlspecialchars($class["class_room"] ?? "", ENT_QUOTES, "UTF-8")?>">
+      <label for="class_room">Room (optional)</label>
+    </div>
+    <div class="form-floating mt-4">
+      <input type="text" class="form-control" id="class_group" maxlength="100"<?=isset($class)?"":" disabled"?>
+             value="<?=htmlspecialchars($class["class_group"] ?? "", ENT_QUOTES, "UTF-8")?>">
+      <label for="class_group">Student group (optional)</label>
+    </div>
     <?php if (isset($class)) { ?>
     <div class="form-floating mt-4">
       <input type="text" class="form-control" id="class-change-reason" maxlength="500">

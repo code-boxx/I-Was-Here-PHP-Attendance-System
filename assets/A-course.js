@@ -38,7 +38,38 @@ var course = {
     onload : () => cb.page(2)
   }),
 
-  // (E) SAVE COURSE
+  // (E) SHOW COURSE AUDIT HISTORY
+  audit : code => {
+    course.auditCode = code;
+    cb.load({
+      page : "A/course-audit",
+      target : "cb-page-2",
+      data : { code : code },
+      onload : () => cb.page(2)
+    });
+  },
+
+  undoAudit : eventId => {
+    let reason = window.prompt("Enter the reason for undoing this course update (required):");
+    if (reason===null) { return; }
+    reason = reason.trim();
+    if (!reason || reason.length>500) {
+      cb.modal("Invalid reason", "Enter a reason of 1 to 500 characters.");
+      return;
+    }
+    cb.modal(
+      "Undo course update",
+      "The update will only be reversed if the course has not changed since that audit entry.",
+      () => cb.api({
+        mod : "courses", act : "undoCourseChange",
+        data : { eventId : eventId, reason : reason },
+        passmsg : "Course update undone",
+        onpass : () => course.audit(course.auditCode)
+      })
+    );
+  },
+
+  // (F) SAVE COURSE
   save : () => {
     // (E1) GET DATA
     var data = {
@@ -69,7 +100,7 @@ var course = {
     return false;
   },
 
-  // (F) DELETE COURSE
+  // (G) DELETE COURSE
   //  code : course code
   del : code => cb.modal("Please confirm", "All course data and attendance will be lost!", () => cb.api({
     mod : "courses", act : "del",
@@ -78,7 +109,7 @@ var course = {
     onpass : course.list
   })),
 
-  // (G) IMPORT COURSES
+  // (H) IMPORT COURSES
   import : () => im.init({
     name : "COURSES",
     at : 2, back : 1,

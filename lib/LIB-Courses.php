@@ -7,7 +7,7 @@ class Courses extends Core {
   //  $end : end date
   //  $desc : course description
   //  $ocode : old course code (edit only)
-  function save ($code, $name, $start, $end, $desc=null, $ocode=null) {
+  function save ($code, $name, $start, $end, $desc=null, $ocode=null, $reason=null) {
     // (A1) DATA SETUP
     if (strtotime($end) < strtotime($start)) {
       $this->error = "End date cannot be earlier than start";
@@ -16,12 +16,35 @@ class Courses extends Core {
     $fields = ["course_code", "course_name", "course_start", "course_end", "course_desc"];
     $data = [$code, $name, $start, $end, $desc];
 
+    if (!isset($_SESSION["user"]["user_id"])) {
+      $this->error = "An authenticated actor is required for course audit history.";
+      return false;
+    }
+    $reason = $this->validCourseReason(
+      $reason ?? ($ocode===null ? "Course created." : "Course updated.")
+    );
+    if ($reason===false) { return false; }
+
     // (A2) ADD/UPDATE COURSE
-    if ($ocode==null) {
-      $this->DB->insert("courses", $fields, $data);
-    } else {
-      $data[] = $ocode;
-      $this->DB->update("courses", $fields, "`course_code`=?", $data);
+    $this->DB->start();
+    try {
+      $previous = $ocode===null ? null : $this->get($ocode);
+      if ($ocode==null) {
+        $this->DB->insert("courses", $fields, $data);
+        $eventType = "created";
+        $courseCode = $code;
+      } else {
+        $data[] = $ocode;
+        $this->DB->update("courses", $fields, "`course_code`=?", $data);
+        $eventType = "updated";
+        $courseCode = $code;
+      }
+      $current = $this->get($courseCode);
+      $this->auditCourseChange($courseCode, $eventType, $previous, $current, $reason);
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
     }
     return true;
   }
@@ -167,16 +190,137 @@ class Courses extends Core {
 
   // (C) DELETE COURSE
   //  $code : course code
-  function del ($code) {
+  function del ($code, $reason=null) {
+    if (!isset($_SESSION["user"]["user_id"])) {
+      $this->error = "An authenticated actor is required for course audit history.";
+      return false;
+    }
+    $reason = $this->validCourseReason($reason ?? "Course deleted.");
+    if ($reason===false) { return false; }
+    $course = $this->get($code);
+    if (!is_array($course)) {
+      $this->error = "Invalid course.";
+      return false;
+    }
     $this->DB->start();
-    $this->DB->query("DELETE `attendance` FROM `attendance` LEFT JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
-    $this->DB->query("DELETE `attendance_corrections` FROM `attendance_corrections` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
-    $this->DB->query("DELETE `attendance_sessions` FROM `attendance_sessions` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
-    $this->DB->query("DELETE `attendance_audit` FROM `attendance_audit` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
-    $this->DB->delete("classes", "`course_code`=?", [$code]);
-    $this->DB->delete("courses_users", "`course_code`=?", [$code]);
-    $this->DB->delete("courses", "`course_code`=?", [$code]);
-    $this->DB->end();
+    try {
+      $this->DB->query("DELETE `attendance` FROM `attendance` LEFT JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+      $this->DB->query("DELETE `attendance_corrections` FROM `attendance_corrections` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+      $this->DB->query("DELETE `attendance_sessions` FROM `attendance_sessions` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+      $this->DB->query("DELETE `attendance_audit` FROM `attendance_audit` JOIN `classes` USING (`class_id`) WHERE `course_code`=?", [$code]);
+      $this->DB->delete("classes", "`course_code`=?", [$code]);
+      $this->DB->delete("courses_users", "`course_code`=?", [$code]);
+      $this->DB->delete("courses", "`course_code`=?", [$code]);
+      $this->auditCourseChange($code, "deleted", $course, null, $reason);
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
+    return true;
+  }
+
+  private function validCourseReason ($reason) {
+    if (!is_string($reason)) {
+      $this->error = "Provide a reason of 1 to 500 characters.";
+      return false;
+    }
+    $reason = trim($reason);
+    $length = preg_match_all('/./us', $reason, $characters);
+    if ($length===false || $length===0 || $length>500) {
+      $this->error = "Provide a reason of 1 to 500 characters.";
+      return false;
+    }
+    return $reason;
+  }
+
+  private function auditCourseChange ($code, $event, $old, $new, $reason) {
+    $this->DB->insert(
+      "course_audit",
+      ["course_code", "event_type", "old_values", "new_values", "reason", "changed_by", "changed_at"],
+      [$code, $event, $old===null ? null : json_encode($old, JSON_THROW_ON_ERROR),
+       $new===null ? null : json_encode($new, JSON_THROW_ON_ERROR), $reason,
+       $_SESSION["user"]["user_id"], date("Y-m-d H:i:s")]
+    );
+  }
+
+  function getCourseAudit ($code) {
+    if (!is_array($this->get($code))) {
+      $this->error = "Invalid course.";
+      return false;
+    }
+    return $this->DB->fetchAll(
+      "SELECT a.*, u.`user_name` AS `changed_by_name`,
+              uu.`user_name` AS `undone_by_name`
+       FROM `course_audit` a
+       LEFT JOIN `users` u ON (u.`user_id`=a.`changed_by`)
+       LEFT JOIN `users` uu ON (uu.`user_id`=a.`undone_by`)
+       WHERE a.`course_code`=?
+       ORDER BY a.`event_id` DESC LIMIT 50",
+      [$code]
+    ) ?? [];
+  }
+
+  function undoCourseChange ($eventId, $reason) {
+    $reason = $this->validCourseReason($reason);
+    if ($reason===false || !isset($_SESSION["user"]["user_id"])) {
+      if (!isset($_SESSION["user"]["user_id"])) {
+        $this->error = "Sign in before undoing a course change.";
+      }
+      return false;
+    }
+    if ((!is_int($eventId) && !(is_string($eventId) && ctype_digit($eventId))) || (int)$eventId<1) {
+      $this->error = "Select a valid course change.";
+      return false;
+    }
+
+    $this->DB->start();
+    try {
+      $event = $this->DB->fetch(
+        "SELECT * FROM `course_audit` WHERE `event_id`=? FOR UPDATE",
+        [(int)$eventId]
+      );
+      if (!is_array($event) || $event["event_type"]!=="updated" || $event["undone_at"]!==null) {
+        $this->DB->end(false);
+        $this->error = "This course change is missing, unsupported, or already undone.";
+        return false;
+      }
+      $old = json_decode((string)$event["old_values"], true);
+      $new = json_decode((string)$event["new_values"], true);
+      if (!is_array($old) || !is_array($new) || ($old["course_code"] ?? null)!==($new["course_code"] ?? null)) {
+        $this->DB->end(false);
+        $this->error = "Course code changes cannot be undone automatically.";
+        return false;
+      }
+      $current = $this->DB->fetch(
+        "SELECT `course_code`,`course_name`,`course_start`,`course_end`,`course_desc`
+         FROM `courses` WHERE `course_code`=? FOR UPDATE",
+        [$new["course_code"]]
+      );
+      $fields = ["course_code", "course_name", "course_start", "course_end", "course_desc"];
+      foreach ($fields as $field) {
+        if (!is_array($current) || (string)($current[$field] ?? "")!==(string)($new[$field] ?? "")) {
+          $this->DB->end(false);
+          $this->error = "The course changed after this audit entry. Undo the later change first.";
+          return false;
+        }
+      }
+      $this->DB->update(
+        "courses", ["course_name", "course_start", "course_end", "course_desc"],
+        "`course_code`=?",
+        [$old["course_name"], $old["course_start"], $old["course_end"], $old["course_desc"], $new["course_code"]]
+      );
+      $this->DB->update(
+        "course_audit",
+        ["undone_by", "undone_at", "undo_reason"],
+        "`event_id`=?",
+        [$_SESSION["user"]["user_id"], date("Y-m-d H:i:s"), $reason, (int)$eventId]
+      );
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
     return true;
   }
 

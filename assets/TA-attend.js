@@ -133,9 +133,41 @@ var attend = {
           return;
         }
         rows.forEach(event => {
-          let entry = document.createElement("p");
-          entry.textContent = `${event.changed_at}: ${event.event_type.replace(/_/g, " ")} by ${event.actor_name}. ${event.old_value || "Scheduled"} to ${event.new_value || "Cancelled"}. Reason: ${event.reason}`;
+          let entry = document.createElement("div");
+          entry.className = "mb-2";
+          let text = document.createElement("span");
+          text.textContent = `${event.changed_at}: ${event.event_type.replace(/_/g, " ")} by ${event.actor_name}. ${event.old_value || "Scheduled"} to ${event.new_value || "Cancelled"}. Reason: ${event.reason}`;
+          entry.append(text);
+          if (event.undone_at) {
+            let undo = document.createElement("small");
+            undo.className = "d-block text-secondary";
+            undo.textContent = `Undone by ${event.undo_actor_name}: ${event.undo_reason}`;
+            entry.append(undo);
+          } else {
+            let button = document.createElement("button");
+            button.type = "button";
+            button.className = "btn btn-sm btn-outline-danger ms-2";
+            button.textContent = "Undo";
+            button.addEventListener("click", () => attend.undoSchedule(event.event_id));
+            entry.append(button);
+          }
           target.append(entry);
+        });
+      },
+
+      undoSchedule : eventId => {
+        let reason = window.prompt("Enter the reason for undoing this schedule change (required):");
+        if (reason===null) { return; }
+        reason = reason.trim();
+        if (!reason || reason.length>500) {
+          cb.modal("Invalid reason", "Enter a reason of 1 to 500 characters.");
+          return;
+        }
+        cb.api({
+          mod : "classes", act : "undoScheduleChange",
+          data : { eventId : eventId, reason : reason },
+          passmsg : "Schedule change undone",
+          onpass : () => attend.show(attend.id)
         });
       },
       onfail : error => { target.textContent = error; }

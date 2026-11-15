@@ -25,13 +25,22 @@ function check ($condition, $message) {
 try {
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='APP_VER'"
-  )===9, "Roster audit migration was not applied.");
+  )===15, "Active session migration was not applied.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_THRESHOLD'"
   )===75, "Attendance warning threshold did not default to 75%.");
   check((int)$db->fetchCol(
     "SELECT `setting_value` FROM `settings` WHERE `setting_name`='ATTENDANCE_LATE_GRACE_MINUTES'"
   )===10, "Late-arrival grace period did not default to 10 minutes.");
+  check(
+    (int)$db->fetchCol("SELECT `setting_value` FROM `settings` WHERE `setting_name`='SESSION_IDLE_MINUTES'")===30 &&
+    (int)$db->fetchCol("SELECT `setting_value` FROM `settings` WHERE `setting_name`='SESSION_ABSOLUTE_HOURS'")===12,
+    "Session expiry settings did not use their secure defaults."
+  );
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE() AND table_name='user_sessions'"
+  )===1, "Active session table is missing.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE()
@@ -71,6 +80,25 @@ try {
     "SELECT COUNT(*) FROM information_schema.tables
      WHERE table_schema=DATABASE() AND table_name='course_roster_audit'"
   )===1, "Course roster audit table is missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.tables
+     WHERE table_schema=DATABASE() AND table_name='course_audit'"
+  )===1, "Course audit table is missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='course_audit'
+     AND column_name IN ('undone_by','undone_at','undo_reason')"
+  )===3, "Course audit undo fields are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='classes'
+     AND column_name IN ('class_room','class_group')"
+  )===2, "Class room and group fields are missing.");
+  check((int)$db->fetchCol(
+    "SELECT COUNT(*) FROM information_schema.columns
+     WHERE table_schema=DATABASE() AND table_name='attendance_schedule_audit'
+     AND column_name IN ('undone_by','undone_at','undo_reason')"
+  )===3, "Schedule audit undo fields are missing.");
   check((int)$db->fetchCol(
     "SELECT COUNT(*) FROM information_schema.columns
      WHERE table_schema=DATABASE() AND table_name='course_roster_audit'
@@ -137,6 +165,26 @@ try {
   check($_CORE->Courses->save($courseCode, "Integration course", $start, $end), "Could not create test course.");
   $destinationCode = "MOVE-$suffix";
   check($_CORE->Courses->save($destinationCode, "Destination course", $start, $end), "Could not create destination course.");
+  check(
+    $_CORE->Courses->save(
+      $courseCode, "Updated integration course", $start, $end, null, $courseCode,
+      "Test course metadata update"
+    ),
+    "Could not update test course."
+  );
+  $courseAudit = $_CORE->Courses->getCourseAudit($courseCode);
+  check(
+    is_array($courseAudit) && ($courseAudit[0]["event_type"] ?? null)==="updated",
+    "Course metadata update was not audited."
+  );
+  check(
+    $_CORE->Courses->undoCourseChange($courseAudit[0]["event_id"], "Test course metadata undo"),
+    "Course metadata update could not be undone."
+  );
+  check(
+    $_CORE->Courses->get($courseCode)["course_name"]==="Integration course",
+    "Course metadata undo did not restore the previous values."
+  );
   $previewRows = [
     ["code" => $courseCode, "name" => "Integration course", "desc" => "", "start" => $start, "end" => $end],
     ["code" => $destinationCode, "name" => "Changed name", "desc" => "", "start" => $start, "end" => $end],
@@ -294,7 +342,12 @@ try {
   );
 
   $_CORE->load("Classes");
-  check($_CORE->Classes->save($courseCode, $teacherId, "$start 09:00:00", "Integration session"), "Could not create test class.");
+  check(
+    $_CORE->Classes->save(
+      $courseCode, $teacherId, "$start 09:00:00", "Integration session", null, null, "Room 1", "Group A"
+    ),
+    "Could not create test class."
+  );
   $classId = $db->lastID;
   $classPreview = $_CORE->Classes->previewImport(json_encode([
     ["code" => $courseCode, "date" => "$start 09:00:00", "email" => $teacherEmail, "desc" => "Integration session"],
@@ -308,6 +361,14 @@ try {
   check(
     !$_CORE->Classes->save($courseCode, $teacherId, "$start 09:30:00", "Overlapping session"),
     "Teacher timetable conflict was not detected."
+  );
+  check(
+    !$_CORE->Classes->save($courseCode, $otherTeacherId, "$start 09:15:00", "Room conflict", null, null, "Room 1"),
+    "Room timetable conflict was not detected."
+  );
+  check(
+    !$_CORE->Classes->save($courseCode, $otherTeacherId, "$start 09:15:00", "Group conflict", null, null, null, "Group A"),
+    "Student group timetable conflict was not detected."
   );
   check(
     $_CORE->Classes->save($courseCode, $teacherId, "$start 10:00:00", "Adjacent session"),
@@ -627,6 +688,16 @@ try {
   check(
     count($_CORE->Classes->getScheduleAudit($rescheduledClassId))===2,
     "Cancellation and rescheduling were not both recorded in the schedule audit."
+  );
+  $scheduleAudit = $_CORE->Classes->getScheduleAudit($rescheduledClassId);
+  check(
+    $_CORE->Classes->undoScheduleChange($scheduleAudit[0]["event_id"], "Restore original schedule"),
+    "Rescheduled class could not be restored from schedule audit."
+  );
+  check(
+    $db->fetchCol("SELECT `class_status` FROM `classes` WHERE `class_id`=?", [$rescheduledClassId])==="scheduled" &&
+    $db->fetchCol("SELECT `class_date` FROM `classes` WHERE `class_id`=?", [$rescheduledClassId])==="$start 12:00:00",
+    "Schedule undo did not restore the original class state."
   );
   check(
     $_CORE->Classes->save($courseCode, $teacherId, "$start 14:00:00", "Holiday test class"),

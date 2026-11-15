@@ -6,7 +6,7 @@ class Classes extends Core {
   //  $date : class date
   //  $desc : class description
   //  $id : class id (for edit only)
-  function save ($code, $uid, $date, $desc=null, $id=null, $reason=null) {
+  function save ($code, $uid, $date, $desc=null, $id=null, $reason=null, $room=null, $group=null) {
     if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) {
       $date .= ":00";
     }
@@ -30,6 +30,9 @@ class Classes extends Core {
       $this->error = "Classes cannot be scheduled on a school holiday or non-instruction day.";
       return false;
     }
+    $room = $this->validLocation($room);
+    $group = $this->validLocation($group);
+    if ($room===false || $group===false) { return false; }
     $teacher = $this->DB->fetchCol(
       "SELECT 1 FROM `courses_users` cu
        JOIN `users` u ON (u.`user_id`=cu.`user_id`)
@@ -41,8 +44,8 @@ class Classes extends Core {
       return false;
     }
     // (A1) DATA SETUP
-    $fields = ["course_code", "user_id", "class_date", "class_desc"];
-    $data = [$code, $uid, $date, $desc];
+    $fields = ["course_code", "user_id", "class_date", "class_desc", "class_room", "class_group"];
+    $data = [$code, $uid, $date, $desc, $room ?: null, $group ?: null];
 
     $this->DB->start();
     try {
@@ -56,6 +59,20 @@ class Classes extends Core {
               AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
               AND `class_status`='scheduled'";
       $params = [$uid, $date, $date];
+      $resourceConditions = [];
+      $resourceParams = [];
+      if ($room) {
+        $resourceConditions[] = "`class_room`=?";
+        $resourceParams[] = $room;
+      }
+      if ($group) {
+        $resourceConditions[] = "`class_group`=?";
+        $resourceParams[] = $group;
+      }
+      if (count($resourceConditions)>0) {
+        $sql .= " AND (".implode(" OR ", $resourceConditions).")";
+        $params = array_merge($params, $resourceParams);
+      }
       if ($id!==null && $id!=="") {
         $sql .= " AND `class_id`!=?";
         $params[] = $id;
@@ -63,7 +80,7 @@ class Classes extends Core {
       $conflict = $this->DB->fetch($sql." LIMIT 1", $params);
       if (is_array($conflict)) {
         $this->DB->end(false);
-        $this->error = "Teacher already has a scheduled class overlapping this 60-minute session (class ".$conflict["class_id"]." at ".$conflict["conflict_date"].").";
+        $this->error = "Teacher, room, or student group already has a scheduled class overlapping this 60-minute session (class ".$conflict["class_id"]." at ".$conflict["conflict_date"].").";
         return false;
       }
 
@@ -126,6 +143,17 @@ class Classes extends Core {
     $reason = trim((string)$reason);
     $length = preg_match_all('/./us', $reason, $characters);
     return $length!==false && $length>0 && $length<=500 ? $reason : false;
+  }
+
+  private function validLocation ($value) {
+    $value = trim((string)$value);
+    if ($value==="") { return ""; }
+    $length = preg_match_all('/./us', $value, $characters);
+    if ($length===false || $length>100) {
+      $this->error = "Room and student group names must be 100 characters or fewer.";
+      return false;
+    }
+    return $value;
   }
 
   private function isHolidayDate ($date) {
@@ -259,8 +287,8 @@ class Classes extends Core {
     $this->DB->start();
     try {
       $class = $this->DB->fetch(
-        "SELECT cl.`class_date`, cl.`class_status`, cl.`user_id`, co.`course_start`,
-                co.`course_end`
+        "SELECT cl.`class_date`, cl.`class_status`, cl.`user_id`, cl.`class_room`,
+                cl.`class_group`, co.`course_start`, co.`course_end`
          FROM `classes` cl JOIN `courses` co USING (`course_code`)
          WHERE cl.`class_id`=? FOR UPDATE",
         [$classId]
@@ -283,16 +311,24 @@ class Classes extends Core {
         $this->error = "Choose a different date or time.";
         return false;
       }
-      $conflict = $this->DB->fetch(
-        "SELECT `class_id` FROM `classes`
-         WHERE `user_id`=? AND `class_id`!=? AND `class_status`='scheduled'
-         AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
-         AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>? LIMIT 1",
-        [$class["user_id"], $classId, $date, $date]
-      );
+      $conflictSql = "SELECT `class_id` FROM `classes`
+        WHERE `class_id`!=? AND `class_status`='scheduled'
+        AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+        AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
+        AND (`user_id`=?";
+      $conflictParams = [$classId, $date, $date, $class["user_id"]];
+      if (!empty($class["class_room"])) {
+        $conflictSql .= " OR `class_room`=?";
+        $conflictParams[] = $class["class_room"];
+      }
+      if (!empty($class["class_group"])) {
+        $conflictSql .= " OR `class_group`=?";
+        $conflictParams[] = $class["class_group"];
+      }
+      $conflict = $this->DB->fetch($conflictSql.") LIMIT 1", $conflictParams);
       if (is_array($conflict)) {
         $this->DB->end(false);
-        $this->error = "The teacher already has a class overlapping this 60-minute session.";
+        $this->error = "The teacher, room, or student group already has a class overlapping this 60-minute session.";
         return false;
       }
       $this->DB->update(
@@ -332,12 +368,91 @@ class Classes extends Core {
       return false;
     }
     return $this->DB->fetchAll(
-      "SELECT a.*, COALESCE(u.`user_name`, CONCAT('Deleted account #', a.`changed_by`)) AS `actor_name`
+      "SELECT a.*, COALESCE(u.`user_name`, CONCAT('Deleted account #', a.`changed_by`)) AS `actor_name`,
+              COALESCE(uu.`user_name`, CONCAT('Deleted account #', a.`undone_by`)) AS `undo_actor_name`
        FROM `attendance_schedule_audit` a
        LEFT JOIN `users` u ON (u.`user_id`=a.`changed_by`)
+       LEFT JOIN `users` uu ON (uu.`user_id`=a.`undone_by`)
        WHERE a.`class_id`=? ORDER BY a.`changed_at` DESC",
       [$classId]
     ) ?? [];
+  }
+
+  function undoScheduleChange ($eventId, $reason) {
+    if (!isset($_SESSION["user"]["user_id"])) {
+      $this->error = "Sign in before undoing a schedule change.";
+      return false;
+    }
+    $reason = $this->validScheduleReason($reason);
+    if ($reason===false || (!is_int($eventId) && !(is_string($eventId) && ctype_digit($eventId)))) {
+      $this->error = "Select a valid schedule change and provide a reason.";
+      return false;
+    }
+    $this->DB->start();
+    try {
+      $event = $this->DB->fetch(
+        "SELECT * FROM `attendance_schedule_audit` WHERE `event_id`=? FOR UPDATE",
+        [(int)$eventId]
+      );
+      if (!is_array($event) || $event["undone_at"]!==null ||
+          !in_array($event["event_type"], ["class_rescheduled", "class_cancelled"], true) ||
+          !$this->canManageSchedule($event["class_id"])) {
+        $this->DB->end(false);
+        $this->error = "This schedule change is missing, unsupported, or already undone.";
+        return false;
+      }
+      $class = $this->DB->fetch(
+        "SELECT cl.*, co.`course_start`, co.`course_end`
+         FROM `classes` cl JOIN `courses` co USING (`course_code`)
+         WHERE cl.`class_id`=? FOR UPDATE",
+        [$event["class_id"]]
+      );
+      $restoreDate = $event["old_value"];
+      if (!is_array($class) || !$restoreDate ||
+          ($event["event_type"]==="class_rescheduled" && $class["class_date"]!==$event["new_value"]) ||
+          ($event["event_type"]==="class_cancelled" && $class["class_status"]!=="cancelled")) {
+        $this->DB->end(false);
+        $this->error = "The class changed after this audit entry. Undo the later change first.";
+        return false;
+      }
+      $conflictSql = "SELECT `class_id` FROM `classes`
+        WHERE `class_id`!=? AND `class_status`='scheduled'
+        AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+        AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
+        AND (`user_id`=?";
+      $conflictParams = [$event["class_id"], $restoreDate, $restoreDate, $class["user_id"]];
+      if (!empty($class["class_room"])) {
+        $conflictSql .= " OR `class_room`=?";
+        $conflictParams[] = $class["class_room"];
+      }
+      if (!empty($class["class_group"])) {
+        $conflictSql .= " OR `class_group`=?";
+        $conflictParams[] = $class["class_group"];
+      }
+      if (is_array($this->DB->fetch($conflictSql.") LIMIT 1", $conflictParams))) {
+        $this->DB->end(false);
+        $this->error = "The original schedule now conflicts with another class.";
+        return false;
+      }
+      $now = date("Y-m-d H:i:s");
+      $this->DB->update(
+        "classes",
+        ["class_date", "class_status", "class_status_reason", "class_status_by", "class_status_at"],
+        "`class_id`=?",
+        [$restoreDate, "scheduled", null, $_SESSION["user"]["user_id"], $now, $event["class_id"]]
+      );
+      $this->DB->update(
+        "attendance_schedule_audit",
+        ["undone_by", "undone_at", "undo_reason"],
+        "`event_id`=?",
+        [$_SESSION["user"]["user_id"], $now, $reason, (int)$eventId]
+      );
+      $this->DB->end();
+    } catch (Throwable $ex) {
+      if ($this->DB->pdo->inTransaction()) { $this->DB->end(false); }
+      throw $ex;
+    }
+    return true;
   }
 
   // (B) IMPORT CLASS
@@ -345,7 +460,7 @@ class Classes extends Core {
   //  $date : class date & time
   //  $email : teacher's email
   //  $desc : description, optional
-  function import ($code, $date, $email, $desc) {
+  function import ($code, $date, $email, $desc, $room=null, $group=null) {
     if (is_string($date) && preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) {
       $date .= ":00";
     }
@@ -381,7 +496,7 @@ class Classes extends Core {
     }
 
     // (B4) IMPORT CLASS
-    return $this->save($course["course_code"], $teacher["user_id"], $date, $desc);
+    return $this->save($course["course_code"], $teacher["user_id"], $date, $desc, null, null, $room, $group);
   }
 
   function previewImport ($rows) {
@@ -411,6 +526,8 @@ class Classes extends Core {
       $date = trim((string)($row["date"] ?? ""));
       $email = strtolower(trim((string)($row["email"] ?? "")));
       $desc = trim((string)($row["desc"] ?? ""));
+      $room = trim((string)($row["room"] ?? ""));
+      $group = trim((string)($row["group"] ?? ""));
       if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/D', $date)) { $date .= ":00"; }
       $parsed = DateTimeImmutable::createFromFormat("!Y-m-d H:i:s", $date);
       if ($code==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)
@@ -454,25 +571,38 @@ class Classes extends Core {
       $seen[$key] = $desc;
 
       $existing = $this->DB->fetch(
-        "SELECT `class_desc` FROM `classes`
+        "SELECT `class_desc`,`class_room`,`class_group` FROM `classes`
          WHERE `course_code`=? AND `user_id`=? AND `class_date`=?
          AND `class_status`='scheduled' LIMIT 1",
         [$course["course_code"], $teacher["user_id"], $date]
       );
       if (is_array($existing)) {
-        $same = (string)($existing["class_desc"] ?? "")===$desc;
+        $same = (string)($existing["class_desc"] ?? "")===$desc
+          && (string)($existing["class_room"] ?? "")===$room
+          && (string)($existing["class_group"] ?? "")===$group;
         $result[] = $same
           ? ["status" => "unchanged", "message" => "This scheduled class already exists."]
           : ["status" => "conflicting", "message" => "A class at this time already exists with a different description."];
         continue;
       }
 
-      $conflict = $this->DB->fetchCol(
-        "SELECT 1 FROM `classes`
-         WHERE `user_id`=? AND `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
+      $conflictSql = "SELECT 1 FROM `classes`
+         WHERE `class_date`<DATE_ADD(?, INTERVAL 1 HOUR)
          AND DATE_ADD(`class_date`, INTERVAL 1 HOUR)>?
-         AND `class_status`='scheduled' LIMIT 1",
-        [$teacher["user_id"], $date, $date]
+         AND `class_status`='scheduled'
+         AND (`user_id`=?";
+      $conflictParams = [$date, $date, $teacher["user_id"]];
+      if ($room!=="") {
+        $conflictSql .= " OR `class_room`=?";
+        $conflictParams[] = $room;
+      }
+      if ($group!=="") {
+        $conflictSql .= " OR `class_group`=?";
+        $conflictParams[] = $group;
+      }
+      $conflictSql .= ")";
+      $conflict = $this->DB->fetchCol(
+        $conflictSql." LIMIT 1", $conflictParams
       );
       $result[] = $conflict!==null
         ? ["status" => "conflicting", "message" => "Teacher has another scheduled class within the 60-minute conflict window."]

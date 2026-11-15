@@ -56,7 +56,7 @@ or expired states and retried idempotently when connectivity returns.
 - Use PHP 8.0 or newer with Apache `mod_rewrite`, PDO MySQL, OpenSSL, and a MySQL-compatible server such as MariaDB.
 - In the installer, use the database hostname that the PHP process can reach. For containers, this is usually the database service name, not `localhost`.
 - Run the JavaScript tests with `node --test tests/*.test.js`.
-- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test.
+- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test. The current validation environment rejected its configured `root@localhost` credentials, so this suite still needs a working test database.
 - Email notifications are opt-in and require PHP's `mail()` transport to be configured. Run `php bin/send-notifications.php --dry-run` to verify the worker without sending mail. In production, schedule `php /absolute/path/to/project/bin/send-notifications.php` with cron (for example every 15 minutes); failures retry up to five times and are logged.
 - Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.
 - Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.

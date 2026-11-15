@@ -19,6 +19,9 @@ if (is_array($courses)) { foreach ($courses as $code=>$c) { ?>
       <li class="dropdown-item" onclick="cuser.show('<?=$code?>')">
         <i class="text-secondary ico-sm icon-users"></i> Cohort
       </li>
+      <li class="dropdown-item" onclick="course.audit('<?=$code?>')">
+        <i class="text-secondary ico-sm icon-history"></i> Audit history
+      </li>
       <li class="dropdown-item text-warning" onclick="course.del('<?=$code?>')">
         <i class="ico-sm icon-bin2"></i> Delete
       </li>

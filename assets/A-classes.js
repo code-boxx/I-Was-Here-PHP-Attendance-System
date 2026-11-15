@@ -58,7 +58,9 @@ var classes = {
         hCNote = document.getElementById("class_course_note"),
         hDate = document.getElementById("class_date"),
         hTeacher = document.getElementById("class_teacher"),
-        hDesc = document.getElementById("class_desc");
+        hDesc = document.getElementById("class_desc"),
+        hRoom = document.getElementById("class_room"),
+        hGroup = document.getElementById("class_group");
 
     // (E2) COURSE CHOSEN - UPDATE FORM
     if (set) {
@@ -90,6 +92,8 @@ var classes = {
 
           // (E2-4) DESCRIPTION
           hDesc.disabled = false;
+          hRoom.disabled = false;
+          hGroup.disabled = false;
 
           // (E2-5) CLICK COURSE TO CHANGE
           hCourse.onclick = () => classes.toggle(false);
@@ -114,6 +118,10 @@ var classes = {
       hTeacher.innerHTML = "";
       hDesc.disabled = true;
       hDesc.value = "";
+      hRoom.disabled = true;
+      hRoom.value = "";
+      hGroup.disabled = true;
+      hGroup.value = "";
     }
   },
 
@@ -124,6 +132,8 @@ var classes = {
       code : document.getElementById("class_course_code").value, // course code
       uid : document.getElementById("class_teacher").value, // user id
       desc : document.getElementById("class_desc").value, // description
+      room : document.getElementById("class_room")?.value || "",
+      group : document.getElementById("class_group")?.value || "",
       date : document.getElementById("class_date").value.replace("T", " "), // date
       reason : document.getElementById("class-change-reason")?.value || ""
     };
@@ -217,7 +227,9 @@ var classes = {
       ["Course Code", "code", true],
       ["Date (YYYY-MM-DD HH:MM:SS)", "date", true],
       ["Teacher's Email", "email", "E"],
-      ["Description (If any)", "desc"]
+      ["Description (If any)", "desc"],
+      ["Room (If any)", "room"],
+      ["Student Group (If any)", "group"]
     ]
   })
 };

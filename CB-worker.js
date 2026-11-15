@@ -73,10 +73,21 @@ self.addEventListener("activate", evt => evt.waitUntil(
     .then(() => self.clients.claim())
 ));
 
+// Clear cached application data when an authenticated session ends.
+self.addEventListener("message", evt => {
+  if (evt.data?.type === "CLEAR_APP_CACHE") {
+    evt.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))));
+  }
+});
+
 // (C) LOAD FROM CACHE FIRST, FALLBACK TO NETWORK IF NOT FOUND
-self.addEventListener("fetch", evt => evt.respondWith(
-  caches.match(evt.request).then(res => res || fetch(evt.request))
-));
+self.addEventListener("fetch", evt => {
+  if (evt.request.method !== "GET" || /\/api(?:\/|$)|[?&](?:mod|act)=/i.test(evt.request.url)) {
+    evt.respondWith(fetch(evt.request));
+    return;
+  }
+  evt.respondWith(caches.match(evt.request).then(res => res || fetch(evt.request)));
+});
 
 // (D) LISTEN TO PUSH NOTIFICATIONS
 self.addEventListener("push", evt => {

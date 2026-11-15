@@ -228,9 +228,18 @@ var cb = {
 
     // (E2) ON AJAX LOAD
     options.onpass = res => {
-      if (res=="E") { location.href = cbhost.base + "login/"; }
+      if (res=="E") {
+        cb.clearClientData();
+        location.href = cbhost.base + "login/";
+      }
       else {
-        document.getElementById(opt.target).innerHTML = res;
+        let target = document.getElementById(opt.target);
+        target.innerHTML = res;
+        let heading = target.querySelector("h1, h2, h3, h4, [autofocus]");
+        if (heading) {
+          if (!heading.hasAttribute("tabindex")) { heading.setAttribute("tabindex", "-1"); }
+          heading.focus({ preventScroll : true });
+        }
         if (opt.onload) { opt.onload(); }
       }
     };
@@ -240,10 +249,21 @@ var cb = {
   },
 
   // (F) SIGN OFF
-  bye : () => cb.modal("Please Confirm", "Sign off?", () => cb.api({
+  clearClientData : () => {
+    try { localStorage.removeItem("iwh-offline-attendance"); }
+    catch (error) { console.error("Could not clear offline attendance data.", error); }
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type : "CLEAR_APP_CACHE" });
+    }
+  },
+
+  bye : () => cb.modal("Please Confirm", "Sign off?", () => {
+    cb.clearClientData();
+    cb.api({
     mod : "session", act : "logout", passmsg : false,
     onpass : () => location.href = cbhost.base + "login/"
-  })),
+    });
+  }),
 
   // (G) PASSWORD/HASH STRENGTH CHECKER
   checker : hash => /^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i.test(hash),

@@ -3,6 +3,8 @@
 $_CORE->autoAPI([
   "login" => ["Users", "login"],
   "logout" => ["Users", "logout"],
+  "getActiveSessions" => ["Session", "getActiveSessions"],
+  "revokeSession" => ["Session", "revokeSession"],
   "update" => ["Users", "update"],
   "forgotA" => ["Forgot", "request"],
   "forgotB" => ["Forgot", "reset"]

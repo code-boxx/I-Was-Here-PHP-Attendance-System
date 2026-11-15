@@ -11,20 +11,27 @@ branch; a roadmap item is not complete just because it is listed here.
   attendance correction history are available.
 - **Step 5: In progress.** Roster search/filter/sort, course transfers, CSV
   reconciliation for courses/users/classes/enrollments, row-error downloads,
-  and reasoned roster audit/undo are implemented. Room/group conflict checks
-  and undo for other administrative changes remain.
+  room/group conflict checks, course audit history, and reasoned roster
+  audit/undo are implemented. Class schedule changes now also support guarded
+  undo with conflict rechecking and an undo reason.
 - **Step 6: In progress.** Offline student QR check-ins now have local pending,
   syncing, synchronized, failed, and expired states with automatic retry and
-  idempotent server submission. Camera guidance, broader accessibility,
-  low-bandwidth optimization, and device-level PWA testing remain.
-- **Steps 7-9: Planned.** Broader security/privacy work, integrations, and
-  contributor/operator tooling.
+  idempotent server submission. Camera permission guidance, live status
+  announcements, reduced scanner polling, and API network-cache protection
+  are implemented. Dynamic page navigation now moves focus to the loaded
+  heading, and logout/session expiry clears offline attendance data and
+  service-worker caches. Device-level PWA testing and a formal cache-retention
+  policy remain.
+- **Step 7: In progress.** Broader security/privacy work has started; idle
+  and absolute session expiry are now configurable and enforced.
+- **Steps 8-9: Planned.** Integrations and contributor/operator tooling.
 - **Step 10: Long term.** Larger institutional capabilities.
 
-**Validation checkpoint (2026-10-31):** JavaScript syntax checks and
-`git diff --check` passed for the recent changes. PHP lint and the database
-integration suite have not been run because PHP is unavailable in the current
-environment; run them before treating these changes as fully verified.
+**Validation checkpoint (2026-11-15):** JavaScript tests, JavaScript syntax
+checks, PHP lint, and `git diff --check` passed for the recent changes. The
+database integration suite is available but requires a configured disposable
+MySQL test database; the current environment rejected the configured
+`root@localhost` credentials.
 
 ## Step 1 — Secure attendance foundations — Implemented
 
@@ -55,8 +62,9 @@ users; stronger identity or proximity checks require separate design work.
   upcoming-class reminders. Queue, deduplicate, retry, and deliver email
   notifications using the host's configured mail transport.
 
-Known limitation: room scheduling conflicts cannot be checked until rooms are
-represented in the data model.
+Room and student-group conflicts are checked when those optional values are
+provided on a class; recurring schedules and reusable room/group directories
+remain future work.
 
 ## Step 3 — Attendance workflow extensions — Implemented
 
@@ -118,12 +126,15 @@ uses the teacher review time.
    unchanged records; all import types flag duplicate and conflicting rows.
 3. **Implemented:** Downloadable row-level error report and a clear,
    reviewable import result.
-4. **Not implemented:** Extend timetable conflict checks to rooms and student
-   groups. This is blocked until those entities and their schedules exist.
+4. **Implemented:** Classes can optionally record a room and student group.
+   The same 60-minute conflict window now rejects overlapping scheduled
+   classes that reuse either resource, including CSV imports.
 5. **Partially implemented:** Course roster changes record who changed
    enrollment, when, and why, and support guarded undo with an undo reason.
-   Undo/correction workflows for course edits, class schedule changes, and
-   other administrative operations remain.
+   Course creation, edits, and deletion now retain actor, reason, timestamp,
+   and before/after values in a viewable audit history. Guarded undo/correction
+   workflows now cover course edits and class schedule changes; other
+   administrative operations remain.
 
 ## Step 6 — Make the PWA dependable on mobile and unreliable networks — Planned
 
@@ -153,15 +164,19 @@ sessions must have an explicit review policy.
 3. **Implemented:** Authenticated POST APIs now require a session-bound CSRF
    token, and the shared client automatically submits it. Anonymous login and
    recovery flows remain available without an authenticated token.
-4. Add account protections such as login throttling, secure recovery, and
+4. **Implemented:** Authenticated JWT sessions enforce configurable idle and
+   absolute expiry limits, with defaults of 30 minutes idle and 12 hours
+   absolute lifetime.
+5. **Implemented:** Active sessions are registered server-side, checked on
+   each authenticated request, and can be listed or individually revoked.
+6. Add account protections such as login throttling, secure recovery, and
    optional administrator MFA.
-5. Add active-session visibility, remote logout, idle expiry, absolute expiry,
-   and signing-key rotation.
-6. Record security-relevant events such as authentication failures,
+7. Add signing-key rotation.
+8. Record security-relevant events such as authentication failures,
    permission denials, exports, configuration changes, and session revocation.
-7. Establish dependency monitoring, patching guidance, and a vulnerability
+9. Establish dependency monitoring, patching guidance, and a vulnerability
    reporting process.
-8. Define retention, export, and deletion controls for personal data.
+10. Define retention, export, and deletion controls for personal data.
 
 Offline caches and service-worker behavior must not expose sensitive records
 after logout or after permissions change.

@@ -4,16 +4,22 @@ var check = {
   storageKey : "iwh-offline-attendance",
   queue : [],
   status : null,
+  cameraStatus : null,
+  cameraErrorShown : false,
   init : () => {
     check.status = document.getElementById("offline-checkin-status");
+    check.cameraStatus = document.getElementById("camera-status");
     check.loadQueue();
     check.renderQueue();
     check.sync();
     window.addEventListener("online", check.sync);
 
     // (A1) START QR SCANNER
-    check.scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    check.scanner = new Html5QrcodeScanner("reader", {
+      fps: 5, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true
+    });
     check.scanner.render((data, res) => {
+      if (check.cameraStatus) { check.cameraStatus.textContent = "QR code detected."; }
       // (A2) STOP ON SCAN
       let buttons = document.querySelectorAll("#reader button");
       buttons[1].click();
@@ -47,6 +53,13 @@ var check = {
         },
         onerr : () => check.queueEvent(data.t, eventId, recordedAt)
       });
+    }, error => {
+      if (!check.cameraStatus) { return; }
+      if (!check.cameraErrorShown && /permission|camera|notallowed|secure/i.test(String(error))) {
+        check.cameraErrorShown = true;
+        check.cameraStatus.textContent =
+          "Camera access was not available. Check browser permissions and HTTPS, then try again.";
+      }
     });
   }
 

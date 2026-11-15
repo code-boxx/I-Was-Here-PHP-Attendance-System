@@ -86,6 +86,16 @@ class Settings extends Core {
           return false;
         }
       }
+      if (in_array($name, ["SESSION_IDLE_MINUTES", "SESSION_ABSOLUTE_HOURS"], true)) {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value<1 || (int)$value>10080
+        ) {
+          $this->error = "Session expiry settings must be whole numbers greater than zero.";
+          return false;
+        }
+      }
     }
     foreach ($settings as $k=>$v) {
       $this->DB->update("settings", ["setting_value"], "`setting_name`=?", [$v, $k]);
