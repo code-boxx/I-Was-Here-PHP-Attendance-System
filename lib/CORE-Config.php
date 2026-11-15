@@ -34,6 +34,8 @@ define("JWT_ALGO", "HS256");
 define("JWT_EXPIRE", 0);
 define("JWT_ISSUER", "");
 define("JWT_SECRET", "");
+// During rotation, keep the old secret here until existing sessions expire.
+define("JWT_SECRET_PREVIOUS", "");
 
 // (F) ERROR HANDLING
 error_reporting(E_ALL & ~E_NOTICE);

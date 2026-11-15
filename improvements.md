@@ -174,7 +174,8 @@ sessions must have an explicit review policy.
    security-event log accessible to admins.
 7. Add account protections such as login throttling, secure recovery, and
    optional administrator MFA.
-8. Add signing-key rotation.
+8. **Implemented:** JWT sessions accept a configured previous signing secret
+   during rotation and transparently reissue sessions with the new secret.
 9. **Implemented:** Report exports and session revocation are recorded in the
    security-event log.
 10. **Implemented:** Deployment hardening, dependency update guidance, and

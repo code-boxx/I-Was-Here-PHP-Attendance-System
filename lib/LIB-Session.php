@@ -1,6 +1,7 @@
 <?php
 class Session extends Core {
   private $jti = null;
+  private $signedWithPreviousKey = false;
   // (A) COMMON COOKIE "TEMPLATE"
   private $cookie = [
     "domain" => HOST_NAME,
@@ -24,9 +25,19 @@ class Session extends Core {
     // (B2) DECODE JWT COOKIE
     if (isset($_COOKIE["cbsess"])) { try {
       require PATH_LIB . "jwt/autoload.php";
-      $token = Firebase\JWT\JWT::decode(
-        $_COOKIE["cbsess"], new Firebase\JWT\Key(JWT_SECRET, JWT_ALGO)
-      );
+      try {
+        $token = Firebase\JWT\JWT::decode(
+          $_COOKIE["cbsess"], new Firebase\JWT\Key(JWT_SECRET, JWT_ALGO)
+        );
+      } catch (Exception $currentKeyError) {
+        if (!defined("JWT_SECRET_PREVIOUS") || JWT_SECRET_PREVIOUS==="") {
+          throw $currentKeyError;
+        }
+        $token = Firebase\JWT\JWT::decode(
+          $_COOKIE["cbsess"], new Firebase\JWT\Key(JWT_SECRET_PREVIOUS, JWT_ALGO)
+        );
+        $this->signedWithPreviousKey = true;
+      }
       $valid = is_object($token);
     } catch (Exception $e) { $valid = false; }}
 
@@ -90,6 +101,10 @@ class Session extends Core {
         throw new Exception("Invalid or revoked session.");
       }
       $this->save();
+      if ($this->signedWithPreviousKey) {
+        $this->signedWithPreviousKey = false;
+        $this->save();
+      }
     }
   }
 

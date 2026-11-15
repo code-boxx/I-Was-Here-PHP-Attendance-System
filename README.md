@@ -72,6 +72,9 @@ or expired states and retried idempotently when connectivity returns.
   submit this token automatically.
 - See [SECURITY.md](SECURITY.md) for private vulnerability reporting and
   production security requirements.
+- To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
+  the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
+  has elapsed; then clear the previous value.
 
 ## BRANCHES, VERSIONS & ROLLBACKS
 
