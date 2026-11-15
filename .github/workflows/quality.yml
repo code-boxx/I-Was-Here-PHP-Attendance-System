@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '20'
       - name: Lint PHP
-        run: find lib pages bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find lib pages bin tests -name '*.php' -print0 | xargs -0 -n1 php -l && php -l health.php
       - name: Check JavaScript syntax
         run: find assets tests -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run JavaScript tests

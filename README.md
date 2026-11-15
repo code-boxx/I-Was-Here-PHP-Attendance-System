@@ -58,6 +58,9 @@ or expired states and retried idempotently when connectivity returns.
 - Run the JavaScript tests with `node --test tests/*.test.js`.
 - Pull requests run PHP linting, JavaScript syntax checks, and the JavaScript
   regression suite through GitHub Actions.
+- `GET /health.php` provides a readiness check for load balancers and
+  monitoring. It returns only `{"status":"ok"}` or an unavailable status and
+  never exposes database diagnostics.
 - Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test. The current validation environment rejected its configured `root@localhost` credentials, so this suite still needs a working test database.
 - Email notifications are opt-in and require PHP's `mail()` transport to be configured. Run `php bin/send-notifications.php --dry-run` to verify the worker without sending mail. In production, schedule `php /absolute/path/to/project/bin/send-notifications.php` with cron (for example every 15 minutes); failures retry up to five times and are logged.
 - Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.

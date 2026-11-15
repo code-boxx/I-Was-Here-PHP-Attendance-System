@@ -204,8 +204,8 @@ after logout or after permissions change.
    migration recovery.
 4. Provide a reproducible local environment, such as Docker Compose, and
    development seed data.
-5. Add a health check that reports application and database readiness without
-   exposing secrets or sensitive diagnostics.
+5. **Implemented:** `health.php` reports application and database readiness
+   without exposing secrets or sensitive diagnostics.
 6. Document supported versions, deployment hardening, backups, restore
    checks, contribution guidelines, and vulnerability reporting.
 
