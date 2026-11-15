@@ -80,6 +80,11 @@ class Report extends Core {
     if (!$this->canViewCourseReport($code)) {
       throw new RuntimeException("No access permission");
     }
+    $this->Core->load("Security");
+    $this->Security->log("report_exported", $_SESSION["user"]["user_id"] ?? null, [
+      "report" => "attendance", "course_code" => $code, "format" => $format,
+      "from" => $from, "to" => $to
+    ]);
 
     // (A2) GET CLASSES IN THE OPTIONAL DATE RANGE
     $sql = "SELECT cl.`class_id`, DATE_FORMAT(cl.`class_date`, '".DT_LONG."') `cd`,

@@ -5,13 +5,17 @@ class Security extends Core {
       throw new InvalidArgumentException("Invalid security event type.");
     }
     if (!is_array($details)) { $details = []; }
-    $this->DB->insert(
-      "security_events",
-      ["event_type", "user_id", "ip_address", "user_agent", "details", "created_at"],
-      [$eventType, $userId, $_SERVER["REMOTE_ADDR"] ?? null,
-       substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255),
-       json_encode($details, JSON_INVALID_UTF8_SUBSTITUTE), date("Y-m-d H:i:s")]
-    );
+    try {
+      $this->DB->insert(
+        "security_events",
+        ["event_type", "user_id", "ip_address", "user_agent", "details", "created_at"],
+        [$eventType, $userId, $_SERVER["REMOTE_ADDR"] ?? null,
+         substr((string)($_SERVER["HTTP_USER_AGENT"] ?? ""), 0, 255),
+         json_encode($details, JSON_INVALID_UTF8_SUBSTITUTE), date("Y-m-d H:i:s")]
+      );
+    } catch (PDOException $e) {
+      error_log("Security event logging failed: ".$e->getMessage());
+    }
   }
 
   function getEvents ($limit=100) {

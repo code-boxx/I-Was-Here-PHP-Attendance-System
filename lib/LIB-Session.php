@@ -184,6 +184,12 @@ class Session extends Core {
        WHERE `session_id`=? AND `user_id`=? AND `revoked_at` IS NULL",
       [$sessionId, $_SESSION["user"]["user_id"]]
     );
+    if ($this->DB->lastRows>0) {
+      $this->Core->load("Security");
+      $this->Security->log("session_revoked", $_SESSION["user"]["user_id"], [
+        "session_id" => hash("sha256", $sessionId)
+      ]);
+    }
     return $this->DB->lastRows>0;
   }
 }

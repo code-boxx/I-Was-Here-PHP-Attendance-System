@@ -175,9 +175,10 @@ sessions must have an explicit review policy.
 7. Add account protections such as login throttling, secure recovery, and
    optional administrator MFA.
 8. Add signing-key rotation.
-9. Record exports and session revocation in the security-event log.
-10. Establish dependency monitoring, patching guidance, and a vulnerability
-   reporting process.
+9. **Implemented:** Report exports and session revocation are recorded in the
+   security-event log.
+10. **Implemented:** Deployment hardening, dependency update guidance, and
+    private vulnerability-reporting guidance are documented in `SECURITY.md`.
 11. Define retention, export, and deletion controls for personal data.
 
 Offline caches and service-worker behavior must not expose sensitive records
