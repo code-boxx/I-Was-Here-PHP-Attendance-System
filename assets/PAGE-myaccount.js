@@ -12,6 +12,43 @@ function save () {
     return false;
   }
 
+  var sessionManager = {
+    load : () => cb.api({
+      mod : "session", act : "getActiveSessions", passmsg : false,
+      onpass : result => {
+        let target = document.getElementById("active-sessions");
+        if (!target) { return; }
+        target.replaceChildren();
+        (result.data || []).forEach(session => {
+          let row = document.createElement("div");
+          row.className = "d-flex justify-content-between align-items-center border p-2";
+          let label = document.createElement("span");
+          label.textContent = `${session.current ? "This device" : "Other device"} — last active ${session.last_seen_at}`;
+          let button = document.createElement("button");
+          button.type = "button";
+          button.className = "btn btn-sm btn-outline-danger";
+          button.textContent = "Revoke";
+          button.addEventListener("click", () => sessionManager.revoke(session.session_id));
+          row.append(label, button);
+          target.append(row);
+        });
+        if (!target.children.length) { target.textContent = "No active sessions found."; }
+      }
+    }),
+    revoke : sessionId => cb.modal(
+      "Revoke session",
+      "That session will be signed out on its next request.",
+      () => cb.api({
+        mod : "session", act : "revokeSession",
+        data : { sessionId : sessionId },
+        passmsg : "Session revoked",
+        onpass : sessionManager.load
+      })
+    )
+  };
+
+  window.addEventListener("load", sessionManager.load);
+
   var notificationPreferences = {
     save : () => {
       cb.api({

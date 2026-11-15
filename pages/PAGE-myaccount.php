@@ -84,4 +84,13 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     </form>
   </div>
 </section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Active sessions</h3>
+    <p class="text-secondary">Revoke access from browsers or devices you no longer use.</p>
+    <div id="active-sessions" class="d-grid gap-2" role="status" aria-live="polite">
+      Loading active sessions...
+    </div>
+  </div>
+</section>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php";
