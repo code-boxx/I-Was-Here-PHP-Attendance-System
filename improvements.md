@@ -182,9 +182,9 @@ sessions must have an explicit review policy.
     monitoring, and private vulnerability-reporting guidance are documented
     in `SECURITY.md`.
 11. **Partially implemented:** Signed-in users can export their own profile,
-    course, attendance, and correction data. Security-event retention is
-    configurable; broader deletion policy controls still require institutional
-    policy decisions.
+    course, attendance, and correction data and submit deletion requests for
+    administrator review. Security-event retention is configurable; actual
+    deletion remains policy-controlled.
 
 Offline caches and service-worker behavior must not expose sensitive records
 after logout or after permissions change.

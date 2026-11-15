@@ -388,6 +388,70 @@ class Users extends Core {
       $this->error = "Please sign in first.";
       return false;
     }
+
+    function requestDeletion () {
+      if (!isset($_SESSION["user"]["user_id"])) {
+        $this->error = "Please sign in first.";
+        return false;
+      }
+      $id = $_SESSION["user"]["user_id"];
+      $pending = $this->DB->fetchCol(
+        "SELECT `request_id` FROM `privacy_requests`
+         WHERE `user_id`=? AND `request_type`='deletion' AND `request_status`='pending'
+         LIMIT 1",
+        [$id]
+      );
+      if ($pending!==null) {
+        $this->error = "A deletion request is already pending.";
+        return false;
+      }
+      $this->DB->insert("privacy_requests",
+        ["user_id", "request_type", "requested_at"],
+        [$id, "deletion", date("Y-m-d H:i:s")]);
+      $this->Core->load("Security");
+      $this->Security->log("deletion_requested", $id);
+      return true;
+    }
+
+    function getDeletionRequests () {
+      if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+        $this->error = "Administrator access required.";
+        return false;
+      }
+      return $this->DB->fetchAll(
+        "SELECT r.*, u.`user_name`, u.`user_email`
+         FROM `privacy_requests` r JOIN `users` u USING (`user_id`)
+         ORDER BY r.`requested_at` DESC LIMIT 500"
+      ) ?? [];
+    }
+
+    function resolveDeletionRequest ($requestId, $decision, $note="") {
+      if (($_SESSION["user"]["user_level"] ?? "")!=="A" ||
+          !is_numeric($requestId) || !in_array($decision, ["approved", "rejected"], true)) {
+        $this->error = "Invalid privacy request decision.";
+        return false;
+      }
+      $note = trim((string)$note);
+      if (strlen($note)>500) {
+        $this->error = "Decision note is too long.";
+        return false;
+      }
+      $this->DB->query(
+        "UPDATE `privacy_requests`
+         SET `request_status`=?, `decided_by`=?, `decided_at`=NOW(), `decision_note`=?
+         WHERE `request_id`=? AND `request_status`='pending'",
+        [$decision, $_SESSION["user"]["user_id"], $note==="" ? null : $note, (int)$requestId]
+      );
+      if ($this->DB->lastRows<1) {
+        $this->error = "Privacy request was not found or was already decided.";
+        return false;
+      }
+      $this->Core->load("Security");
+      $this->Security->log("deletion_request_resolved", $_SESSION["user"]["user_id"], [
+        "request_id" => (int)$requestId, "decision" => $decision
+      ]);
+      return true;
+    }
     $id = $_SESSION["user"]["user_id"];
     $user = $this->DB->fetch(
       "SELECT `user_id`,`user_level`,`user_name`,`user_email` FROM `users` WHERE `user_id`=?",

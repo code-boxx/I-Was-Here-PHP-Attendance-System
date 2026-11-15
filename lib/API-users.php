@@ -10,6 +10,8 @@ $_CORE->autoAPI([
   "suspend" => ["Users", "suspend"],
   "import" => ["Users", "import"],
   "previewImport" => ["Users", "previewImport"]
+  ,"getDeletionRequests" => ["Users", "getDeletionRequests"]
+  ,"resolveDeletionRequest" => ["Users", "resolveDeletionRequest"]
 ]);
 
 // (C) INVALID REQUEST

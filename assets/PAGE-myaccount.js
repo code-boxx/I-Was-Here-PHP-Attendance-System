@@ -100,6 +100,14 @@ function save () {
     }
   });
 
+  window.requestDeletion = () => {
+    if (!window.confirm("Submit an account deletion request for administrator review?")) { return; }
+    cb.api({
+      mod : "session", act : "requestDeletion",
+      passmsg : "Deletion request submitted"
+    });
+  };
+
   // (C) PASSWORD STRENGTH
   if (!cb.checker(data.pass)) {
     cb.modal("Please Check", "Password must be at least 8 characters, alphanumeric.");

@@ -100,6 +100,13 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     <button type="button" class="btn btn-outline-primary" onclick="exportMyData()">Download my data</button>
   </div>
 </section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Account deletion</h3>
+    <p class="text-secondary">Submit a request for an administrator to review. Your records are not deleted automatically.</p>
+    <button type="button" class="btn btn-outline-danger" onclick="requestDeletion()">Request account deletion</button>
+  </div>
+</section>
 <?php if (($_SESSION["user"]["user_level"] ?? "")==="A") { ?>
 <section class="row justify-content-center mt-4">
   <div class="col-md-10 bg-white border p-4">
