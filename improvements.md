@@ -201,7 +201,8 @@ after logout or after permissions change.
 
 ## Step 9 — Improve contributor and operator workflows — Planned
 
-1. Add continuous integration for automated tests and supported PHP versions.
+1. **Implemented:** Continuous integration runs linting and JavaScript tests
+   across PHP 8.0 through 8.3.
 2. Add PHP static analysis and consistent formatting checks.
 3. Document the database schema, API behavior, installation, upgrades, and
    migration recovery.

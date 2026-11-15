@@ -57,7 +57,7 @@ or expired states and retried idempotently when connectivity returns.
 - In the installer, use the database hostname that the PHP process can reach. For containers, this is usually the database service name, not `localhost`.
 - Run the JavaScript tests with `node --test tests/*.test.js`.
 - Pull requests run PHP linting, JavaScript syntax checks, and the JavaScript
-  regression suite through GitHub Actions.
+  regression suite through GitHub Actions on PHP 8.0 through 8.3.
 - `GET /health.php` provides a readiness check for load balancers and
   monitoring. It returns only `{"status":"ok"}` or an unavailable status and
   never exposes database diagnostics.
