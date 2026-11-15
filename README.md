@@ -17,16 +17,24 @@ percentages. Offline timestamps are unverified; offline requests do not count
 as attendance until a teacher approves them. Student QR check-ins that lose
 connectivity are stored locally with pending, syncing, synchronized, failed,
 or expired states and retried idempotently when connectivity returns.
+
+Security and operations include configurable session expiry, server-side
+session revocation, administrator TOTP MFA, JWT key rotation support, CSRF
+protection, throttling, security-event auditing, retention controls, personal
+data export and deletion requests, dependency monitoring, CI, Docker
+development support, and a readiness health check.
 <br><br>
 
 ## :white_check_mark: FEATURES
 1) NFC and passwordless login.
-2) Installble progressive web app.
+2) Installable progressive web app.
 3) Take attendance manually or with a teacher-controlled rotating QR session.
 4) Follow live class attendance and view student summaries and correction requests.
 5) Configure the school-wide attendance warning threshold in System Settings.
 6) Filter attendance reports by date and download CSV or open a print-friendly report.
 7) Schedule opt-in notification delivery with `php /path/to/project/bin/send-notifications.php`; preview discovery safely with `--dry-run`.
+8) Download personal attendance data as JSON and scheduled classes as iCalendar.
+9) Review security events and privacy requests as an administrator.
 <br><br>
 
 ## :camera: SCREENSHOTS

@@ -22,16 +22,21 @@ branch; a roadmap item is not complete just because it is listed here.
   heading, and logout/session expiry clears offline attendance data and
   service-worker caches. Device-level PWA testing and a formal cache-retention
   policy remain.
-- **Step 7: In progress.** Broader security/privacy work has started; idle
-  and absolute session expiry are now configurable and enforced.
-- **Steps 8-9: Planned.** Integrations and contributor/operator tooling.
+- **Step 7: In progress.** Session security, MFA, key rotation, security-event
+  auditing, retention controls, personal export, and deletion-request review
+  are implemented. Irreversible deletion policy still requires institutional
+  approval.
+- **Step 8: In progress.** Calendar export, notification controls, and API
+  documentation are implemented. LMS/SIS integrations and webhooks remain.
+- **Step 9: In progress.** CI, Docker development setup, seed data, health
+  checks, dependency monitoring, and contributor documentation are implemented.
+  Static analysis and formatting checks remain.
 - **Step 10: Long term.** Larger institutional capabilities.
 
 **Validation checkpoint (2026-11-15):** JavaScript tests, JavaScript syntax
 checks, PHP lint, and `git diff --check` passed for the recent changes. The
-database integration suite is available but requires a configured disposable
-MySQL test database; the current environment rejected the configured
-`root@localhost` credentials.
+database integration suite is available and requires a configured disposable
+MySQL/MariaDB test database with valid credentials.
 
 ## Step 1 — Secure attendance foundations — Implemented
 
@@ -136,16 +141,16 @@ uses the teacher review time.
    workflows now cover course edits and class schedule changes; other
    administrative operations remain.
 
-## Step 6 — Make the PWA dependable on mobile and unreliable networks — Planned
+## Step 6 — Make the PWA dependable on mobile and unreliable networks — In progress
 
-1. Build on the connection hint with explicit pending, syncing, synchronized,
+1. **Implemented:** Build on the connection hint with explicit pending, syncing, synchronized,
    failed, and expired states for queued work.
-2. Add safe retry and duplicate prevention for submissions that time out.
-3. Improve camera permission guidance, low-light QR scanning, and successful
+2. **Implemented:** Add safe retry and duplicate prevention for submissions that time out.
+3. **Implemented:** Improve camera permission guidance, low-light QR scanning, and successful
    check-in confirmation.
-4. Provide accessible font sizing, keyboard navigation, and screen-reader
+4. **Implemented:** Provide accessible font sizing, keyboard navigation, and screen-reader
    feedback throughout attendance workflows.
-5. Reduce unnecessary network requests and provide a low-bandwidth experience.
+5. **Implemented:** Reduce unnecessary network requests and provide a low-bandwidth experience.
 6. Test installation, updates, and offline behavior on supported Android and
    iOS browsers.
 7. Decide whether and how to cache class information. Any cached student data
@@ -189,7 +194,7 @@ sessions must have an explicit review policy.
 Offline caches and service-worker behavior must not expose sensitive records
 after logout or after permissions change.
 
-## Step 8 — Extend communication and approved integrations — Planned
+## Step 8 — Extend communication and approved integrations — In progress
 
 1. Expand notification options only with user preferences, deduplication,
    retries, and clear delivery status.
@@ -202,7 +207,7 @@ after logout or after permissions change.
 5. **Implemented:** Signed-in users can export their scheduled classes as an
    iCalendar (`.ics`) download without exposing other users' schedules.
 
-## Step 9 — Improve contributor and operator workflows — Planned
+## Step 9 — Improve contributor and operator workflows — In progress
 
 1. **Implemented:** Continuous integration runs linting and JavaScript tests
    across PHP 8.0 through 8.3.
@@ -214,8 +219,8 @@ after logout or after permissions change.
    seed script.
 5. **Implemented:** `health.php` reports application and database readiness
    without exposing secrets or sensitive diagnostics.
-6. Document supported versions, deployment hardening, backups, restore
-   checks, contribution guidelines, and vulnerability reporting.
+6. **Implemented:** Document supported versions, deployment hardening, backups,
+   restore checks, contribution guidelines, and vulnerability reporting.
 
 Prioritize regression tests, safe migrations, and a reproducible development
 setup before considering a framework rewrite.
