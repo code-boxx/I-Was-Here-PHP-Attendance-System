@@ -77,6 +77,8 @@ or expired states and retried idempotently when connectivity returns.
   has elapsed; then clear the previous value.
 - Administrators can enable TOTP MFA from My Account. Store the generated
   recovery codes securely; they are shown only during enrollment.
+- Signed-in users can download a JSON export of their own account and
+  attendance data from My Account.
 
 ## BRANCHES, VERSIONS & ROLLBACKS
 

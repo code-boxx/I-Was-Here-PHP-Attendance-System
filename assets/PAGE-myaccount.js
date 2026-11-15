@@ -88,6 +88,18 @@ function save () {
     }
   };
 
+  window.exportMyData = () => cb.api({
+    mod : "session", act : "exportMyData", passmsg : false,
+    onpass : result => {
+      let blob = new Blob([JSON.stringify(result.data, null, 2)], {type:"application/json"});
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "my-attendance-data.json";
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+  });
+
   // (C) PASSWORD STRENGTH
   if (!cb.checker(data.pass)) {
     cb.modal("Please Check", "Password must be at least 8 characters, alphanumeric.");

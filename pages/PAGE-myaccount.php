@@ -93,6 +93,13 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
     </div>
   </div>
 </section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Personal data</h3>
+    <p class="text-secondary">Download a copy of your profile, courses, attendance, and correction requests.</p>
+    <button type="button" class="btn btn-outline-primary" onclick="exportMyData()">Download my data</button>
+  </div>
+</section>
 <?php if (($_SESSION["user"]["user_level"] ?? "")==="A") { ?>
 <section class="row justify-content-center mt-4">
   <div class="col-md-10 bg-white border p-4">

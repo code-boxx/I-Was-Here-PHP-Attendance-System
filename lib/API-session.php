@@ -10,6 +10,7 @@ $_CORE->autoAPI([
   "getActiveSessions" => ["Session", "getActiveSessions"],
   "revokeSession" => ["Session", "revokeSession"],
   "update" => ["Users", "update"],
+  "exportMyData" => ["Users", "exportMyData"],
   "forgotA" => ["Forgot", "request"],
   "forgotB" => ["Forgot", "reset"]
 ]);

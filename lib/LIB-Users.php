@@ -383,6 +383,47 @@ class Users extends Core {
     return true;
   }
 
+  function exportMyData () {
+    if (!isset($_SESSION["user"]["user_id"])) {
+      $this->error = "Please sign in first.";
+      return false;
+    }
+    $id = $_SESSION["user"]["user_id"];
+    $user = $this->DB->fetch(
+      "SELECT `user_id`,`user_level`,`user_name`,`user_email` FROM `users` WHERE `user_id`=?",
+      [$id]
+    );
+    if (!is_array($user)) {
+      $this->error = "Account not found.";
+      return false;
+    }
+    $courses = $this->DB->fetchAll(
+      "SELECT c.`course_code`,`course_name`,`course_desc`,`course_start`,`course_end`
+       FROM `courses_users` cu JOIN `courses` c USING (`course_code`)
+       WHERE cu.`user_id`=? ORDER BY c.`course_start`, c.`course_code`",
+      [$id]
+    ) ?? [];
+    $attendance = $this->DB->fetchAll(
+      "SELECT cl.`course_code`,cl.`class_date`,cl.`class_desc`,a.`a_status`,
+              a.`a_date`,a.`a_notes`
+       FROM `attendance` a JOIN `classes` cl USING (`class_id`)
+       WHERE a.`user_id`=? ORDER BY cl.`class_date`",
+      [$id]
+    ) ?? [];
+    $corrections = $this->DB->fetchAll(
+      "SELECT cl.`course_code`,cl.`class_date`,r.`requested_status`,
+              r.`request_reason`,r.`request_status`,r.`submitted_at`,
+              r.`decided_at`,r.`decision_note`
+       FROM `attendance_corrections` r JOIN `classes` cl USING (`class_id`)
+       WHERE r.`user_id`=? ORDER BY r.`submitted_at`",
+      [$id]
+    ) ?? [];
+    $this->Core->load("Security");
+    $this->Security->log("personal_data_exported", $id);
+    return ["exported_at" => date("c"), "user" => $user, "courses" => $courses,
+      "attendance" => $attendance, "corrections" => $corrections];
+  }
+
   // (K) LOGOUT
   function logout () {
     // (K1) REVOKE ALL EXISTING TOKENS FOR THIS ACCOUNT
