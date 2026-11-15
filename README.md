@@ -1,9 +1,8 @@
-# I Was Here — Community Edition v2.5
+# I Was Here — Secure Attendance Management System
 
-I Was Here is an open-source PHP Student Attendance Management System. This
-repository is a community-maintained continuation of the original project,
-focused on security, reliability, accessibility, and practical improvements.
-It is not an official upstream release.
+I Was Here is an open-source PHP Student Attendance Management System focused
+on secure attendance workflows, reliability, accessibility, privacy, and
+practical administration tools.
 
 The system features NFC and passwordless login, teacher-controlled rotating QR
 attendance sessions, live teacher dashboards, configurable attendance
@@ -37,16 +36,6 @@ development support, and a readiness health check.
 9) Review security events and privacy requests as an administrator.
 <br><br>
 
-## :camera: SCREENSHOTS
-<p float="left">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-1.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-2.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-3.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-4.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-5.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-6.png">
-</p><br>
-
 ## :ballot_box_with_check: REQUIREMENTS
 1) LAMP/WAMP/MAMP/XAMPP
 2) Apache Mod Rewrite
@@ -69,7 +58,7 @@ development support, and a readiness health check.
 - `GET /health.php` provides a readiness check for load balancers and
   monitoring. It returns only `{"status":"ok"}` or an unavailable status and
   never exposes database diagnostics.
-- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test. The current validation environment rejected its configured `root@localhost` credentials, so this suite still needs a working test database.
+- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test. Configure a dedicated database user before running the suite.
 - Email notifications are opt-in and require PHP's `mail()` transport to be configured. Run `php bin/send-notifications.php --dry-run` to verify the worker without sending mail. In production, schedule `php /absolute/path/to/project/bin/send-notifications.php` with cron (for example every 15 minutes); failures retry up to five times and are logged.
 - Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.
 - Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.
