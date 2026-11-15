@@ -10,6 +10,9 @@ services:
       IWH_DB_USER: iwashere_app
       IWH_DB_PASSWORD: ${IWH_DB_PASSWORD:-dev-only-password}
       IWH_JWT_SECRET: ${IWH_JWT_SECRET:-dev-only-change-this-secret}
+      IWH_ALLOW_DEV_SEED: ${IWH_ALLOW_DEV_SEED:-0}
+      IWH_DEV_ADMIN_PASSWORD: ${IWH_DEV_ADMIN_PASSWORD:-dev-admin-change-me}
+      IWH_DEV_STUDENT_PASSWORD: ${IWH_DEV_STUDENT_PASSWORD:-dev-student-change-me}
     depends_on:
       db:
         condition: service_healthy

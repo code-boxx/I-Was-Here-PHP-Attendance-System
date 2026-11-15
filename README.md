@@ -78,6 +78,10 @@ or expired states and retried idempotently when connectivity returns.
   development secrets, and run `docker compose up --build`. Open
   `http://localhost:8080/` and complete the installer. The Compose database
   uses a named volume and is not intended for production.
+- After installation, development seed data can be loaded with
+  `IWH_ALLOW_DEV_SEED=1 docker compose run --rm app php bin/seed-dev.php`.
+  The seed command is disabled unless explicitly enabled and creates only
+  `admin@example.test`, `student@example.test`, and course `DEMO-101`.
 - To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
   the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
   has elapsed; then clear the previous value.

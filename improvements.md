@@ -210,7 +210,8 @@ after logout or after permissions change.
 3. Document the database schema, API behavior, installation, upgrades, and
    migration recovery.
 4. **Implemented:** Docker Compose provides a reproducible PHP/Apache and
-   MariaDB development environment. Development seed data remains future work.
+   MariaDB development environment, with an explicitly guarded development
+   seed script.
 5. **Implemented:** `health.php` reports application and database readiness
    without exposing secrets or sensitive diagnostics.
 6. Document supported versions, deployment hardening, backups, restore
