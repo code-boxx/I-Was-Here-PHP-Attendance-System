@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /lib/jwt/firebase/php-jwt
+    schedule:
+      interval: weekly
+  - package-ecosystem: composer
+    directory: /lib/WebAuthn/lbuchs/webauthn
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

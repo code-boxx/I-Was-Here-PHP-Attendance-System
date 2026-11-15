@@ -178,8 +178,9 @@ sessions must have an explicit review policy.
    during rotation and transparently reissue sessions with the new secret.
 9. **Implemented:** Report exports and session revocation are recorded in the
    security-event log.
-10. **Implemented:** Deployment hardening, dependency update guidance, and
-    private vulnerability-reporting guidance are documented in `SECURITY.md`.
+10. **Implemented:** Deployment hardening, weekly Dependabot dependency
+    monitoring, and private vulnerability-reporting guidance are documented
+    in `SECURITY.md`.
 11. **Partially implemented:** Signed-in users can export their own profile,
     course, attendance, and correction data. Retention and deletion policy
     controls still require institutional policy decisions.
@@ -197,7 +198,8 @@ after logout or after permissions change.
    authentication, authorization, and delivery retry controls.
 4. Design controlled enrollment imports or integrations with learning
    management and student information systems.
-5. Consider calendar exports for class schedules.
+5. **Implemented:** Signed-in users can export their scheduled classes as an
+   iCalendar (`.ics`) download without exposing other users' schedules.
 
 ## Step 9 — Improve contributor and operator workflows — Planned
 

@@ -72,6 +72,8 @@ or expired states and retried idempotently when connectivity returns.
   submit this token automatically.
 - See [SECURITY.md](SECURITY.md) for private vulnerability reporting and
   production security requirements.
+- Dependabot checks the bundled Composer dependencies and GitHub Actions
+  weekly; review update pull requests before deploying them.
 - To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
   the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
   has elapsed; then clear the previous value.
@@ -79,6 +81,8 @@ or expired states and retried idempotently when connectivity returns.
   recovery codes securely; they are shown only during enrollment.
 - Signed-in users can download a JSON export of their own account and
   attendance data from My Account.
+- Signed-in users can download their scheduled classes as an iCalendar feed
+  from `/calendar.php`.
 
 ## BRANCHES, VERSIONS & ROLLBACKS
 
