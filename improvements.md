@@ -207,8 +207,8 @@ after logout or after permissions change.
 1. **Implemented:** Continuous integration runs linting and JavaScript tests
    across PHP 8.0 through 8.3.
 2. Add PHP static analysis and consistent formatting checks.
-3. Document the database schema, API behavior, installation, upgrades, and
-   migration recovery.
+3. **Implemented:** Contributor documentation now covers the database
+   migration process, API behavior, installation, upgrades, and validation.
 4. **Implemented:** Docker Compose provides a reproducible PHP/Apache and
    MariaDB development environment, with an explicitly guarded development
    seed script.

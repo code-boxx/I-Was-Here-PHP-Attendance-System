@@ -115,6 +115,8 @@ or expired states and retried idempotently when connectivity returns.
 3) [For The Developers](https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev)
 4) [Current features and improvement ideas](features.md)
 5) [Additional improvement roadmap and implementation status](improvements.md)
+6) [Contributor guide](CONTRIBUTING.md)
+7) [API overview](docs/API.md)
 
 ## :electric_plug: FRAMEWORKS
 1) PHP Packages
