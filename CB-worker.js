@@ -1,11 +1,14 @@
+const CACHE_NAME = "IWASHERE-v12";
+
 // (A) CREATE/INSTALL CACHE
 self.addEventListener("install", evt => {
   self.skipWaiting();
   evt.waitUntil(
-    caches.open("IWASHERE")
+    caches.open(CACHE_NAME)
     .then(cache => cache.addAll([
       // (A1) ADMIN
       "assets/A-classes.js",
+      "assets/A-holidays.js",
       "assets/A-course.js",
       "assets/A-course-user.js",
       "assets/A-import.js",
@@ -47,7 +50,12 @@ self.addEventListener("install", evt => {
       
       // (A6) TEACHER & STUDENT
       "assets/TA-attend.js",
+      "assets/TA-classqr.js",
+      "assets/TA-corrections.js",
+      "assets/TA-projector.js",
       "assets/T-classes.js",
+      "assets/U-attendance.js",
+      "assets/U-corrections.js",
       "assets/U-classes.js",
       "assets/U-qr.js",
     ]))
@@ -55,13 +63,31 @@ self.addEventListener("install", evt => {
   );
 });
 
-// (B) CLAIM CONTROL INSTANTLY
-self.addEventListener("activate", evt => self.clients.claim());
+// (B) REMOVE OLD CACHES AND CLAIM CONTROL
+self.addEventListener("activate", evt => evt.waitUntil(
+  caches.keys()
+    .then(keys => Promise.all(keys
+      .filter(key => key.startsWith("IWASHERE") && key !== CACHE_NAME)
+      .map(key => caches.delete(key))
+    ))
+    .then(() => self.clients.claim())
+));
+
+// Clear cached application data when an authenticated session ends.
+self.addEventListener("message", evt => {
+  if (evt.data?.type === "CLEAR_APP_CACHE") {
+    evt.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))));
+  }
+});
 
 // (C) LOAD FROM CACHE FIRST, FALLBACK TO NETWORK IF NOT FOUND
-self.addEventListener("fetch", evt => evt.respondWith(
-  caches.match(evt.request).then(res => res || fetch(evt.request))
-));
+self.addEventListener("fetch", evt => {
+  if (evt.request.method !== "GET" || /\/api(?:\/|$)|[?&](?:mod|act)=/i.test(evt.request.url)) {
+    evt.respondWith(fetch(evt.request));
+    return;
+  }
+  evt.respondWith(caches.match(evt.request).then(res => res || fetch(evt.request)));
+});
 
 // (D) LISTEN TO PUSH NOTIFICATIONS
 self.addEventListener("push", evt => {

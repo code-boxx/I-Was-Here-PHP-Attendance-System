@@ -12,14 +12,14 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 
 <!-- (B2) SEARCH BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return classes.search()">
-  <select id="search-range" class="form-select w-auto" onchange="classes.stog()">
+  <select id="search-range" aria-label="Date filter" class="form-select w-auto" onchange="classes.stog()">
     <option value="1">After</option>
     <option value="-1">Before</option>
     <option value="0">On</option>
     <option value="">All</option>
   </select>
-  <input type="date" id="search-date" class="mx-1 form-control form-control-sm" value="<?=date("Y-m-d")?>">
-  <button class="btn btn-primary p-3 ico-sm icon-search" type="submit"></button>
+  <input type="date" id="search-date" aria-label="Filter date" class="mx-1 form-control form-control-sm" value="<?=date("Y-m-d")?>">
+  <button class="btn btn-primary p-3 ico-sm icon-search" type="submit" aria-label="Search classes"></button>
 </form>
 
 <!-- (B3) CLASSES LIST -->

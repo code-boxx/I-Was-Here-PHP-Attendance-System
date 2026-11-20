@@ -32,9 +32,27 @@ var cb = {
 
     // (A5) SIDEBAR
     cb.hSide = document.getElementById("cb-side");
+
+    // (A6) CONNECTION STATUS
+    cb.networkStatus();
+    window.addEventListener("online", cb.networkStatus);
+    window.addEventListener("offline", cb.networkStatus);
   },
 
   // (B) HTML INTERFACE
+  // (B0) CONNECTION STATUS
+  networkStatus : () => {
+    let status = document.getElementById("network-status");
+    if (!status) { return; }
+    if (navigator.onLine) {
+      status.textContent = "Online (network detected)";
+      status.className = "small text-success";
+    } else {
+      status.textContent = "Offline - changes may not sync";
+      status.className = "small text-warning";
+    }
+  },
+
   // (B1) LOADING SPINNER
   //  show : boolean, show or hide loading spinner
   loading : show => {
@@ -86,7 +104,12 @@ var cb = {
   }},
 
   // (B5) TOGGLE SIDEBAR
-  toggle : () => cb.hSide.classList.toggle("show"),
+  toggle : () => {
+    cb.hSide.classList.toggle("show");
+    document.getElementById("cb-toggle").setAttribute(
+      "aria-expanded", cb.hSide.classList.contains("show") ? "true" : "false"
+    );
+  },
 
   // (C) AJAX CALL
   //  url : string, target URL
@@ -105,6 +128,9 @@ var cb = {
     // (C2) DATA TO SEND
     var data = new FormData();
     if (opt.data) { for (let [k,v] of Object.entries(opt.data)) { data.append(k, v); }}
+    if (cbhost.csrf && !data.has("csrf_token")) {
+      data.append("csrf_token", cbhost.csrf);
+    }
 
     // (C3) AJAX REQUEST
     if (opt.loading) { cb.loading(true); }
@@ -202,9 +228,18 @@ var cb = {
 
     // (E2) ON AJAX LOAD
     options.onpass = res => {
-      if (res=="E") { location.href = cbhost.base + "login/"; }
+      if (res=="E") {
+        cb.clearClientData();
+        location.href = cbhost.base + "login/";
+      }
       else {
-        document.getElementById(opt.target).innerHTML = res;
+        let target = document.getElementById(opt.target);
+        target.innerHTML = res;
+        let heading = target.querySelector("h1, h2, h3, h4, [autofocus]");
+        if (heading) {
+          if (!heading.hasAttribute("tabindex")) { heading.setAttribute("tabindex", "-1"); }
+          heading.focus({ preventScroll : true });
+        }
         if (opt.onload) { opt.onload(); }
       }
     };
@@ -214,10 +249,21 @@ var cb = {
   },
 
   // (F) SIGN OFF
-  bye : () => cb.modal("Please Confirm", "Sign off?", () => cb.api({
+  clearClientData : () => {
+    try { localStorage.removeItem("iwh-offline-attendance"); }
+    catch (error) { console.error("Could not clear offline attendance data.", error); }
+    if (navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type : "CLEAR_APP_CACHE" });
+    }
+  },
+
+  bye : () => cb.modal("Please Confirm", "Sign off?", () => {
+    cb.clearClientData();
+    cb.api({
     mod : "session", act : "logout", passmsg : false,
     onpass : () => location.href = cbhost.base + "login/"
-  })),
+    });
+  }),
 
   // (G) PASSWORD/HASH STRENGTH CHECKER
   checker : hash => /^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i.test(hash),

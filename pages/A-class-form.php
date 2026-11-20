@@ -33,8 +33,8 @@ if ($edit) {
     <div class="form-floating mb-4">
       <input type="datetime-local" class="form-control" id="class_date" required<?=isset($class)?"":" disabled"?>
              value="<?=isset($class)?str_replace(" ", "T", $class["class_date"]):""?>"
-             min="<?=isset($class)?$course["course_start"]." 00:00:00":""?>"
-             max="<?=isset($class)?$course["course_end"]." 23:59:59":""?>">
+             min="<?=isset($class)?$course["course_start"]."T00:00":""?>"
+             max="<?=isset($class)?$course["course_end"]."T23:59":""?>">
       <label>Date Time</label>
     </div>
 
@@ -55,7 +55,54 @@ if ($edit) {
              value="<?=isset($class)?$class["class_desc"]:""?>">
       <label>Description, if any.</label>
     </div>
+    <div class="form-floating mt-4">
+      <input type="text" class="form-control" id="class_room" maxlength="100"<?=isset($class)?"":" disabled"?>
+             value="<?=htmlspecialchars($class["class_room"] ?? "", ENT_QUOTES, "UTF-8")?>">
+      <label for="class_room">Room (optional)</label>
+    </div>
+    <div class="form-floating mt-4">
+      <input type="text" class="form-control" id="class_group" maxlength="100"<?=isset($class)?"":" disabled"?>
+             value="<?=htmlspecialchars($class["class_group"] ?? "", ENT_QUOTES, "UTF-8")?>">
+      <label for="class_group">Student group (optional)</label>
+    </div>
+    <?php if (isset($class)) { ?>
+    <div class="form-floating mt-4">
+      <input type="text" class="form-control" id="class-change-reason" maxlength="500">
+      <label for="class-change-reason">Reason if changing the scheduled date or time</label>
+    </div>
+    <?php } ?>
   </div>
+
+  <?php if (isset($class) && is_array($class)) { $_CORE->load("Classes"); $subs = $_CORE->Classes->getSubstitutes($class["class_id"]); if (!is_array($subs)) { $subs = []; } ?>
+  <div class="fw-bold text-danger mb-2">SUBSTITUTE TEACHERS</div>
+  <div class="bg-white border p-4 mb-4">
+    <div class="mb-3">
+      <label class="form-label" for="class_substitute_expiry">Access expires at</label>
+      <input id="class_substitute_expiry" type="datetime-local" class="form-control mb-3"
+             value="<?=htmlspecialchars(date("Y-m-d\TH:i", strtotime($class["class_date"]." +2 hours")), ENT_QUOTES, "UTF-8")?>" required>
+      <label class="form-label" for="class_substitute_user">Add substitute teacher</label>
+      <div class="input-group">
+        <select id="class_substitute_user" class="form-select">
+          <option value="">Select a teacher</option>
+          <?php if (is_array($teachers)) { foreach ($teachers as $id=>$t) { if ((int)$id === (int)$class["user_id"]) continue; ?>
+            <option value="<?=$id?>"><?=htmlspecialchars($t["user_name"], ENT_QUOTES, "UTF-8")?> (<?=htmlspecialchars($t["user_email"], ENT_QUOTES, "UTF-8")?>)</option>
+          <?php }} ?>
+        </select>
+        <button type="button" class="btn btn-primary" onclick="classes.addSubstitute()">Add</button>
+      </div>
+    </div>
+    <div id="class-substitute-list" class="d-grid gap-2">
+      <?php if (count($subs)>0) { foreach ($subs as $sub) { ?>
+        <div class="d-flex justify-content-between align-items-center border p-2">
+          <span><?=htmlspecialchars($sub["user_name"], ENT_QUOTES, "UTF-8")?> (<?=htmlspecialchars($sub["user_email"], ENT_QUOTES, "UTF-8")?>) — access expires <?=htmlspecialchars($sub["expires_at"], ENT_QUOTES, "UTF-8")?></span>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="classes.removeSubstitute(<?=$sub["user_id"]?>)">Remove</button>
+        </div>
+      <?php } } else { ?>
+        <small class="text-secondary">No substitute teachers assigned.</small>
+      <?php } ?>
+    </div>
+  </div>
+  <?php } ?>
 
   <button type="button" class="my-1 btn btn-danger d-flex-inline" onclick="cb.page(1)">
     <i class="ico-sm icon-undo2"></i> Back

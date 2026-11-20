@@ -34,5 +34,8 @@
   <i class="ico-sm icon-undo2"></i> Back
 </button>
 <button type="button" id="import-go" disabled onclick="im.go(true)" class="my-1 btn btn-primary d-flex-inline">
-  <i class="ico-sm icon-cloud-upload"></i> Start
+  <i class="ico-sm icon-cloud-upload"></i> Apply eligible rows
+</button>
+<button type="button" id="import-errors" onclick="im.downloadErrors()" class="my-1 btn btn-outline-secondary d-none">
+  Download row errors
 </button>

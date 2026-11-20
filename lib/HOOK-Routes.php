@@ -4,9 +4,8 @@
 
 // (A) EXACT PATH ROUTING
 $routes = [
-  // EXAMPLES
-  // "/" => "myhome.php", // http://site.com/ > pages/myhome.php
-  // "foo/" => "bar.php", // http://site.com/foo/ > pages/bar.php
+  "T/corrections/" => "TA-corrections.php",
+  "A/corrections/" => "TA-corrections.php"
 ];
 
 // (B) WILDCARD PATH ROUTING

@@ -1,6 +1,8 @@
 <?php
 // (A) NOT SIGNED IN
 if (!isset($_SESSION["user"])) { $_CORE->redirect(); }
+$_CORE->load("Notifications");
+$notificationPreferences = $_CORE->Notifications->getPreferences();
 
 // (B) PAGE META & SCRIPTS
 $_PMETA = ["load" => [
@@ -49,4 +51,71 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 </div>
 </div>
 </div>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Email notifications</h3>
+    <p class="text-secondary">
+      Optional email notices are sent by the site's scheduled notification worker.
+      You can change these preferences at any time.
+    </p>
+    <form onsubmit="return notificationPreferences.save()">
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="notify-attendance-warning"
+               <?=$notificationPreferences["attendance_warning"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-attendance-warning">
+          Attendance falls below the school threshold
+        </label>
+      </div>
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="notify-correction-decision"
+               <?=$notificationPreferences["correction_decision"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-correction-decision">
+          My attendance correction request is approved or rejected
+        </label>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="notify-class-reminder"
+               <?=$notificationPreferences["class_reminder"] ? "checked" : ""?>>
+        <label class="form-check-label" for="notify-class-reminder">
+          Reminder for a class scheduled within 24 hours
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">Save notification preferences</button>
+    </form>
+  </div>
+</section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Active sessions</h3>
+    <p class="text-secondary">Revoke access from browsers or devices you no longer use.</p>
+    <div id="active-sessions" class="d-grid gap-2" role="status" aria-live="polite">
+      Loading active sessions...
+    </div>
+  </div>
+</section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Personal data</h3>
+    <p class="text-secondary">Download a copy of your profile, courses, attendance, and correction requests.</p>
+    <button type="button" class="btn btn-outline-primary" onclick="exportMyData()">Download my data</button>
+  </div>
+</section>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Account deletion</h3>
+    <p class="text-secondary">Submit a request for an administrator to review. Your records are not deleted automatically.</p>
+    <button type="button" class="btn btn-outline-danger" onclick="requestDeletion()">Request account deletion</button>
+  </div>
+</section>
+<?php if (($_SESSION["user"]["user_level"] ?? "")==="A") { ?>
+<section class="row justify-content-center mt-4">
+  <div class="col-md-10 bg-white border p-4">
+    <h3>Administrator MFA</h3>
+    <p class="text-secondary">Use an authenticator app for administrator sign-in.</p>
+    <button type="button" class="btn btn-primary" onclick="mfa.start()">Set up MFA</button>
+    <button type="button" class="btn btn-outline-danger" onclick="mfa.disable()">Disable MFA</button>
+    <pre id="mfa-result" class="mt-3 d-none"></pre>
+  </div>
+</section>
+<?php } ?>
 <?php require PATH_PAGES . "TEMPLATE-bottom.php";

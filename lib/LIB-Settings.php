@@ -50,9 +50,70 @@ class Settings extends Core {
     if (!is_array($settings)) {
       $settings = json_decode($settings, true);
     }
+    if (!is_array($settings) || count($settings)==0) {
+      $this->error = "Settings data is invalid.";
+      return false;
+    }
+    $allowed = $this->DB->fetchKV(
+      "SELECT `setting_name`, `setting_value` FROM `settings` WHERE `setting_group`=1",
+      [], "setting_name", "setting_value"
+    ) ?? [];
+    foreach ($settings as $name=>$value) {
+      if (
+        !is_string($name) || !array_key_exists($name, $allowed) ||
+        !is_scalar($value) || strlen((string)$value)>255
+      ) {
+        $this->error = "Settings data is invalid.";
+        return false;
+      }
+      if ($name=="ATTENDANCE_THRESHOLD") {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value<1 || (int)$value>100
+        ) {
+          $this->error = "Attendance threshold must be a whole number from 1 to 100.";
+          return false;
+        }
+      }
+      if ($name=="ATTENDANCE_LATE_GRACE_MINUTES") {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value>1440
+        ) {
+          $this->error = "Late-arrival grace must be a whole number from 0 to 1440 minutes.";
+          return false;
+        }
+      }
+      if (in_array($name, ["SESSION_IDLE_MINUTES", "SESSION_ABSOLUTE_HOURS"], true)) {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value<1 || (int)$value>10080
+        ) {
+          $this->error = "Session expiry settings must be whole numbers greater than zero.";
+          return false;
+        }
+      }
+      if ($name=="SECURITY_EVENT_RETENTION_DAYS") {
+        if (
+          (!is_string($value) && !is_int($value)) ||
+          !preg_match('/^[0-9]+$/D', (string)$value) ||
+          (int)$value<30 || (int)$value>3650
+        ) {
+          $this->error = "Security event retention must be between 30 and 3650 days.";
+          return false;
+        }
+      }
+    }
     foreach ($settings as $k=>$v) {
       $this->DB->update("settings", ["setting_value"], "`setting_name`=?", [$v, $k]);
     }
+    $this->Core->load("Security");
+    $this->Security->log("settings_changed", $_SESSION["user"]["user_id"], [
+      "setting_names" => array_keys($settings)
+    ]);
     return true;
   }
 }

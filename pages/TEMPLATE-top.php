@@ -28,7 +28,13 @@
     <!-- (A4) SERVICE WORKER + HOST -->
     <script>
     if ("serviceWorker" in navigator) { navigator.serviceWorker.register("<?=HOST_BASE?>CB-worker.js", {scope: "<?=HOST_BASE_PATH?>"}); }
-    var cbhost={base:"<?=HOST_BASE?>",basepath:"<?=HOST_BASE_PATH?>",api:"<?=HOST_API_BASE?>",assets:"<?=HOST_ASSETS?>"};
+    var cbhost={
+      base:<?=json_encode(HOST_BASE)?>,
+      basepath:<?=json_encode(HOST_BASE_PATH)?>,
+      api:<?=json_encode(HOST_API_BASE)?>,
+      assets:<?=json_encode(HOST_ASSETS)?>,
+      csrf:<?=json_encode($_SESSION["csrf_token"] ?? "")?>
+    };
     </script>
 
     <!-- (A5) LIBRARIES & SCRIPTS -->
@@ -94,13 +100,20 @@
         <?php if (isset($_SESSION["user"])) { ?>
         <!-- (C2-1) TOP NAV -->
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container-fluid">
-          <button id="cb-toggle" class="navbar-toggler btn btn-sm text-white ico icon-menu" onclick="cb.toggle()"></button>
+          <button type="button" id="cb-toggle" class="navbar-toggler btn btn-sm text-white ico icon-menu"
+                  aria-label="Toggle navigation" aria-controls="cb-side" aria-expanded="false"
+                  onclick="cb.toggle()"></button>
 
-          <div class="navbar-nav me-auto mb-2 mb-lg-0"></div>
+          <div class="navbar-nav me-auto mb-2 mb-lg-0">
+            <span id="network-status" class="small text-white" role="status" aria-live="polite">
+              Checking connection...
+            </span>
+          </div>
 
           <div class="d-flex align-items-center">
             <div class="dropdown">
-              <div class="text-white ico icon-user p-2" role="button" data-bs-toggle="dropdown"></div>
+              <button type="button" class="text-white ico icon-user p-2 btn btn-link"
+                      aria-label="Open account menu" data-bs-toggle="dropdown"></button>
               <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
                 <li class="dropdown-header">
                   <?=$_SESSION["user"]["user_name"]?><br>

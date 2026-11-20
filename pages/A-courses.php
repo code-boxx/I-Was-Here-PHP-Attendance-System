@@ -16,8 +16,8 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <!-- (B2) SEARCH BAR -->
 <form class="d-flex align-items-stretch head border mb-3 p-2" onsubmit="return course.search()">
   <input type="text" id="course-search" placeholder="Search" class="form-control form-control-sm">
-  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-search"></button>
-  <button class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
+  <button type="submit" class="btn btn-primary p-3 mx-1 ico-sm icon-search" aria-label="Search courses"></button>
+  <button class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" aria-label="Course actions" data-bs-toggle="dropdown"></button>
   <ul class="dropdown-menu dropdown-menu-dark">
     <li class="dropdown-item" onclick="course.addEdit()">
       <i class="text-secondary ico-sm icon-plus"></i> Add Single

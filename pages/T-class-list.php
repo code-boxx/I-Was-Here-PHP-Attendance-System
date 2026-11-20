@@ -10,9 +10,14 @@ if (is_array($classes)) { foreach ($classes as $id=>$c) { ?>
     <strong><?=$c["cd"]?></strong><br>
     [<?=$c["course_code"]?>] <?=$c["course_name"]?><br>
     <small><?=$c["class_desc"]?></small>
+    <?php if ($c["class_status"]==="cancelled") { ?>
+    <span class="badge bg-danger">Cancelled</span>
+    <?php } elseif (!empty($c["is_holiday"])) { ?>
+    <span class="badge bg-warning text-dark">Non-instruction day</span>
+    <?php } ?>
   </div>
   <div class="dropdown">
-    <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" type="button" data-bs-toggle="dropdown"></button>
+    <button type="button" class="btn btn-primary p-3 ico-sm icon-arrow-right" aria-label="Class actions" data-bs-toggle="dropdown"></button>
     <ul class="dropdown-menu dropdown-menu-dark">
       <li class="dropdown-item" onclick="attend.show(<?=$id?>)">
         <i class="text-secondary ico-sm icon-users"></i> Attendance

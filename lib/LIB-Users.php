@@ -10,8 +10,93 @@ class Users extends Core {
   // (A) SETTINGS
   private $hvalid = 900; // validation link good for 15 mins
   private $hlen = 12; // 24 characters validation hash
+  private $loginAttempts = 5;
+  private $loginWindow = 15;
 
-  // (B) PASSWORD CHECKER (HELPER)
+  private function mfaBase32 ($value) {
+    $alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    $bits = "";
+    foreach (str_split($value) as $char) {
+      $bits .= str_pad(decbin(ord($char)), 8, "0", STR_PAD_LEFT);
+    }
+    $result = "";
+    foreach (str_split($bits, 5) as $part) {
+      if (strlen($part)<5) { $part = str_pad($part, 5, "0"); }
+      $result .= $alphabet[bindec($part)];
+    }
+    return $result;
+  }
+
+  private function mfaCode ($secret, $time=null) {
+    $alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    $bits = "";
+    foreach (str_split($secret) as $char) {
+      $value = strpos($alphabet, strtoupper($char));
+      if ($value===false) { throw new InvalidArgumentException("Invalid MFA secret."); }
+      $bits .= str_pad(decbin($value), 5, "0", STR_PAD_LEFT);
+    }
+    $binary = "";
+    foreach (str_split($bits, 8) as $part) {
+      if (strlen($part)==8) { $binary .= chr(bindec($part)); }
+    }
+    $counter = pack("N2", 0, intdiv($time ?? time(), 30));
+    $hash = hash_hmac("sha1", $counter, $binary, true);
+    $offset = ord($hash[19]) & 15;
+    return str_pad((string)((((ord($hash[$offset]) & 127) << 24) |
+      ((ord($hash[$offset+1]) & 255) << 16) |
+      ((ord($hash[$offset+2]) & 255) << 8) |
+      (ord($hash[$offset+3]) & 255)) % 1000000), 6, "0", STR_PAD_LEFT);
+  }
+
+  private function mfaValid ($secret, $code) {
+    if (!is_string($code) || !preg_match('/^\d{6}$/D', $code)) { return false; }
+    for ($offset=-1; $offset<=1; $offset++) {
+      if (hash_equals($this->mfaCode($secret, time()+($offset*30)), $code)) { return true; }
+    }
+    return false;
+  }
+
+  // (B) LOGIN THROTTLE
+  function loginKey ($email) {
+    $ip = $_SERVER["REMOTE_ADDR"] ?? "unknown";
+    return hash("sha256", strtolower(trim($email)) . "|" . $ip);
+  }
+
+  function loginLocked ($key) {
+    return $this->DB->fetchCol(
+      "SELECT 1 FROM `login_attempts` WHERE `attempt_key`=? AND `locked_until`>NOW()",
+      [$key]
+    ) !== null;
+  }
+
+  function loginFailed ($key) {
+    $this->DB->query(
+      "INSERT INTO `login_attempts` (`attempt_key`, `failed_attempts`, `window_started`)
+       VALUES (?, 1, NOW())
+       ON DUPLICATE KEY UPDATE
+         `locked_until`=CASE
+           WHEN `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE) THEN NULL
+           WHEN `failed_attempts`>= ".($this->loginAttempts - 1)."
+             THEN DATE_ADD(NOW(), INTERVAL ".$this->loginWindow." MINUTE)
+           ELSE `locked_until`
+         END,
+         `failed_attempts`=IF(
+           `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE),
+           1, `failed_attempts`+1
+         ),
+         `window_started`=IF(
+           `window_started`<DATE_SUB(NOW(), INTERVAL ".$this->loginWindow." MINUTE),
+           NOW(), `window_started`
+         )",
+      [$key]
+    );
+  }
+
+  function loginSucceeded ($key) {
+    $this->DB->delete("login_attempts", "`attempt_key`=?", [$key]);
+  }
+
+  // (C) PASSWORD CHECKER (HELPER)
   //  $password : password to check
   //  $pattern : regex pattern check (at least 8 characters, alphanumeric)
   function checker ($password, $pattern='/^(?=.*[0-9])(?=.*[A-Z]).{8,20}$/i') {
@@ -76,8 +161,13 @@ class Users extends Core {
     if ($id===null) {
       $this->DB->insert("users", $fields, $data);
     } else {
-      $data[] = $id;
-      $this->DB->update("users", $fields, "`user_id`=?", $data);
+      $this->DB->query(
+        "UPDATE `users`
+         SET `user_name`=?, `user_email`=?, `user_password`=?, `user_level`=?,
+             `session_version`=`session_version`+1
+         WHERE `user_id`=?",
+        [$name, $email, $data[2], $lvl, $id]
+      );
     }
     return true;
   }
@@ -95,9 +185,9 @@ class Users extends Core {
   // (G) SUSPEND USER
   //  $id : user id
   function suspend ($id) {
-    $this->DB->update("users",
-      ["user_level"], "`user_id`=?",
-      ["S", $id]
+    $this->DB->query(
+      "UPDATE `users` SET `user_level`='S', `session_version`=`session_version`+1 WHERE `user_id`=?",
+      [$id]
     );
   }
 
@@ -121,10 +211,13 @@ class Users extends Core {
     }
 
     // (H4) UPDATE DATABASE
-    $this->DB->update("users",
-      ["user_name", "user_password"], "`user_id`=?",
+    $this->DB->query(
+      "UPDATE `users`
+       SET `user_name`=?, `user_password`=?, `session_version`=`session_version`+1
+       WHERE `user_id`=?",
       [$name, password_hash($pass, PASSWORD_DEFAULT), $_SESSION["user"]["user_id"]]
     );
+    $this->Session->destroy();
     return true;
   }
 
@@ -167,25 +260,245 @@ class Users extends Core {
     // (J1) ALREADY SIGNED IN
     if (isset($_SESSION["user"])) { return true; }
 
-    // (J2) VERIFY EMAIL PASSWORD ACCOUNT
-    $user = $this->verify($email, $password);
-    if ($user===false) { return false; }
+    // (J2) LIMIT REPEATED FAILED SIGN-IN ATTEMPTS
+    $key = $this->loginKey($email);
+    if ($this->loginLocked($key)) {
+      $this->Core->load("Security");
+      $this->Security->log("login_throttled", null, ["login_key" => $key]);
+      $this->error = "Invalid user or password. Try again later.";
+      return false;
+    }
 
-    // (J3) SESSION START
+    // (J3) VERIFY EMAIL PASSWORD ACCOUNT
+    $user = $this->verify($email, $password);
+    if ($user===false) {
+      $this->loginFailed($key);
+      $this->Core->load("Security");
+      $this->Security->log("login_failed", null, ["login_key" => $key]);
+      return false;
+    }
+    $this->loginSucceeded($key);
+
+    if ($user["user_level"]==="A" && !empty($user["mfa_secret"])) {
+      $_SESSION["mfa_pending"] = ["user_id" => (int)$user["user_id"], "expires" => time()+300];
+      $this->Session->save();
+      return ["mfa_required" => true];
+    }
+
+    // (J4) SESSION START
     $_SESSION["user"] = $user;
     unset($_SESSION["user"]["user_password"]);
     unset($_SESSION["user"]["hash_code"]);
     unset($_SESSION["user"]["hash_time"]);
     $this->Session->save();
+    $this->Core->load("Security");
+    $this->Security->log("login_succeeded", $user["user_id"]);
     return true;
+  }
+
+  function mfaStart () {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+      $this->error = "Administrator access required.";
+      return false;
+    }
+    $secret = $this->mfaBase32(random_bytes(20));
+    $_SESSION["mfa_setup"] = ["secret" => $secret, "expires" => time()+600];
+    $this->Session->save();
+    return ["secret" => $secret, "issuer" => HOST_NAME,
+      "account" => $_SESSION["user"]["user_email"],
+      "uri" => "otpauth://totp/".rawurlencode(HOST_NAME.":".$_SESSION["user"]["user_email"]).
+        "?secret=".$secret."&issuer=".rawurlencode(HOST_NAME)];
+  }
+
+  function mfaEnable ($code) {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A" || !isset($_SESSION["mfa_setup"])) {
+      $this->error = "Start MFA setup first.";
+      return false;
+    }
+    $setup = $_SESSION["mfa_setup"];
+    if ($setup["expires"]<time() || !$this->mfaValid($setup["secret"], $code)) {
+      $this->error = "Invalid or expired MFA code.";
+      return false;
+    }
+    $recovery = [];
+    $hashes = [];
+    for ($i=0; $i<8; $i++) {
+      $plain = strtoupper(bin2hex(random_bytes(5)));
+      $recovery[] = $plain;
+      $hashes[] = password_hash($plain, PASSWORD_DEFAULT);
+    }
+    $this->DB->query("UPDATE `users` SET `mfa_secret`=?, `mfa_recovery`=? WHERE `user_id`=?",
+      [$setup["secret"], json_encode($hashes), $_SESSION["user"]["user_id"]]);
+    unset($_SESSION["mfa_setup"]);
+    return ["recovery_codes" => $recovery];
+  }
+
+  function mfaDisable ($code) {
+    if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+      $this->error = "Administrator access required.";
+      return false;
+    }
+    $user = $this->get($_SESSION["user"]["user_id"]);
+    if (!is_array($user) || !$this->mfaValid($user["mfa_secret"], $code)) {
+      $this->error = "Invalid MFA code.";
+      return false;
+    }
+    $this->DB->query("UPDATE `users` SET `mfa_secret`=NULL, `mfa_recovery`=NULL WHERE `user_id`=?",
+      [$_SESSION["user"]["user_id"]]);
+    return true;
+  }
+
+  function mfaVerify ($code) {
+    $pending = $_SESSION["mfa_pending"] ?? null;
+    if (!is_array($pending) || $pending["expires"]<time()) {
+      $this->error = "MFA verification expired.";
+      return false;
+    }
+    $user = $this->get($pending["user_id"]);
+    if (!is_array($user) || $user["user_level"]!=="A") {
+      $this->error = "MFA verification failed.";
+      return false;
+    }
+    $valid = $this->mfaValid($user["mfa_secret"], $code);
+    if (!$valid && is_string($user["mfa_recovery"])) {
+      $hashes = json_decode($user["mfa_recovery"], true) ?: [];
+      foreach ($hashes as $index=>$hash) {
+        if (password_verify($code, $hash)) {
+          unset($hashes[$index]);
+          $this->DB->query("UPDATE `users` SET `mfa_recovery`=? WHERE `user_id`=?",
+            [json_encode(array_values($hashes)), $user["user_id"]]);
+          $valid = true;
+          break;
+        }
+      }
+    }
+    if (!$valid) {
+      $this->error = "Invalid MFA code.";
+      return false;
+    }
+    unset($_SESSION["mfa_pending"]);
+    $_SESSION["user"] = $user;
+    unset($_SESSION["user"]["user_password"], $_SESSION["user"]["mfa_secret"], $_SESSION["user"]["mfa_recovery"]);
+    $this->Session->save();
+    return true;
+  }
+
+  function exportMyData () {
+    if (!isset($_SESSION["user"]["user_id"])) {
+      $this->error = "Please sign in first.";
+      return false;
+    }
+
+    function requestDeletion () {
+      if (!isset($_SESSION["user"]["user_id"])) {
+        $this->error = "Please sign in first.";
+        return false;
+      }
+      $id = $_SESSION["user"]["user_id"];
+      $pending = $this->DB->fetchCol(
+        "SELECT `request_id` FROM `privacy_requests`
+         WHERE `user_id`=? AND `request_type`='deletion' AND `request_status`='pending'
+         LIMIT 1",
+        [$id]
+      );
+      if ($pending!==null) {
+        $this->error = "A deletion request is already pending.";
+        return false;
+      }
+      $this->DB->insert("privacy_requests",
+        ["user_id", "request_type", "requested_at"],
+        [$id, "deletion", date("Y-m-d H:i:s")]);
+      $this->Core->load("Security");
+      $this->Security->log("deletion_requested", $id);
+      return true;
+    }
+
+    function getDeletionRequests () {
+      if (($_SESSION["user"]["user_level"] ?? "")!=="A") {
+        $this->error = "Administrator access required.";
+        return false;
+      }
+      return $this->DB->fetchAll(
+        "SELECT r.*, u.`user_name`, u.`user_email`
+         FROM `privacy_requests` r JOIN `users` u USING (`user_id`)
+         ORDER BY r.`requested_at` DESC LIMIT 500"
+      ) ?? [];
+    }
+
+    function resolveDeletionRequest ($requestId, $decision, $note="") {
+      if (($_SESSION["user"]["user_level"] ?? "")!=="A" ||
+          !is_numeric($requestId) || !in_array($decision, ["approved", "rejected"], true)) {
+        $this->error = "Invalid privacy request decision.";
+        return false;
+      }
+      $note = trim((string)$note);
+      if (strlen($note)>500) {
+        $this->error = "Decision note is too long.";
+        return false;
+      }
+      $this->DB->query(
+        "UPDATE `privacy_requests`
+         SET `request_status`=?, `decided_by`=?, `decided_at`=NOW(), `decision_note`=?
+         WHERE `request_id`=? AND `request_status`='pending'",
+        [$decision, $_SESSION["user"]["user_id"], $note==="" ? null : $note, (int)$requestId]
+      );
+      if ($this->DB->lastRows<1) {
+        $this->error = "Privacy request was not found or was already decided.";
+        return false;
+      }
+      $this->Core->load("Security");
+      $this->Security->log("deletion_request_resolved", $_SESSION["user"]["user_id"], [
+        "request_id" => (int)$requestId, "decision" => $decision
+      ]);
+      return true;
+    }
+    $id = $_SESSION["user"]["user_id"];
+    $user = $this->DB->fetch(
+      "SELECT `user_id`,`user_level`,`user_name`,`user_email` FROM `users` WHERE `user_id`=?",
+      [$id]
+    );
+    if (!is_array($user)) {
+      $this->error = "Account not found.";
+      return false;
+    }
+    $courses = $this->DB->fetchAll(
+      "SELECT c.`course_code`,`course_name`,`course_desc`,`course_start`,`course_end`
+       FROM `courses_users` cu JOIN `courses` c USING (`course_code`)
+       WHERE cu.`user_id`=? ORDER BY c.`course_start`, c.`course_code`",
+      [$id]
+    ) ?? [];
+    $attendance = $this->DB->fetchAll(
+      "SELECT cl.`course_code`,cl.`class_date`,cl.`class_desc`,a.`a_status`,
+              a.`a_date`,a.`a_notes`
+       FROM `attendance` a JOIN `classes` cl USING (`class_id`)
+       WHERE a.`user_id`=? ORDER BY cl.`class_date`",
+      [$id]
+    ) ?? [];
+    $corrections = $this->DB->fetchAll(
+      "SELECT cl.`course_code`,cl.`class_date`,r.`requested_status`,
+              r.`request_reason`,r.`request_status`,r.`submitted_at`,
+              r.`decided_at`,r.`decision_note`
+       FROM `attendance_corrections` r JOIN `classes` cl USING (`class_id`)
+       WHERE r.`user_id`=? ORDER BY r.`submitted_at`",
+      [$id]
+    ) ?? [];
+    $this->Core->load("Security");
+    $this->Security->log("personal_data_exported", $id);
+    return ["exported_at" => date("c"), "user" => $user, "courses" => $courses,
+      "attendance" => $attendance, "corrections" => $corrections];
   }
 
   // (K) LOGOUT
   function logout () {
-    // (K1) ALREADY SIGNED OFF
-    if (!isset($_SESSION["user"])) { return true; }
+    // (K1) REVOKE ALL EXISTING TOKENS FOR THIS ACCOUNT
+    if (isset($_SESSION["user"]["user_id"])) {
+      $this->DB->query(
+        "UPDATE `users` SET `session_version`=`session_version`+1 WHERE `user_id`=?",
+        [$_SESSION["user"]["user_id"]]
+      );
+    }
 
-    // (K2) END SESSION
+    // (K2) END THIS SESSION
     $this->Session->destroy();
     return true;
   }
@@ -340,17 +653,79 @@ class Users extends Core {
   //  $password : user password
   //  $level : user level
   function import ($name, $email, $password, $level) {
+    $name = trim($name);
+    $email = strtolower(trim($email));
+
+    if ($name==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $this->error = "A valid name and email are required.";
+      return false;
+    }
+
     // (R1) CHECK REGISTERED
     if (is_array($this->get($email))) {
       $this->error = "$email is already registered";
+      return false;
     }
 
     // (R2) CHECK LEVEL
-    if (!in_array($level, USR_LVL)) {
+    if (!array_key_exists($level, USR_LVL)) {
       $this->error = "Invalid user level";
+      return false;
     }
 
     // (R3) SAVE
     return $this->save($name, $email, $password, $level);
+  }
+
+  function previewImport ($rows) {
+    if (!is_string($rows)) {
+      $this->error = "Import preview rows are invalid.";
+      return false;
+    }
+    try { $rows = json_decode($rows, true, 512, JSON_THROW_ON_ERROR); }
+    catch (JsonException $ex) {
+      $this->error = "Import preview rows are invalid JSON.";
+      return false;
+    }
+    if (!is_array($rows) || count($rows)==0 || count($rows)>500) {
+      $this->error = "Preview between 1 and 500 user rows.";
+      return false;
+    }
+
+    $result = [];
+    $seen = [];
+    foreach ($rows as $row) {
+      if (!is_array($row)) {
+        $result[] = ["status" => "conflicting", "message" => "Invalid row data."];
+        continue;
+      }
+      $name = trim((string)($row["name"] ?? ""));
+      $email = strtolower(trim((string)($row["email"] ?? "")));
+      $password = (string)($row["password"] ?? "");
+      $level = (string)($row["level"] ?? "");
+      if ($name==="" || !filter_var($email, FILTER_VALIDATE_EMAIL)
+          || !array_key_exists($level, USR_LVL) || !$this->checker($password)) {
+        $result[] = ["status" => "conflicting", "message" => "Name, valid email, password, and user level are required."];
+        continue;
+      }
+      $normalized = [$name, $email, $password, $level];
+      if (isset($seen[$email])) {
+        $same = $seen[$email]===$normalized;
+        $result[] = [
+          "status" => $same ? "duplicate" : "conflicting",
+          "message" => $same
+            ? "Duplicate of an earlier row; it will not be imported."
+            : "This email has conflicting values in another row."
+        ];
+        continue;
+      }
+      $seen[$email] = $normalized;
+
+      $existing = $this->get($email);
+      $result[] = is_array($existing)
+        ? ["status" => "conflicting", "message" => "Email is already registered; existing accounts are not changed by CSV import."]
+        : ["status" => "new", "message" => "New account will be created."];
+    }
+    return $result;
   }
 }

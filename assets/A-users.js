@@ -80,10 +80,11 @@ var usr = {
     at : 2, back : 1,
     eg : "dummy-users.csv",
     api : { mod : "users", act : "import" },
+    preview : { mod : "users", act : "previewImport" },
     after : () => usr.list(true),
     cols : [
       ["Name", "name", true],
-      ["Email", "email", true],
+      ["Email", "email", "E"],
       ["Password", "password", true],
       ["Level (A,T,U,S)", "level", true]
     ]

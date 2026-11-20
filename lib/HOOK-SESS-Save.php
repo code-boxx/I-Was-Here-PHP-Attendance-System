@@ -9,3 +9,4 @@
 if (isset($data["user"])) {
   $data["user"] = ["user_id" => $data["user"]["user_id"]];
 }
+unset($data["session_version"]);

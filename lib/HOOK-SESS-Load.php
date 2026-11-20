@@ -29,11 +29,17 @@ if (isset($_SESSION["user"])) {
     "SELECT * FROM `users` WHERE `user_id`=?",
     [$_SESSION["user"]["user_id"]]
   );
-  if (!is_array($user) || (isset($user["user_level"]) && $user["user_level"]=="S")) {
+  if (
+    !is_array($user) ||
+    $user["user_level"]=="S" ||
+    !isset($_SESSION["session_version"]) ||
+    (int)$_SESSION["session_version"] !== (int)$user["session_version"]
+  ) {
     $this->destroy();
     throw new Exception("Invalid or expired session.");
   } else {
     unset($user["user_password"]);
+    unset($_SESSION["session_version"]);
     $_SESSION["user"] = $user;
   }
 }

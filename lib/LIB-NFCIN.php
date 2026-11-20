@@ -15,7 +15,7 @@ class NFCIN extends Core {
     $this->Users->hashAdd($id, "NFC", password_hash($token, PASSWORD_DEFAULT));
 
     // (B2) RETURN ENCODED TOKEN
-    require PATH_LIB . "JWT/autoload.php";
+    require PATH_LIB . "jwt/autoload.php";
     return Firebase\JWT\JWT::encode([$id, $token], JWT_SECRET, JWT_ALGO);
   }
 
@@ -31,7 +31,7 @@ class NFCIN extends Core {
     // (D1) DECODE TOKEN
     $valid = true;
     try {
-      require PATH_LIB . "JWT/autoload.php";
+      require PATH_LIB . "jwt/autoload.php";
       $token = Firebase\JWT\JWT::decode(
         $token, new Firebase\JWT\Key(JWT_SECRET, JWT_ALGO)
       );

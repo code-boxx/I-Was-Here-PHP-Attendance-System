@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      IWH_HOST_BASE: http://localhost:8080/
+      IWH_DB_HOST: db
+      IWH_DB_NAME: iwashere
+      IWH_DB_USER: iwashere_app
+      IWH_DB_PASSWORD: ${IWH_DB_PASSWORD:-dev-only-password}
+      IWH_JWT_SECRET: ${IWH_JWT_SECRET:-dev-only-change-this-secret}
+      IWH_ALLOW_DEV_SEED: ${IWH_ALLOW_DEV_SEED:-0}
+      IWH_DEV_ADMIN_PASSWORD: ${IWH_DEV_ADMIN_PASSWORD:-dev-admin-change-me}
+      IWH_DEV_STUDENT_PASSWORD: ${IWH_DEV_STUDENT_PASSWORD:-dev-student-change-me}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: iwashere
+      MARIADB_USER: iwashere_app
+      MARIADB_PASSWORD: ${IWH_DB_PASSWORD:-dev-only-password}
+      MARIADB_ROOT_PASSWORD: ${IWH_DB_ROOT_PASSWORD:-dev-only-root-password}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  db-data:

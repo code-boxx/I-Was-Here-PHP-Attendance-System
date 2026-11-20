@@ -15,7 +15,27 @@ define("I_ALL", [
 
 // (A3) SQL FILES - FROM OLDEST TO NEWEST VERSIONS
 // @TODO - SET AS REQUIRED
-define("I_SQL", ["SQL-I-WAS-HERE-1.sql"]);
+define("I_SQL", [
+  "SQL-I-WAS-HERE-1.sql",
+  "SQL-I-WAS-HERE-2.sql",
+  "SQL-I-WAS-HERE-3.sql",
+  "SQL-I-WAS-HERE-4.sql",
+  "SQL-I-WAS-HERE-5.sql",
+  "SQL-I-WAS-HERE-6.sql",
+  "SQL-I-WAS-HERE-7.sql",
+  "SQL-I-WAS-HERE-8.sql",
+  "SQL-I-WAS-HERE-9.sql",
+  "SQL-I-WAS-HERE-10.sql",
+  "SQL-I-WAS-HERE-11.sql",
+  "SQL-I-WAS-HERE-12.sql",
+  "SQL-I-WAS-HERE-13.sql",
+  "SQL-I-WAS-HERE-14.sql",
+  "SQL-I-WAS-HERE-15.sql",
+  "SQL-I-WAS-HERE-16.sql",
+  "SQL-I-WAS-HERE-17.sql",
+  "SQL-I-WAS-HERE-18.sql",
+  "SQL-I-WAS-HERE-19.sql"
+]);
 
 // (A4) MINIMUM APACHE VERSION + PHP VERSION + EXTENSIONS
 define("I_MIN_PHP", "8.0.0");
@@ -72,9 +92,10 @@ class Install extends Core {
     $all = count(I_SQL);
 
     // (C3) AUTO UPDATE
-    if ($ver < $all) { for ($i=$ver; $i < $all; $i++) {
+    if ($ver >= $all) { return null; }
+    for ($i=$ver; $i < $all; $i++) {
       $this->DB->query(file_get_contents(PATH_LIB . I_SQL[$i]));
-    }}
+    }
     $this->DB->update(
       "settings", ["setting_value"], "`setting_name`=?", [$all, "APP_VER"]
     );

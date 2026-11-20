@@ -23,21 +23,21 @@ require PATH_PAGES . "TEMPLATE-top.php"; ?>
 <div class="row justify-content-center">
 <div class="col-md-10 bg-white border">
 <div class="row">
-  <div class="col-4" style="background:url('<?=HOST_ASSETS?>users.webp') center;background-size:cover"></div>
-  <div class="col-8 p-4">
+  <div class="d-none d-md-block col-md-4" style="background:url('<?=HOST_ASSETS?>users.webp') center;background-size:cover"></div>
+  <div class="col-12 col-md-8 p-4">
     <form onsubmit="return login();">
       <!-- (C2-1) NORMAL LOGIN -->
-      <img src="<?=HOST_ASSETS?>favicon.png" class="p-2 rounded-circle" style="width:128px;height:128px;background:#f1f1f1">
+      <img src="<?=HOST_ASSETS?>favicon.png" alt="I Was Here" class="p-2 rounded-circle" style="width:128px;height:128px;background:#f1f1f1">
       <h3 class="my-4">PLEASE SIGN IN</h3>
 
       <div class="form-floating mb-4">
-        <input type="email" id="login-email" class="form-control" required>
-        <label>Email</label>
+        <input type="email" id="login-email" class="form-control" autocomplete="username" required>
+        <label for="login-email">Email</label>
       </div>
 
       <div class="form-floating mb-4">
-        <input type="password" id="login-pass" class="form-control" required>
-        <label>Password</label>
+        <input type="password" id="login-pass" class="form-control" autocomplete="current-password" required>
+        <label for="login-pass">Password</label>
       </div>
 
       <button type="submit" class="my-1 btn btn-primary d-flex-inline">

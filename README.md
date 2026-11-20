@@ -1,22 +1,40 @@
-## I WAS HERE
-I Was Here is an open-source PHP Student Attendance Management System. Featuring NFC and passwordless login, also allows students to take attendance by scanning a QR code.
+# I Was Here — Secure Attendance Management System
+
+I Was Here is an open-source PHP Student Attendance Management System focused
+on secure attendance workflows, reliability, accessibility, privacy, and
+practical administration tools.
+
+The system features NFC and passwordless login, teacher-controlled rotating QR
+attendance sessions, live teacher dashboards, configurable attendance
+warnings, date-filtered analytics, bulk course enrollment, notification
+preferences, student attendance summaries, correction requests, expiring
+substitute-teacher access, configurable late-arrival summaries, and
+teacher-reviewed offline check-in requests. Admins can define school holidays,
+and class owners can cancel or reschedule sessions with an audit reason.
+Excused absences are reported separately and excluded from attendance
+percentages. Offline timestamps are unverified; offline requests do not count
+as attendance until a teacher approves them. Student QR check-ins that lose
+connectivity are stored locally with pending, syncing, synchronized, failed,
+or expired states and retried idempotently when connectivity returns.
+
+Security and operations include configurable session expiry, server-side
+session revocation, administrator TOTP MFA, JWT key rotation support, CSRF
+protection, throttling, security-event auditing, retention controls, personal
+data export and deletion requests, dependency monitoring, CI, Docker
+development support, and a readiness health check.
 <br><br>
 
 ## :white_check_mark: FEATURES
 1) NFC and passwordless login.
-2) Installble progressive web app.
-3) Take attendance manually, or let students scan a QR code.
+2) Installable progressive web app.
+3) Take attendance manually or with a teacher-controlled rotating QR session.
+4) Follow live class attendance and view student summaries and correction requests.
+5) Configure the school-wide attendance warning threshold in System Settings.
+6) Filter attendance reports by date and download CSV or open a print-friendly report.
+7) Schedule opt-in notification delivery with `php /path/to/project/bin/send-notifications.php`; preview discovery safely with `--dry-run`.
+8) Download personal attendance data as JSON and scheduled classes as iCalendar.
+9) Review security events and privacy requests as an administrator.
 <br><br>
-
-## :camera: SCREENSHOTS
-<p float="left">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-1.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-2.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-3.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-4.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-5.png">
-  <img width="250" src="https://github.com/code-boxx/I-Was-Here-PHP-Attendance-System/blob/main/assets/iwh-6.png">
-</p><br>
 
 ## :ballot_box_with_check: REQUIREMENTS
 1) LAMP/WAMP/MAMP/XAMPP
@@ -30,10 +48,72 @@ I Was Here is an open-source PHP Student Attendance Management System. Featuring
 2) Access `http://your-site.com/` in your browser and walk through the installer.
 <br><br>
 
+## LOCAL DEVELOPMENT, TESTS & BACKUPS
+
+- Use PHP 8.0 or newer with Apache `mod_rewrite`, PDO MySQL, OpenSSL, and a MySQL-compatible server such as MariaDB.
+- In the installer, use the database hostname that the PHP process can reach. For containers, this is usually the database service name, not `localhost`.
+- Run the JavaScript tests with `node --test tests/*.test.js`.
+- Pull requests run PHP linting, JavaScript syntax checks, and the JavaScript
+  regression suite through GitHub Actions on PHP 8.0 through 8.3.
+- `GET /health.php` provides a readiness check for load balancers and
+  monitoring. It returns only `{"status":"ok"}` or an unavailable status and
+  never exposes database diagnostics.
+- Run the database integration tests with `php tests/integration.php` only against a disposable development/test database. They create temporary records inside a transaction and roll it back; migrations are applied by the test. Configure a dedicated database user before running the suite.
+- Email notifications are opt-in and require PHP's `mail()` transport to be configured. Run `php bin/send-notifications.php --dry-run` to verify the worker without sending mail. In production, schedule `php /absolute/path/to/project/bin/send-notifications.php` with cron (for example every 15 minutes); failures retry up to five times and are logged.
+- Back up the database regularly with `mysqldump --single-transaction --default-character-set=utf8mb4 --host=DB_HOST --user=DB_USER --password DB_NAME > attendance-backup.sql`. The command prompts for the password.
+- Restore a backup with `mysql --host=DB_HOST --user=DB_USER --password DB_NAME < attendance-backup.sql`.
+- Keep database and JWT secrets out of version control. Store backups securely and periodically test restoring them.
+- Before production, use HTTPS, keep detailed PHP errors hidden from visitors, restrict database access and writable files, and review the configured API CORS policy.
+- Authenticated API POST requests include a session-bound CSRF token generated
+  by the application shell. Keep the standard browser client enabled so it can
+  submit this token automatically.
+- See [SECURITY.md](SECURITY.md) for private vulnerability reporting and
+  production security requirements.
+- Dependabot checks the bundled Composer dependencies and GitHub Actions
+  weekly; review update pull requests before deploying them.
+- For local development, copy `.env.example` to `.env`, replace the
+  development secrets, and run `docker compose up --build`. Open
+  `http://localhost:8080/` and complete the installer. The Compose database
+  uses a named volume and is not intended for production.
+- After installation, development seed data can be loaded with
+  `IWH_ALLOW_DEV_SEED=1 docker compose run --rm app php bin/seed-dev.php`.
+  The seed command is disabled unless explicitly enabled and creates only
+  `admin@example.test`, `student@example.test`, and course `DEMO-101`.
+- To rotate JWT signing secrets, set `JWT_SECRET` to the new secret and keep
+  the old value in `JWT_SECRET_PREVIOUS` until the configured session lifetime
+  has elapsed; then clear the previous value.
+- Administrators can enable TOTP MFA from My Account. Store the generated
+  recovery codes securely; they are shown only during enrollment.
+- Signed-in users can download a JSON export of their own account and
+  attendance data from My Account.
+- Administrators can configure security-event retention from System Settings
+  (30 to 3650 days); expired events are automatically removed.
+- Administrators can filter security events and expand structured event
+  details from System Settings.
+- Signed-in users can download their scheduled classes as an iCalendar feed
+  from `/calendar.php`.
+
+## BRANCHES, VERSIONS & ROLLBACKS
+
+- `main` and tag `v2.0.0` are the Community Edition v2 baseline.
+- Tag `v2.1.0` preserves the secure QR and student correction release.
+- Tag `v2.2.0` preserves the initial live attendance dashboard release.
+- Tag `v2.3.0` preserves configurable attendance-threshold warnings for students.
+- Tag `v2.4.0` preserves date-filtered CSV and printable attendance reports.
+- Tag `v2.5.0` preserves Phase 3 analytics, bulk course actions, schedule conflict checks, and opt-in email notifications.
+- `v2-improvements` is the local development branch for ongoing improvements.
+- The v2.0.0 tag is a preserved rollback point. To inspect it without changing branches, run `git switch --detach v2.0.0`; to continue work from it, create a branch with `git switch -c restore-v2.0.0 v2.0.0`.
+- Keep each reviewed release as an annotated tag (for example, `v2.1.0`) and use `git revert <commit>` to undo a published change without rewriting history.
+- The current branch and tags are local until explicitly pushed to the repository.
+
 ## :bulb: DOCUMENTATION
 1) [How To Use](https://code-boxx.com/i-was-here-php-attendance-system/#sec-use)
 2) [FAQ](https://code-boxx.com/core-boxx-php-framework/#sec-faq)
 3) [For The Developers](https://code-boxx.com/i-was-here-php-attendance-system/#sec-dev)
+4) [Current features and improvement ideas](features.md)
+5) [Additional improvement roadmap and implementation status](improvements.md)
+6) [Contributor guide](CONTRIBUTING.md)
+7) [API overview](docs/API.md)
 
 ## :electric_plug: FRAMEWORKS
 1) PHP Packages
